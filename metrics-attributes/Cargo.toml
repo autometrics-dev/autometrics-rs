@@ -11,3 +11,4 @@ metrics-attributes-macros = { path = "../metrics-attributes-macros" }
 
 [dev-dependencies]
 metrics-util = "0.14.0"
+mockall = "0.11.3"

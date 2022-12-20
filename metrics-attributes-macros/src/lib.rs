@@ -19,7 +19,6 @@ pub fn instrument(
 }
 
 fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
-    dbg!(&item);
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -30,42 +29,48 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
     } else {
         TokenStream::new()
     };
-    let block = quote! {
-        #block #maybe_await
-    };
 
-    // Define the metrics
-    let counter_name = format!("{}_total", sig.ident);
-    let histogram_name = format!("{}_duration_seconds", sig.ident);
-
-    // We only use a loop here so that we can use the break to exit the block early
-    // (We could also use labeled block expressions but that would make the minimum
-    // supported Rust version 1.65, which is possible but seems not strictly necessary)
-    let track_metrics = loop {
-        // Check if the function returns a Result
-        // TODO handle if it is a NewType
-        if let ReturnType::Type(_, ty) = &sig.output {
-            if let Type::Path(TypePath { path, .. }) = ty.as_ref() {
-                if let Some(segment) = path.segments.first() {
-                    if segment.ident == "Result" {
-                        break quote! {
-                            let status = if ret.is_ok() {
-                                "ok"
-                            } else {
-                                "err"
-                            };
-                            ::metrics::histogram!(#histogram_name, "result" => status, __start_internal.elapsed().as_secs_f64());
-                            ::metrics::increment_counter!(#counter_name, "result" => status);
-                        };
-                    }
+    // This is a convoluted way to figure out if the return type resolves to a Result
+    // or not. We cannot simply parse the code using syn to figure out if it's a Result
+    // because syn doesn't do type resolution and thus would count any renamed version
+    // of Result as a different type. Instead, we define two traits with intentionally
+    // conflicting method names and use a trick based on the order in which Rust resolves
+    // method names to return a different value based on whether the return value is
+    // a Result or anything else.
+    // This approach is based on dtolnay's answer to this question:
+    // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/5
+    // and this answer explains why it works:
+    // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
+    //
+    // TODO should we move this to the main crate export so it isn't redefined every time?
+    let trait_to_get_return_type = quote! {
+        trait GetLabelsFromResult {
+            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)];
+        }
+        impl<T, E> GetLabelsFromResult for ::std::result::Result<T, E> {
+            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)] {
+                match self {
+                    Ok(_) => &[("result", "ok")],
+                    Err(_) => &[("result", "err")],
                 }
             }
         }
+        trait GetLabels {
+            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)] {
+                &[]
+            }
+        }
+        impl<T> GetLabels for &T { }
+    };
 
-        break quote! {
-            ::metrics::histogram!(#histogram_name, __start_internal.elapsed().as_secs_f64());
-            ::metrics::increment_counter!(#counter_name);
-        };
+    // TODO make sure we import metrics macros from the right place
+    let counter_name = format!("{}_total", sig.ident);
+    let histogram_name = format!("{}_duration_seconds", sig.ident);
+    let track_metrics = quote! {
+        #trait_to_get_return_type
+        let labels = ret.__metrics_attributes_labels();
+        ::metrics::histogram!(#histogram_name, __start_internal.elapsed().as_secs_f64(), labels);
+        ::metrics::increment_counter!(#counter_name, labels);
     };
 
     // TODO generate doc comments that describe the related metrics
@@ -73,7 +78,7 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
     Ok(quote! {
         #vis #sig {
             let __start_internal = ::std::time::Instant::now();
-            let ret = #block;
+            let ret = #block #maybe_await;
 
             #track_metrics
 

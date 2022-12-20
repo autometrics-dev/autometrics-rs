@@ -1,7 +1,7 @@
 use super::*;
 use metrics::{Counter, Gauge, Histogram, Key, KeyName, Recorder, SharedString, Unit};
 use metrics_util::registry::{AtomicStorage, Registry};
-use std::{collections::HashMap, sync::Mutex};
+use std::{collections::HashMap, fmt::Result, sync::Mutex};
 
 struct TestRecorder(Registry<Key, AtomicStorage>);
 
@@ -32,8 +32,8 @@ impl Recorder for TestRecorder {
 }
 
 #[instrument]
-fn add(a: i32, b: i32) -> i32 {
-    a + b
+fn add(a: i32, b: i32) -> std::fmt::Result {
+    Ok(())
 }
 
 #[test]
