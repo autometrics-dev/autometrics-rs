@@ -1,6 +1,8 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Error, ItemFn, Result};
+use syn::{
+    parse_macro_input, Error, ItemFn, Path, PathSegment, Result, ReturnType, Type, TypePath,
+};
 
 #[proc_macro_attribute]
 pub fn instrument(
@@ -36,16 +38,44 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
     let counter_name = format!("{}_total", sig.ident);
     let histogram_name = format!("{}_duration_seconds", sig.ident);
 
+    // We only use a loop here so that we can use the break to exit the block early
+    // (We could also use labeled block expressions but that would make the minimum
+    // supported Rust version 1.65, which is possible but seems not strictly necessary)
+    let track_metrics = loop {
+        // Check if the function returns a Result
+        // TODO handle if it is a NewType
+        if let ReturnType::Type(_, ty) = &sig.output {
+            if let Type::Path(TypePath { path, .. }) = ty.as_ref() {
+                if let Some(segment) = path.segments.first() {
+                    if segment.ident == "Result" {
+                        break quote! {
+                            let status = if ret.is_ok() {
+                                "ok"
+                            } else {
+                                "err"
+                            };
+                            ::metrics::histogram!(#histogram_name, "result" => status, __start_internal.elapsed().as_secs_f64());
+                            ::metrics::increment_counter!(#counter_name, "result" => status);
+                        };
+                    }
+                }
+            }
+        }
+
+        break quote! {
+            ::metrics::histogram!(#histogram_name, __start_internal.elapsed().as_secs_f64());
+            ::metrics::increment_counter!(#counter_name);
+        };
+    };
+
     // TODO generate doc comments that describe the related metrics
 
     Ok(quote! {
         #vis #sig {
             let __start_internal = ::std::time::Instant::now();
-            ::metrics::increment_counter!(#counter_name);
-
             let ret = #block;
 
-            ::metrics::histogram!(#histogram_name, __start_internal.elapsed().as_secs_f64());
+            #track_metrics
 
             ret
         }
@@ -68,13 +98,13 @@ mod tests {
         let expected = quote! {
             pub fn add(a: i32, b: i32) -> i32 {
                 let __start_internal = ::std::time::Instant::now();
-                ::metrics::increment_counter!("add_total");
 
                 let ret = {
                     a + b
                 };
 
                 ::metrics::histogram!("add_duration_seconds", __start_internal.elapsed().as_secs_f64());
+                ::metrics::increment_counter!("add_total");
 
                 ret
             }
@@ -94,13 +124,52 @@ mod tests {
         let expected = quote! {
             async fn add(a: i32, b: i32) -> i32 {
                 let __start_internal = ::std::time::Instant::now();
-                ::metrics::increment_counter!("add_total");
 
                 let ret = {
                     a + b
                 }.await;
 
                 ::metrics::histogram!("add_duration_seconds", __start_internal.elapsed().as_secs_f64());
+                ::metrics::increment_counter!("add_total");
+
+                ret
+            }
+        };
+        assert_eq!(actual.to_string(), expected.to_string());
+    }
+
+    #[test]
+    fn return_result() {
+        let item = quote! {
+            fn check_positive(num: i32) -> Result<(), ()> {
+                if num >= 0 {
+                    Ok(())
+                } else {
+                    Err(())
+                }
+            }
+        };
+        let item: ItemFn = syn::parse2(item).unwrap();
+        let actual = instrument_inner(item).unwrap();
+        let expected = quote! {
+            fn check_positive(num: i32) -> Result<(), ()> {
+                let __start_internal = ::std::time::Instant::now();
+
+                let ret = {
+                    if num >= 0 {
+                        Ok(())
+                    } else {
+                        Err(())
+                    }
+                };
+
+                let status = if ret.is_ok() {
+                    "ok"
+                } else {
+                    "err"
+                };
+                ::metrics::histogram!("check_positive_duration_seconds", "result" => status, __start_internal.elapsed().as_secs_f64());
+                ::metrics::increment_counter!("check_positive_total", "result" => status);
 
                 ret
             }
