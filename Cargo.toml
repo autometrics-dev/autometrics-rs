@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "metrics-attributes",
+  "metrics-attributes-macros",
+]
+default-members = ["metrics-attributes"]
