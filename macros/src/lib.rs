@@ -83,7 +83,6 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
 
     // TODO make sure we import metrics macros from the right place
     // TODO maybe it's okay if metrics is a peer dependency
-    // TODO include the function name as a label
     let function_name = sig.ident.to_string();
     let base_name = args.name.unwrap_or_else(|| function_name.clone());
     let counter_name = format!("{}_total", base_name);
@@ -93,6 +92,9 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     let track_metrics = quote! {
         use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
         let duration = __metrics_attributes_start.elapsed().as_secs_f64();
+
+        // Note that the Rust compiler should optimize away this if/else statement because
+        // it's smart enough to figure out that only one branch will ever be hit for a given function
         if let Some(label) = ret.__metrics_attributes_get_result_label() {
             metrics::histogram!(#histogram_name, duration, "function" => #function_name, "result" => label);
             metrics::increment_counter!(#counter_name, "function" => #function_name, "result" => label);
