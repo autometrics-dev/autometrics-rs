@@ -7,4 +7,5 @@ mod tests;
 #[doc(hidden)]
 pub mod __private {
     pub use crate::result_labels::*;
+    pub use const_format::{formatcp, str_replace};
 }

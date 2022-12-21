@@ -60,15 +60,31 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
 
     // TODO make sure we import metrics macros from the right place
     // TODO maybe it's okay if metrics is a peer dependency
-    let base_name = args.name.unwrap_or(sig.ident.to_string());
-    let counter_name = format!("{}_total", base_name);
-    let histogram_name = format!("{}_duration_seconds", base_name);
+
+    // Either use the metric base name that was provided or use the module path (replacing "::" with "_")
+    let metric_names = if let Some(base_name) = args.name {
+        let counter_name = format!("{}_total", base_name);
+        let histogram_name = format!("{}_duration_seconds", base_name);
+        quote! {
+            let histogram_name = #histogram_name;
+            let counter_name = #counter_name
+        }
+    } else {
+        quote! {
+            const BASE_NAME: &str = str_replace!(module_path!(), "::", "_");
+            let histogram_name = formatcp!("{}_duration_seconds", BASE_NAME);
+            let counter_name = formatcp!("{}_total", BASE_NAME);
+        }
+    };
     let track_metrics = quote! {
-        use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
-        let labels = ret.__metrics_attributes_get_labels();
-        let duration = __metrics_attributes_start.elapsed().as_secs_f64();
-        metrics::histogram!(#histogram_name, duration, labels);
-        metrics::increment_counter!(#counter_name, labels);
+        {
+            use ::metrics_attributes::__private::{GetLabels, GetLabelsFromResult, str_replace, formatcp};
+            let labels = ret.__metrics_attributes_get_labels();
+            let duration = __metrics_attributes_start.elapsed().as_secs_f64();
+            #metric_names
+            metrics::histogram!(histogram_name, duration, labels);
+            metrics::increment_counter!(counter_name, labels);
+        }
     };
 
     // TODO generate doc comments that describe the related metrics
