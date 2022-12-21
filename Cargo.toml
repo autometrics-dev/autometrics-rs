@@ -1,6 +1,17 @@
-[workspace]
-members = [
-  "metrics-attributes",
-  "metrics-attributes-macros",
-]
-default-members = ["metrics-attributes"]
+[package]
+name = "metrics-attributes"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["metrics"]
+
+[dependencies]
+metrics = { version = "0.20.1", optional = true }
+metrics-attributes-macros = { path = "./macros" }
+
+[dev-dependencies]
+metrics-util = "0.14.0"
+mockall = "0.11.3"
