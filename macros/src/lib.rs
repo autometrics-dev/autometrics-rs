@@ -83,17 +83,23 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
 
     // TODO make sure we import metrics macros from the right place
     // TODO maybe it's okay if metrics is a peer dependency
-    let base_name = args.name.unwrap_or(sig.ident.to_string());
+    // TODO include the function name as a label
+    let function_name = sig.ident.to_string();
+    let base_name = args.name.unwrap_or_else(|| function_name.clone());
     let counter_name = format!("{}_total", base_name);
     let histogram_name = format!("{}_duration_seconds", base_name);
     write_metrics_to_file(&histogram_name, &counter_name, span)?;
 
     let track_metrics = quote! {
         use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
-        let labels = ret.__metrics_attributes_get_labels();
         let duration = __metrics_attributes_start.elapsed().as_secs_f64();
-        metrics::histogram!(#histogram_name, duration, labels);
-        metrics::increment_counter!(#counter_name, labels);
+        if let Some(label) = ret.__metrics_attributes_get_result_label() {
+            metrics::histogram!(#histogram_name, duration, "function" => #function_name, "result" => label);
+            metrics::increment_counter!(#counter_name, "function" => #function_name, "result" => label);
+        } else {
+            metrics::histogram!(#histogram_name, duration, "function" => #function_name);
+            metrics::increment_counter!(#counter_name, "function" => #function_name);
+        }
     };
 
     // TODO generate doc comments that describe the related metrics
@@ -154,6 +160,11 @@ mod kw {
 // that would need to happen when the dependent crate is being built
 // because we're only getting the labels after the macro runs when
 // the crate is being compiled
+//
+// Alternative approaches:
+// - call #[instrument(ret)] if you want the labels included so that we know the labels at macro expansion time
+// - inject the printing to a file code but only have it run in #[cfg(test)] or some other mode
+// - have a cargo command that goes through the code looking for metrics
 fn write_metrics_to_file(histogram_name: &str, counter_name: &str, span: Span) -> Result<()> {
     let mut file = fs::OpenOptions::new()
         .append(true)

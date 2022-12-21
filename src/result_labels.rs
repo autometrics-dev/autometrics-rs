@@ -11,19 +11,19 @@
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
 pub trait GetLabelsFromResult {
-    fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)];
+    fn __metrics_attributes_get_result_label(&self) -> Option<&'static str>;
 }
 impl<T, E> GetLabelsFromResult for Result<T, E> {
-    fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
+    fn __metrics_attributes_get_result_label(&self) -> Option<&'static str> {
         match self {
-            Ok(_) => &[("result", "ok")],
-            Err(_) => &[("result", "err")],
+            Ok(_) => Some("ok"),
+            Err(_) => Some("err"),
         }
     }
 }
 pub trait GetLabels {
-    fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
-        &[]
+    fn __metrics_attributes_get_result_label(&self) -> Option<&'static str> {
+        None
     }
 }
 impl<T> GetLabels for &T {}
