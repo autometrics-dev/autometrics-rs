@@ -1,7 +1,29 @@
-use proc_macro2::TokenStream;
+use once_cell::sync::Lazy;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{fs, io::Write, path::PathBuf};
 use syn::parse::{Parse, ParseStream};
+use syn::spanned::Spanned;
 use syn::{parse_macro_input, Error, Expr, ItemFn, LitStr, Result, Token};
+
+// TODO it would probably be better if this ended up in the directory of the main crate that's
+// being built rater than in the out directory of the metrics-attributes-macro crate
+static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
+    let mut path = PathBuf::new();
+    // This is set in build.rs
+    path.push(env!("OUT_DIR"));
+
+    let compile_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("error getting system time")
+        .as_micros();
+    path.push(format!("metrics-{}.yaml", compile_time));
+
+    println!("Writing list of metrics to: {}", path.display());
+
+    path
+});
 
 #[derive(Default)]
 struct InstrumentArgs {
@@ -47,6 +69,7 @@ pub fn instrument(
 }
 
 fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
+    let span = item.span();
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -63,6 +86,8 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     let base_name = args.name.unwrap_or(sig.ident.to_string());
     let counter_name = format!("{}_total", base_name);
     let histogram_name = format!("{}_duration_seconds", base_name);
+    write_metrics_to_file(&histogram_name, &counter_name, span)?;
+
     let track_metrics = quote! {
         use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
         let labels = ret.__metrics_attributes_get_labels();
@@ -123,6 +148,46 @@ impl<T: Parse> Parse for ExprArg<T> {
 
 mod kw {
     syn::custom_keyword!(name);
+}
+
+// TODO can we figure out the labels and write those too?
+// that would need to happen when the dependent crate is being built
+// because we're only getting the labels after the macro runs when
+// the crate is being compiled
+fn write_metrics_to_file(histogram_name: &str, counter_name: &str, span: Span) -> Result<()> {
+    let mut file = fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(&*METRICS_FILE)
+        .map_err(|err| {
+            let message = format!(
+                "error opening metrics file {} {:?}",
+                METRICS_FILE.display(),
+                err
+            );
+            Error::new(span, message)
+        })?;
+    writeln!(
+        &mut file,
+        "- name: {}
+  type: histogram
+- name: {}
+  type: counter
+",
+        histogram_name, counter_name
+    )
+    .map_err(|err| {
+        Error::new(
+            span,
+            format!(
+                "error writing to metrics file {} {:?}",
+                METRICS_FILE.display(),
+                err
+            ),
+        )
+    })?;
+
+    Ok(())
 }
 
 #[cfg(test)]
