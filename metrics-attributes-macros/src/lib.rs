@@ -28,45 +28,12 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
         TokenStream::new()
     };
 
-    // This is a convoluted way to figure out if the return type resolves to a Result
-    // or not. We cannot simply parse the code using syn to figure out if it's a Result
-    // because syn doesn't do type resolution and thus would count any renamed version
-    // of Result as a different type. Instead, we define two traits with intentionally
-    // conflicting method names and use a trick based on the order in which Rust resolves
-    // method names to return a different value based on whether the return value is
-    // a Result or anything else.
-    // This approach is based on dtolnay's answer to this question:
-    // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/5
-    // and this answer explains why it works:
-    // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
-    //
-    // TODO should we move this to the main crate export so it isn't redefined every time?
-    let trait_to_get_return_type = quote! {
-        trait GetLabelsFromResult {
-            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)];
-        }
-        impl<T, E> GetLabelsFromResult for ::std::result::Result<T, E> {
-            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
-                match self {
-                    Ok(_) => &[("result", "ok")],
-                    Err(_) => &[("result", "err")],
-                }
-            }
-        }
-        trait GetLabels {
-            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
-                &[]
-            }
-        }
-        impl<T> GetLabels for &T { }
-    };
-
     // TODO make sure we import metrics macros from the right place
     // TODO maybe it's okay if metrics is a peer dependency
     let counter_name = format!("{}_total", sig.ident);
     let histogram_name = format!("{}_duration_seconds", sig.ident);
     let track_metrics = quote! {
-        #trait_to_get_return_type
+        use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
         let labels = ret.__metrics_attributes_get_labels();
         let duration = __metrics_attributes_start.elapsed().as_secs_f64();
         metrics::histogram!(#histogram_name, duration, labels);

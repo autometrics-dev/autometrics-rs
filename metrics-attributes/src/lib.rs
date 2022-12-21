@@ -1,9 +1,10 @@
-pub use metrics::{histogram, increment_counter, increment_gauge};
 pub use metrics_attributes_macros::instrument;
+mod result_labels;
 #[cfg(test)]
 mod tests;
 
-#[instrument]
-fn add(a: i32, b: i32) -> std::fmt::Result {
-    Ok(())
+// Not public API.
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::result_labels::*;
 }

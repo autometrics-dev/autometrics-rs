@@ -31,10 +31,5 @@ impl Recorder for TestRecorder {
     }
 }
 
-#[instrument]
-fn add(a: i32, b: i32) -> std::fmt::Result {
-    Ok(())
-}
-
 #[test]
 fn simple_function() {}
