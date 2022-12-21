@@ -1,8 +1,6 @@
-use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
-use syn::{
-    parse_macro_input, Error, ItemFn, Path, PathSegment, Result, ReturnType, Type, TypePath,
-};
+use proc_macro2::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, ItemFn, Result};
 
 #[proc_macro_attribute]
 pub fn instrument(
@@ -45,10 +43,10 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
     // TODO should we move this to the main crate export so it isn't redefined every time?
     let trait_to_get_return_type = quote! {
         trait GetLabelsFromResult {
-            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)];
+            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)];
         }
         impl<T, E> GetLabelsFromResult for ::std::result::Result<T, E> {
-            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)] {
+            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
                 match self {
                     Ok(_) => &[("result", "ok")],
                     Err(_) => &[("result", "err")],
@@ -56,7 +54,7 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
             }
         }
         trait GetLabels {
-            fn __metrics_attributes_labels(&self) -> &'static [(&'static str, &'static str)] {
+            fn __metrics_attributes_get_labels(&self) -> &'static [(&'static str, &'static str)] {
                 &[]
             }
         }
@@ -64,20 +62,23 @@ fn instrument_inner(item: ItemFn) -> Result<TokenStream> {
     };
 
     // TODO make sure we import metrics macros from the right place
+    // TODO maybe it's okay if metrics is a peer dependency
     let counter_name = format!("{}_total", sig.ident);
     let histogram_name = format!("{}_duration_seconds", sig.ident);
     let track_metrics = quote! {
         #trait_to_get_return_type
-        let labels = ret.__metrics_attributes_labels();
-        ::metrics::histogram!(#histogram_name, __start_internal.elapsed().as_secs_f64(), labels);
-        ::metrics::increment_counter!(#counter_name, labels);
+        let labels = ret.__metrics_attributes_get_labels();
+        let duration = __metrics_attributes_start.elapsed().as_secs_f64();
+        metrics::histogram!(#histogram_name, duration, labels);
+        metrics::increment_counter!(#counter_name, labels);
     };
 
     // TODO generate doc comments that describe the related metrics
 
     Ok(quote! {
         #vis #sig {
-            let __start_internal = ::std::time::Instant::now();
+            let __metrics_attributes_start = ::std::time::Instant::now();
+
             let ret = #block #maybe_await;
 
             #track_metrics
