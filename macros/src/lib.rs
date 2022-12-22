@@ -1,11 +1,11 @@
 use once_cell::sync::Lazy;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
+use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::{fs, io::Write, path::PathBuf};
+use std::{collections::HashMap, fmt, fs, path::PathBuf};
 use syn::parse::{Parse, ParseStream};
-use syn::spanned::Spanned;
-use syn::{parse_macro_input, Error, Expr, ItemFn, LitStr, Result, Token};
+use syn::{parse_macro_input, spanned::Spanned, Error, Expr, ItemFn, LitStr, Result, Token};
 
 // TODO it would probably be better if this ended up in the directory of the main crate that's
 // being built rater than in the out directory of the metrics-attributes-macro crate
@@ -28,6 +28,7 @@ static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
 #[derive(Default)]
 struct InstrumentArgs {
     name: Option<String>,
+    infallible: bool,
 }
 
 impl Parse for InstrumentArgs {
@@ -44,6 +45,11 @@ impl Parse for InstrumentArgs {
                 }
                 let name = input.parse::<StrArg<kw::name>>()?.value;
                 args.name = Some(name.value());
+            } else if lookahead.peek(kw::infallible) {
+                input.parse::<kw::infallible>()?;
+                args.infallible = true;
+            } else if lookahead.peek(Token![,]) {
+                let _ = input.parse::<Token![,]>()?;
             } else {
                 return Err(lookahead.error());
             }
@@ -87,20 +93,57 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     let base_name = args.name.unwrap_or_else(|| function_name.clone());
     let counter_name = format!("{}_total", base_name);
     let histogram_name = format!("{}_duration_seconds", base_name);
-    write_metrics_to_file(&histogram_name, &counter_name, span)?;
 
-    let track_metrics = quote! {
-        use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
-        let duration = __metrics_attributes_start.elapsed().as_secs_f64();
+    // Write these metrics to a file
+    // TODO we could be more efficient about this
+    let labels = if args.infallible {
+        HashMap::from([("function", vec![function_name.clone()])])
+    } else {
+        HashMap::from([
+            ("function", vec![function_name.clone()]),
+            ("result", vec!["ok".to_string(), "err".to_string()]),
+        ])
+    };
+    let metrics = [
+        Metric {
+            name: counter_name.clone(),
+            labels: labels.clone(),
+            ty: MetricType::Counter,
+        },
+        Metric {
+            name: histogram_name.clone(),
+            labels,
+            ty: MetricType::Histogram,
+        },
+    ];
+    write_metrics_to_file(&metrics).map_err(|err| {
+        Error::new(
+            span,
+            format!(
+                "error writing to metrics file {} {}",
+                METRICS_FILE.display(),
+                err
+            ),
+        )
+    })?;
 
-        // Note that the Rust compiler should optimize away this if/else statement because
-        // it's smart enough to figure out that only one branch will ever be hit for a given function
-        if let Some(label) = ret.__metrics_attributes_get_result_label() {
-            metrics::histogram!(#histogram_name, duration, "function" => #function_name, "result" => label);
-            metrics::increment_counter!(#counter_name, "function" => #function_name, "result" => label);
-        } else {
+    let track_metrics = if args.infallible {
+        quote! {
             metrics::histogram!(#histogram_name, duration, "function" => #function_name);
             metrics::increment_counter!(#counter_name, "function" => #function_name);
+        }
+    } else {
+        quote! {
+            use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
+            // Note that the Rust compiler should optimize away this if/else statement because
+            // it's smart enough to figure out that only one branch will ever be hit for a given function
+            if let Some(label) = ret.__metrics_attributes_get_result_label() {
+                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "result" => label);
+                metrics::increment_counter!(#counter_name, "function" => #function_name, "result" => label);
+            } else {
+                metrics::histogram!(#histogram_name, duration, "function" => #function_name);
+                metrics::increment_counter!(#counter_name, "function" => #function_name);
+            }
         }
     };
 
@@ -112,6 +155,7 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
 
             let ret = #block #maybe_await;
 
+            let duration = __metrics_attributes_start.elapsed().as_secs_f64();
             #track_metrics
 
             ret
@@ -156,49 +200,42 @@ impl<T: Parse> Parse for ExprArg<T> {
 
 mod kw {
     syn::custom_keyword!(name);
+    syn::custom_keyword!(infallible);
 }
 
-// TODO can we figure out the labels and write those too?
-// that would need to happen when the dependent crate is being built
-// because we're only getting the labels after the macro runs when
-// the crate is being compiled
-//
-// Alternative approaches:
-// - call #[instrument(ret)] if you want the labels included so that we know the labels at macro expansion time
-// - inject the printing to a file code but only have it run in #[cfg(test)] or some other mode
-// - have a cargo command that goes through the code looking for metrics
-fn write_metrics_to_file(histogram_name: &str, counter_name: &str, span: Span) -> Result<()> {
+#[derive(Serialize)]
+struct Metric {
+    name: String,
+    labels: HashMap<&'static str, Vec<String>>,
+    ty: MetricType,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+enum MetricType {
+    Histogram,
+    Counter,
+}
+
+impl fmt::Display for MetricType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MetricType::Counter => f.write_str("counter"),
+            MetricType::Histogram => f.write_str("histogram"),
+        }
+    }
+}
+
+// TODO figure out a better file format
+// TODO figure out how to combine duplicate rows efficiently (i.e. after we're done appending to this file)
+fn write_metrics_to_file(metrics: &[Metric]) -> std::result::Result<(), String> {
     let mut file = fs::OpenOptions::new()
         .append(true)
         .create(true)
         .open(&*METRICS_FILE)
-        .map_err(|err| {
-            let message = format!(
-                "error opening metrics file {} {:?}",
-                METRICS_FILE.display(),
-                err
-            );
-            Error::new(span, message)
-        })?;
-    writeln!(
-        &mut file,
-        "- name: {}
-  type: histogram
-- name: {}
-  type: counter
-",
-        histogram_name, counter_name
-    )
-    .map_err(|err| {
-        Error::new(
-            span,
-            format!(
-                "error writing to metrics file {} {:?}",
-                METRICS_FILE.display(),
-                err
-            ),
-        )
-    })?;
+        .map_err(|err| format!("error opening file: {:?}", err))?;
+    serde_yaml::to_writer(&mut file, metrics)
+        .map_err(|err| format!("error writing metric to file: {:?}", err))?;
 
     Ok(())
 }

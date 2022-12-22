@@ -1,8 +1,8 @@
 use metrics_attributes::instrument;
 
-#[instrument(name = "handlers")]
-fn add(a: i32, b: i32) -> Result<i32, ()> {
-    Ok(a + b)
+#[instrument(infallible, name = "handlers")]
+fn add(a: i32, b: i32) -> i32 {
+    a + b
 }
 
 #[instrument(name = "other")]
