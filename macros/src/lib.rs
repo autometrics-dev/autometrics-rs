@@ -24,6 +24,7 @@ static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
 
     path
 });
+const DEFAULT_METRIC_BASE_NAME: &str = "function_call";
 
 #[derive(Default)]
 struct InstrumentArgs {
@@ -92,7 +93,11 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     // TODO make sure we import metrics macros from the right place
     // TODO maybe it's okay if metrics is a peer dependency
     let function_name = sig.ident.to_string();
-    let base_name = args.name.unwrap_or_else(|| function_name.clone());
+    let base_name = if let Some(name) = &args.name {
+        name.as_str()
+    } else {
+        DEFAULT_METRIC_BASE_NAME
+    };
     let counter_name = format!("{}_total", base_name);
     let histogram_name = format!("{}_duration_seconds", base_name);
 
@@ -137,23 +142,39 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
         }
     } else {
         quote! {
-            use metrics_attributes::__private::{GetLabels, GetLabelsFromResult};
+            use metrics_attributes::__private::{GetLabels, GetLabelsFromResult, str_replace};
+            let module_path = str_replace!(module_path!(), "::", "_");
+
             // Note that the Rust compiler should optimize away this if/else statement because
             // it's smart enough to figure out that only one branch will ever be hit for a given function
             if let Some(label) = ret.__metrics_attributes_get_result_label() {
-                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "result" => label);
-                metrics::increment_counter!(#counter_name, "function" => #function_name, "result" => label);
+                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path, "result" => label);
+                metrics::increment_counter!(#counter_name, "function" => #function_name, "module" => module_path, "result" => label);
             } else {
-                metrics::histogram!(#histogram_name, duration, "function" => #function_name);
-                metrics::increment_counter!(#counter_name, "function" => #function_name);
+                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path);
+                metrics::increment_counter!(#counter_name, "function" => #function_name, "module" => module_path);
             }
         }
     };
 
+    // Add the metrics to the function documentation
+    let docs = format!(
+        "
+
+# Metrics
+
+This function has the following metrics associated with it:
+- `{}{{function=\"{}\"}}`
+- `{}{{function=\"{}\"}}`",
+        histogram_name, function_name, counter_name, function_name
+    );
+
     // TODO generate doc comments that describe the related metrics
 
     Ok(quote! {
-        #(#attrs)* #vis #sig {
+        #(#attrs)*
+        #[doc=#docs]
+        #vis #sig {
             let __metrics_attributes_start = ::std::time::Instant::now();
 
             let ret = #block #maybe_await;
