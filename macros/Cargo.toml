@@ -13,3 +13,4 @@ quote = "1.0.23"
 serde = { version = "1.0.151", features = ["derive"] }
 serde_yaml = "0.9.16"
 syn =  { version = "1.0.107", features = ["extra-traits", "full"] }
+urlencoding = "2.1.2"

@@ -143,6 +143,10 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     } else {
         quote! {
             use metrics_attributes::__private::{GetLabels, GetLabelsFromResult, str_replace};
+            // Metric labels must use underscores as separators rather than colons.
+            // The str_replace macro produces a static str rather than a String.
+            // Note that we cannot determine the module path at macro expansion time
+            // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
             let module_path = str_replace!(module_path!(), "::", "_");
 
             // Note that the Rust compiler should optimize away this if/else statement because
@@ -158,15 +162,22 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     };
 
     // Add the metrics to the function documentation
+    // TODO get the URL from somewhere else
+    let prometheus_url = "https://prometheus.studio.fiberplane.com/graph?g0.expr=";
+    let request_rate = format!("sum (rate({counter_name}{{function=\"{function_name}\"}}[5m]))");
+    let request_rate = format!(
+        "[Request Rate]({prometheus_url}{})",
+        urlencoding::encode(&request_rate)
+    );
     let docs = format!(
-        "
-
-# Metrics
+        "\n\n# Metrics
 
 This function has the following metrics associated with it:
-- `{}{{function=\"{}\"}}`
-- `{}{{function=\"{}\"}}`",
-        histogram_name, function_name, counter_name, function_name
+- `{counter_name}{{function=\"{function_name}\"}}`
+- `{histogram_name}{{function=\"{function_name}\"}}`
+
+Go directly to your production metrics:
+- {request_rate}",
     );
 
     // TODO generate doc comments that describe the related metrics
