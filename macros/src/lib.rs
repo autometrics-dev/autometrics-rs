@@ -44,6 +44,7 @@ impl Parse for InstrumentArgs {
                     ))?;
                 }
                 let name = input.parse::<StrArg<kw::name>>()?.value;
+                // TODO validate label name
                 args.name = Some(name.value());
             } else if lookahead.peek(kw::infallible) {
                 input.parse::<kw::infallible>()?;
@@ -79,6 +80,7 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
+    let attrs = item.attrs;
 
     // If the function is async we need to add a .await after the block
     let maybe_await = if sig.asyncness.is_some() {
@@ -127,6 +129,7 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
         )
     })?;
 
+    // If the function is marked as infallible, we won't add the "result" label, otherwise we will
     let track_metrics = if args.infallible {
         quote! {
             metrics::histogram!(#histogram_name, duration, "function" => #function_name);
@@ -150,7 +153,7 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     // TODO generate doc comments that describe the related metrics
 
     Ok(quote! {
-        #vis #sig {
+        #(#attrs)* #vis #sig {
             let __metrics_attributes_start = ::std::time::Instant::now();
 
             let ret = #block #maybe_await;
