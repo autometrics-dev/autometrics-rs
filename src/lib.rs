@@ -1,7 +1,8 @@
-pub use autometrics_macros::autometrics;
 mod result_labels;
 #[cfg(test)]
 mod tests;
+
+pub use autometrics_macros::autometrics;
 
 // Not public API.
 #[doc(hidden)]

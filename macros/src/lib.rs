@@ -84,10 +84,10 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let attrs = item.attrs;
 
     // If the function is async we need to add a .await after the block
-    let maybe_await = if sig.asyncness.is_some() {
-        quote! { .await }
+    let (maybe_async, maybe_await) = if sig.asyncness.is_some() {
+        (quote! { async move }, quote! { .await })
     } else {
-        TokenStream::new()
+        (TokenStream::new(), TokenStream::new())
     };
 
     // TODO make sure we import metrics macros from the right place
@@ -163,32 +163,33 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
     // Add the metrics to the function documentation
     // TODO get the URL from somewhere else
-    let prometheus_url = "https://prometheus.studio.fiberplane.com/graph?g0.expr=";
+    // let prometheus_url = "https://prometheus.studio.fiberplane.com";
+    let prometheus_url = "http://localhost:9090";
     let function_label = format!("{{function=\"{function_name}\"}}");
     let request_rate = format!("sum(rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
     let request_rate_doc = format!(
-        "- [Request Rate]({prometheus_url}{})",
-        urlencoding::encode(&request_rate_doc)
+        "- [Request Rate]({})",
+        make_prometheus_url(&prometheus_url, &request_rate_doc)
     );
     let error_rate_doc = if args.infallible {
         String::new()
     } else {
         let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
-sum(rate({counter_name}{function_label}[5m])) / {request_rate}");
+sum(rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
         format!(
-            "\n- [Error Rate]({prometheus_url}{})",
-            urlencoding::encode(&error_rate)
+            "\n- [Error Rate]({})",
+            make_prometheus_url(&prometheus_url, &error_rate)
         )
     };
-    let latency = format!("sum(rate({histogram_name}{function_label}[5m])");
+    let latency = format!("sum(rate({histogram_name}{function_label}[5m]))");
     let latency = format!(
         "# 95th and 99th percentile latencies
 histogram_quantile(0.99, {latency}) or histogram_quantile(0.95, {latency})"
     );
     let latency_doc = format!(
-        "- [Latency (95th and 99th percentiles)]({prometheus_url}{})",
-        urlencoding::encode(&latency)
+        "- [Latency (95th and 99th percentiles)]({})",
+        make_prometheus_url(&prometheus_url, &latency)
     );
     let docs = format!(
         "\n\n# Metrics
@@ -206,16 +207,23 @@ This function has the following metrics associated with it:
         #(#attrs)*
         #[doc=#docs]
         #vis #sig {
-            let __metrics_attributes_start = ::std::time::Instant::now();
+            let __autometrics_start = ::std::time::Instant::now();
 
-            let ret = #block #maybe_await;
+            let ret = #maybe_async { #block } #maybe_await;
 
-            let duration = __metrics_attributes_start.elapsed().as_secs_f64();
+            let duration = __autometrics_start.elapsed().as_secs_f64();
             #track_metrics
 
             ret
         }
     })
+}
+
+fn make_prometheus_url(base_url: &str, query: &str) -> String {
+    format!(
+        "{base_url}/graph?g0.expr={}&g0.tab=0",
+        urlencoding::encode(query)
+    )
 }
 
 // Copied from tracing-attributes
@@ -225,23 +233,6 @@ struct StrArg<T> {
 }
 
 impl<T: Parse> Parse for StrArg<T> {
-    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
-        let _ = input.parse::<T>()?;
-        let _ = input.parse::<Token![=]>()?;
-        let value = input.parse()?;
-        Ok(Self {
-            value,
-            _p: std::marker::PhantomData,
-        })
-    }
-}
-
-struct ExprArg<T> {
-    value: Expr,
-    _p: std::marker::PhantomData<T>,
-}
-
-impl<T: Parse> Parse for ExprArg<T> {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let _ = input.parse::<T>()?;
         let _ = input.parse::<Token![=]>()?;
