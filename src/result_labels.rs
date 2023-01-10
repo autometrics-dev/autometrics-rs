@@ -27,3 +27,22 @@ pub trait GetLabels {
     }
 }
 impl<T> GetLabels for &T {}
+
+// Implement for primitives
+impl GetLabels for i8 {}
+impl GetLabels for i16 {}
+impl GetLabels for i32 {}
+impl GetLabels for i64 {}
+impl GetLabels for i128 {}
+impl GetLabels for isize {}
+impl GetLabels for u8 {}
+impl GetLabels for u16 {}
+impl GetLabels for u32 {}
+impl GetLabels for u64 {}
+impl GetLabels for u128 {}
+impl GetLabels for usize {}
+impl GetLabels for f32 {}
+impl GetLabels for f64 {}
+impl GetLabels for char {}
+impl GetLabels for bool {}
+impl GetLabels for () {}
