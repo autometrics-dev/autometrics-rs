@@ -5,7 +5,8 @@ use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::HashMap, fmt, fs, path::PathBuf};
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, spanned::Spanned, Error, Expr, ItemFn, LitStr, Result, Token};
+use syn::{parse_macro_input, spanned::Spanned, Error, ItemFn, LitStr, Result, Token};
+use url::Url;
 
 // TODO it would probably be better if this ended up in the directory of the main crate that's
 // being built rater than in the out directory of the metrics-attributes-macro crate
@@ -164,7 +165,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     // Add the metrics to the function documentation
     // TODO get the URL from somewhere else
     // let prometheus_url = "https://prometheus.studio.fiberplane.com";
-    let prometheus_url = "http://localhost:9090";
+    let prometheus_url = Url::parse("http://localhost:9090").unwrap();
     let function_label = format!("{{function=\"{function_name}\"}}");
     let request_rate = format!("sum(rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
@@ -219,11 +220,14 @@ This function has the following metrics associated with it:
     })
 }
 
-fn make_prometheus_url(base_url: &str, query: &str) -> String {
-    format!(
-        "{base_url}/graph?g0.expr={}&g0.tab=0",
-        urlencoding::encode(query)
-    )
+fn make_prometheus_url(url: &Url, query: &str) -> Url {
+    let mut url = url.clone();
+    url.set_path("graph");
+    let mut qs = url.query_pairs_mut();
+    qs.append_pair("g0.expr", query);
+    qs.append_pair("g0.tab", "0");
+    drop(qs);
+    url
 }
 
 // Copied from tracing-attributes
