@@ -164,20 +164,31 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
     // Add the metrics to the function documentation
     // TODO get the URL from somewhere else
     let prometheus_url = "https://prometheus.studio.fiberplane.com/graph?g0.expr=";
-    let request_rate = format!("sum (rate({counter_name}{{function=\"{function_name}\"}}[5m]))");
-    let request_rate = format!(
-        "[Request Rate]({prometheus_url}{})",
-        urlencoding::encode(&request_rate)
+    let request_rate = format!("sum(rate({counter_name}{{function=\"{function_name}\"}}[5m]))");
+    let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
+    let request_rate_doc = format!(
+        "- [Request Rate]({prometheus_url}{})",
+        urlencoding::encode(&request_rate_doc)
     );
+    let error_rate_doc = if args.infallible {
+        String::new()
+    } else {
+        let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
+sum(rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+        format!(
+            "\n- [Error Rate]({prometheus_url}{})",
+            urlencoding::encode(&error_rate)
+        )
+    };
     let docs = format!(
         "\n\n# Metrics
 
+View the live metrics for this function:
+{request_rate_doc}{error_rate_doc}
+
 This function has the following metrics associated with it:
 - `{counter_name}{{function=\"{function_name}\"}}`
-- `{histogram_name}{{function=\"{function_name}\"}}`
-
-Go directly to your production metrics:
-- {request_rate}",
+- `{histogram_name}{{function=\"{function_name}\"}}`",
     );
 
     // TODO generate doc comments that describe the related metrics

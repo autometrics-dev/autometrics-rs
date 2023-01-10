@@ -1,12 +1,12 @@
 use metrics_attributes::instrument;
 
-#[instrument(infallible, name = "handlers")]
+#[instrument(infallible, name = "util_function_call")]
 fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-/// The add two function
+/// "HTTP" handler function
 #[instrument]
-fn add2(a: i32, b: i32) -> std::fmt::Result {
-    Ok(())
+fn get_index_handler() -> Result<String, ()> {
+    Ok("Hello world!".to_string())
 }
