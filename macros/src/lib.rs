@@ -186,7 +186,11 @@ sum(rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {
     let latency = format!("sum(rate({histogram_name}{function_label}[5m]))");
     let latency = format!(
         "# 95th and 99th percentile latencies
-histogram_quantile(0.99, {latency}) or histogram_quantile(0.95, {latency})"
+# (Note this will calculate the latencies if the metric is exported as a histogram)
+histogram_quantile(0.99, {latency}) or
+histogram_quantile(0.95, {latency}) or
+# (This will show the latencies if the metric is exported as a summary)
+rate({histogram_name}{{function=\"{function_name}\",quantile=~\"0.95|0.99\"}}[5m])"
     );
     let latency_doc = format!(
         "- [Latency (95th and 99th percentiles)]({})",
