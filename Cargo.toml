@@ -1,9 +1,7 @@
 [package]
-name = "metrics-attributes"
+name = "autometrics"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
 default = ["metrics"]
@@ -11,7 +9,7 @@ default = ["metrics"]
 [dependencies]
 const_format = { version = "0.2.30", features = ["rust_1_51"] }
 metrics = { version = "0.20.1", optional = true }
-metrics-attributes-macros = { path = "./macros" }
+autometrics-macros = { path = "./macros" }
 
 [dev-dependencies]
 metrics-util = "0.14.0"

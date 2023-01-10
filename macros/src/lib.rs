@@ -27,14 +27,14 @@ static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
 const DEFAULT_METRIC_BASE_NAME: &str = "function_call";
 
 #[derive(Default)]
-struct InstrumentArgs {
+struct Args {
     name: Option<String>,
     infallible: bool,
 }
 
-impl Parse for InstrumentArgs {
+impl Parse for Args {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut args = InstrumentArgs::default();
+        let mut args = Args::default();
         while !input.is_empty() {
             let lookahead = input.lookahead1();
             if lookahead.peek(kw::name) {
@@ -61,14 +61,14 @@ impl Parse for InstrumentArgs {
 }
 
 #[proc_macro_attribute]
-pub fn instrument(
+pub fn autometrics(
     args: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let args = parse_macro_input!(args as InstrumentArgs);
+    let args = parse_macro_input!(args as Args);
     let item = parse_macro_input!(item as ItemFn);
 
-    let output = match instrument_inner(args, item) {
+    let output = match autometrics_inner(args, item) {
         Ok(output) => output,
         Err(err) => err.into_compile_error(),
     };
@@ -76,7 +76,7 @@ pub fn instrument(
     output.into()
 }
 
-fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
+fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let span = item.span();
     let sig = item.sig;
     let block = item.block;
@@ -142,7 +142,7 @@ fn instrument_inner(args: InstrumentArgs, item: ItemFn) -> Result<TokenStream> {
         }
     } else {
         quote! {
-            use metrics_attributes::__private::{GetLabels, GetLabelsFromResult, str_replace};
+            use autometrics::__private::{GetLabels, GetLabelsFromResult, str_replace};
             // Metric labels must use underscores as separators rather than colons.
             // The str_replace macro produces a static str rather than a String.
             // Note that we cannot determine the module path at macro expansion time
@@ -298,7 +298,7 @@ mod tests {
             }
         };
         let item: ItemFn = syn::parse2(item).unwrap();
-        let actual = instrument_inner(Default::default(), item).unwrap();
+        let actual = autometrics_inner(Default::default(), item).unwrap();
         let expected = quote! {
             pub fn add(a: i32, b: i32) -> i32 {
                 let __start_internal = ::std::time::Instant::now();
@@ -324,7 +324,7 @@ mod tests {
             }
         };
         let item: ItemFn = syn::parse2(item).unwrap();
-        let actual = instrument_inner(Default::default(), item).unwrap();
+        let actual = autometrics_inner(Default::default(), item).unwrap();
         let expected = quote! {
             async fn add(a: i32, b: i32) -> i32 {
                 let __start_internal = ::std::time::Instant::now();
@@ -354,7 +354,7 @@ mod tests {
             }
         };
         let item: ItemFn = syn::parse2(item).unwrap();
-        let actual = instrument_inner(Default::default(), item).unwrap();
+        let actual = autometrics_inner(Default::default(), item).unwrap();
         let expected = quote! {
             fn check_positive(num: i32) -> Result<(), ()> {
                 let __start_internal = ::std::time::Instant::now();

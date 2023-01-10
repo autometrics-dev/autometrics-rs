@@ -1,5 +1,5 @@
 [package]
-name = "metrics-attributes-macros"
+name = "autometrics-macros"
 version = "0.1.0"
 edition = "2021"
 

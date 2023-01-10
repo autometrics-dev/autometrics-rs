@@ -1,4 +1,4 @@
-pub use metrics_attributes_macros::instrument;
+pub use autometrics_macros::autometrics;
 mod result_labels;
 #[cfg(test)]
 mod tests;
