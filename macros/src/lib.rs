@@ -25,7 +25,7 @@ static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
 
     path
 });
-const DEFAULT_METRIC_BASE_NAME: &str = "function_call";
+const DEFAULT_METRIC_BASE_NAME: &str = "function";
 
 #[derive(Default)]
 struct Args {
@@ -99,8 +99,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     } else {
         DEFAULT_METRIC_BASE_NAME
     };
-    let counter_name = format!("{}_total", base_name);
-    let histogram_name = format!("{}_duration_seconds", base_name);
+    let histogram_name = format!("{base_name}_duration_seconds");
+    let counter_name = format!("{histogram_name}_count");
 
     // Write these metrics to a file
     // TODO we could be more efficient about this
@@ -139,7 +139,6 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let track_metrics = if args.infallible {
         quote! {
             metrics::histogram!(#histogram_name, duration, "function" => #function_name);
-            metrics::increment_counter!(#counter_name, "function" => #function_name);
         }
     } else {
         quote! {
@@ -154,10 +153,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
             // it's smart enough to figure out that only one branch will ever be hit for a given function
             if let Some(label) = ret.__metrics_attributes_get_result_label() {
                 metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path, "result" => label);
-                metrics::increment_counter!(#counter_name, "function" => #function_name, "module" => module_path, "result" => label);
             } else {
                 metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path);
-                metrics::increment_counter!(#counter_name, "function" => #function_name, "module" => module_path);
             }
         }
     };
