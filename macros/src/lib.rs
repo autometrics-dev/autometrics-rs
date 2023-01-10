@@ -164,7 +164,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     // Add the metrics to the function documentation
     // TODO get the URL from somewhere else
     let prometheus_url = "https://prometheus.studio.fiberplane.com/graph?g0.expr=";
-    let request_rate = format!("sum(rate({counter_name}{{function=\"{function_name}\"}}[5m]))");
+    let function_label = format!("{{function=\"{function_name}\"}}");
+    let request_rate = format!("sum(rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
     let request_rate_doc = format!(
         "- [Request Rate]({prometheus_url}{})",
@@ -174,24 +175,32 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         String::new()
     } else {
         let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
-sum(rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+sum(rate({counter_name}{function_label}[5m])) / {request_rate}");
         format!(
             "\n- [Error Rate]({prometheus_url}{})",
             urlencoding::encode(&error_rate)
         )
     };
+    let latency = format!("sum(rate({histogram_name}{function_label}[5m])");
+    let latency = format!(
+        "# 95th and 99th percentile latencies
+histogram_quantile(0.99, {latency}) or histogram_quantile(0.95, {latency})"
+    );
+    let latency_doc = format!(
+        "- [Latency (95th and 99th percentiles)]({prometheus_url}{})",
+        urlencoding::encode(&latency)
+    );
     let docs = format!(
         "\n\n# Metrics
 
 View the live metrics for this function:
 {request_rate_doc}{error_rate_doc}
+{latency_doc}
 
 This function has the following metrics associated with it:
 - `{counter_name}{{function=\"{function_name}\"}}`
 - `{histogram_name}{{function=\"{function_name}\"}}`",
     );
-
-    // TODO generate doc comments that describe the related metrics
 
     Ok(quote! {
         #(#attrs)*
