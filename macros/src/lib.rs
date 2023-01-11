@@ -104,6 +104,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     };
     let histogram_name = format!("{base_name}_duration_seconds");
     let counter_name = format!("{histogram_name}_count");
+    let bucket_name = format!("{histogram_name}_bucket");
 
     // Write these metrics to a file
     // TODO we could be more efficient about this
@@ -141,30 +142,33 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     // If the function is marked as infallible, we won't add the "result" label, otherwise we will
     let track_metrics = if args.infallible {
         quote! {
-            metrics::histogram!(#histogram_name, duration, "function" => #function_name);
-        }
-    } else {
-        quote! {
-            use autometrics::__private::{GetLabels, GetLabelsFromResult, str_replace};
+            use autometrics::__private::{Context, str_replace, histogram, labels};
             // Metric labels must use underscores as separators rather than colons.
             // The str_replace macro produces a static str rather than a String.
             // Note that we cannot determine the module path at macro expansion time
             // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
             let module_path = str_replace!(module_path!(), "::", "_");
+            histogram(#histogram_name).record(&Context::current(), duration, &labels(#function_name, module_path));
+        }
+    } else {
+        quote! {
+            use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, histogram, labels, labels_with_result, str_replace};
+            let module_path = str_replace!(module_path!(), "::", "_");
 
             // Note that the Rust compiler should optimize away this if/else statement because
             // it's smart enough to figure out that only one branch will ever be hit for a given function
             if let Some(label) = ret.__metrics_attributes_get_result_label() {
-                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path, "result" => label);
+                histogram(#histogram_name).record(&Context::current(), duration, &labels_with_result(#function_name, module_path, label));
             } else {
-                metrics::histogram!(#histogram_name, duration, "function" => #function_name, "module" => module_path);
+                histogram(#histogram_name).record(&Context::current(), duration, &labels(#function_name, module_path));
             }
         }
     };
 
     // Add the metrics to the function documentation
     let function_label = format!("{{function=\"{function_name}\"}}");
-    let request_rate = format!("sum by (module) (rate({counter_name}{function_label}[5m]))");
+    let request_rate =
+        format!("sum by (function, module) (rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
     let request_rate_doc = format!(
         "- [Request Rate]({})",
@@ -174,20 +178,18 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         String::new()
     } else {
         let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
-sum by (module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
         format!(
             "\n- [Error Rate]({})",
             make_prometheus_url(&prometheus_url, &error_rate)
         )
     };
-    let latency = format!("sum by (le, module) (rate({histogram_name}{function_label}[5m]))");
+    let latency =
+        format!("sum by (le, function, module) (rate({bucket_name}{function_label}[5m]))");
     let latency = format!(
         "# 95th and 99th percentile latencies
-# (Note this will calculate the latencies if the metric is exported as a histogram)
 histogram_quantile(0.99, {latency}) or
-histogram_quantile(0.95, {latency}) or
-# (This will show the latencies if the metric is exported as a summary)
-sum by (module, quantile) rate({histogram_name}{{function=\"{function_name}\",quantile=~\"0.95|0.99\"}}[5m])"
+histogram_quantile(0.95, {latency})"
     );
     let latency_doc = format!(
         "- [Latency (95th and 99th percentiles)]({})",
@@ -202,7 +204,7 @@ View the live metrics for this function:
 
 This function has the following metrics associated with it:
 - `{counter_name}{{function=\"{function_name}\"}}`
-- `{histogram_name}{{function=\"{function_name}\"}}`",
+- `{bucket_name}{{function=\"{function_name}\"}}`",
     );
 
     Ok(quote! {
@@ -213,8 +215,10 @@ This function has the following metrics associated with it:
 
             let ret = #maybe_async { #block } #maybe_await;
 
-            let duration = __autometrics_start.elapsed().as_secs_f64();
-            #track_metrics
+            {
+                let duration = __autometrics_start.elapsed().as_secs_f64();
+                #track_metrics
+            }
 
             ret
         }

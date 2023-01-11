@@ -3,14 +3,11 @@ name = "autometrics"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = ["metrics"]
-
 [dependencies]
-const_format = { version = "0.2.30", features = ["rust_1_51"] }
-metrics = { version = "0.20.1", optional = true }
 autometrics-macros = { path = "./macros" }
+const_format = { version = "0.2.30", features = ["rust_1_51"] }
+opentelemetry = { version = "0.18.0", features = ["metrics"] }
 
 [dev-dependencies]
-metrics-util = "0.14.0"
 mockall = "0.11.3"
+opentelemetry-prometheus = { version = "*", features = ["prometheus-encoding"] }
