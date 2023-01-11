@@ -164,7 +164,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     // let prometheus_url = "https://prometheus.studio.fiberplane.com";
     let prometheus_url = Url::parse("http://localhost:9090").unwrap();
     let function_label = format!("{{function=\"{function_name}\"}}");
-    let request_rate = format!("sum(rate({counter_name}{function_label}[5m]))");
+    let request_rate = format!("sum by (module) (rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
     let request_rate_doc = format!(
         "- [Request Rate]({})",
@@ -174,13 +174,13 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         String::new()
     } else {
         let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
-sum(rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+sum by (module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
         format!(
             "\n- [Error Rate]({})",
             make_prometheus_url(&prometheus_url, &error_rate)
         )
     };
-    let latency = format!("sum(rate({histogram_name}{function_label}[5m]))");
+    let latency = format!("sum by (le, module) (rate({histogram_name}{function_label}[5m]))");
     let latency = format!(
         "# 95th and 99th percentile latencies
 # (Note this will calculate the latencies if the metric is exported as a histogram)
@@ -194,7 +194,7 @@ rate({histogram_name}{{function=\"{function_name}\",quantile=~\"0.95|0.99\"}}[5m
         make_prometheus_url(&prometheus_url, &latency)
     );
     let docs = format!(
-        "\n\n# Metrics
+        "\n\n## Metrics
 
 View the live metrics for this function:
 {request_rate_doc}{error_rate_doc}
