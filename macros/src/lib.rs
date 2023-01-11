@@ -3,10 +3,9 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::{collections::HashMap, fmt, fs, path::PathBuf};
+use std::{collections::HashMap, env, fmt, fs, path::PathBuf};
 use syn::parse::{Parse, ParseStream};
 use syn::{parse_macro_input, spanned::Spanned, Error, ItemFn, LitStr, Result, Token};
-use url::Url;
 
 // TODO it would probably be better if this ended up in the directory of the main crate that's
 // being built rater than in the out directory of the metrics-attributes-macro crate
@@ -26,6 +25,7 @@ static METRICS_FILE: Lazy<PathBuf> = Lazy::new(|| {
     path
 });
 const DEFAULT_METRIC_BASE_NAME: &str = "function";
+const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 
 #[derive(Default)]
 struct Args {
@@ -83,6 +83,9 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let block = item.block;
     let vis = item.vis;
     let attrs = item.attrs;
+
+    let prometheus_url =
+        env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
     // If the function is async we need to add a .await after the block
     let (maybe_async, maybe_await) = if sig.asyncness.is_some() {
@@ -160,9 +163,6 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     };
 
     // Add the metrics to the function documentation
-    // TODO get the URL from somewhere else
-    // let prometheus_url = "https://prometheus.studio.fiberplane.com";
-    let prometheus_url = Url::parse("http://localhost:9090").unwrap();
     let function_label = format!("{{function=\"{function_name}\"}}");
     let request_rate = format!("sum by (module) (rate({counter_name}{function_label}[5m]))");
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
@@ -187,7 +187,7 @@ sum by (module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\
 histogram_quantile(0.99, {latency}) or
 histogram_quantile(0.95, {latency}) or
 # (This will show the latencies if the metric is exported as a summary)
-rate({histogram_name}{{function=\"{function_name}\",quantile=~\"0.95|0.99\"}}[5m])"
+sum by (module, quantile) rate({histogram_name}{{function=\"{function_name}\",quantile=~\"0.95|0.99\"}}[5m])"
     );
     let latency_doc = format!(
         "- [Latency (95th and 99th percentiles)]({})",
@@ -221,13 +221,14 @@ This function has the following metrics associated with it:
     })
 }
 
-fn make_prometheus_url(url: &Url, query: &str) -> Url {
-    let mut url = url.clone();
-    url.set_path("graph");
-    let mut qs = url.query_pairs_mut();
-    qs.append_pair("g0.expr", query);
-    qs.append_pair("g0.tab", "0");
-    drop(qs);
+fn make_prometheus_url(url: &str, query: &str) -> String {
+    let mut url = url.to_string();
+    if !url.ends_with('/') {
+        url.push('/');
+    }
+    url.push_str("graph?g0.expr=");
+    url.push_str(&urlencoding::encode(query));
+    url.push_str("&g0.tab=0");
     url
 }
 
