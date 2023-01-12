@@ -116,7 +116,7 @@ fn create_metrics_docs(prometheus_url: &str, histogram_name: &str, function_name
     let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
 sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
     let error_rate_doc = format!(
-        "\n- [Error Rate]({})",
+        "- [Error Rate]({})",
         make_prometheus_url(&prometheus_url, &error_rate)
     );
 
@@ -135,10 +135,13 @@ histogram_quantile(0.95, {latency})"
 
     // Create the RustDoc string
     format!(
-        "\n\n## Metrics
+        "\n\n---
+
+## Autometrics
 
 View the live metrics for this function:
-{request_rate_doc}{error_rate_doc}
+{request_rate_doc}
+{error_rate_doc}
 {latency_doc}
 
 This function has the following metrics associated with it:
