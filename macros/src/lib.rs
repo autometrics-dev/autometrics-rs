@@ -51,29 +51,52 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         DEFAULT_METRIC_BASE_NAME
     };
     let histogram_name = format!("{base_name}_duration_seconds");
+    let gauge_name = format!("{base_name}_concurrent_calls");
+
+    let setup = quote! {
+        let __autometrics_start = ::std::time::Instant::now();
+
+        let __autometrics_concurrency_tracker = {
+            use autometrics::__private::{create_labels, create_concurrency_tracker, str_replace};
+
+            // Metric labels must use underscores as separators rather than colons.
+            // The str_replace macro produces a static str rather than a String.
+            // Note that we cannot determine the module path at macro expansion time
+            // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
+            let module_label = str_replace!(module_path!(), "::", "_");
+            let labels = create_labels(#function_name, module_label);
+
+            // This increments a gauge and decrements the gauge again when the return value is dropped
+            create_concurrency_tracker(#gauge_name, labels)
+        };
+    };
 
     let track_metrics = quote! {
-        use autometrics::__private::{Context, create_labels, create_labels_with_result, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
+        {
+            use autometrics::__private::{Context, create_labels, create_labels_with_result, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
 
-        // Metric labels must use underscores as separators rather than colons.
-        // The str_replace macro produces a static str rather than a String.
-        // Note that we cannot determine the module path at macro expansion time
-        // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
-        let module_path = str_replace!(module_path!(), "::", "_");
+            let module_label = str_replace!(module_path!(), "::", "_");
+            let context = Context::current();
+            let duration = __autometrics_start.elapsed().as_secs_f64();
 
-        let histogram = register_histogram(#histogram_name);
-        let context = Context::current();
+            let histogram = register_histogram(#histogram_name);
 
-        // Note that the Rust compiler should optimize away this if/else statement because
-        // it's smart enough to figure out that only one branch will ever be hit for a given function
-        if let Some(result) = ret.__metrics_attributes_get_result_label() {
-            histogram.record(&context, duration, &create_labels_with_result(#function_name, module_path, result));
-        } else {
-            histogram.record(&context, duration, &create_labels(#function_name, module_path));
+            // Note that the Rust compiler should optimize away this if/else statement because
+            // it's smart enough to figure out that only one branch will ever be hit for a given function
+            if let Some(result) = ret.__metrics_attributes_get_result_label() {
+                histogram.record(&context, duration, &create_labels_with_result(#function_name, module_label, result));
+            } else {
+                histogram.record(&context, duration, &create_labels(#function_name, module_label));
+            }
         }
     };
 
-    let metrics_docs = create_metrics_docs(&prometheus_url, &histogram_name, &function_name);
+    let metrics_docs = create_metrics_docs(
+        &prometheus_url,
+        &histogram_name,
+        &gauge_name,
+        &function_name,
+    );
 
     Ok(quote! {
         #(#attrs)*
@@ -82,14 +105,11 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         #[doc=#metrics_docs]
 
         #vis #sig {
-            let __autometrics_start = ::std::time::Instant::now();
+            #setup
 
             let ret = #maybe_async { #block } #maybe_await;
 
-            {
-                let duration = __autometrics_start.elapsed().as_secs_f64();
-                #track_metrics
-            }
+            #track_metrics
 
             ret
         }
@@ -98,7 +118,12 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
 /// Create Prometheus queries for the generated metric and
 /// package them up into a RustDoc string
-fn create_metrics_docs(prometheus_url: &str, histogram_name: &str, function_name: &str) -> String {
+fn create_metrics_docs(
+    prometheus_url: &str,
+    histogram_name: &str,
+    gauge_name: &str,
+    function_name: &str,
+) -> String {
     let counter_name = format!("{histogram_name}_count");
     let bucket_name = format!("{histogram_name}_bucket");
     let function_label = format!("{{function=\"{function_name}\"}}");
@@ -106,7 +131,9 @@ fn create_metrics_docs(prometheus_url: &str, histogram_name: &str, function_name
     // Request rate
     let request_rate =
         format!("sum by (function, module) (rate({counter_name}{function_label}[5m]))");
-    let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows\n{request_rate}");
+    let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows
+
+{request_rate}");
     let request_rate_doc = format!(
         "- [Request Rate]({})",
         make_prometheus_url(&prometheus_url, &request_rate_doc)
@@ -114,6 +141,7 @@ fn create_metrics_docs(prometheus_url: &str, histogram_name: &str, function_name
 
     // Error rate
     let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
+
 sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
     let error_rate_doc = format!(
         "- [Error Rate]({})",
@@ -133,6 +161,17 @@ histogram_quantile(0.95, {latency})"
         make_prometheus_url(&prometheus_url, &latency)
     );
 
+    // Concurrent calls
+    let concurrent_calls = format!(
+        "# Average number of concurrent requests over the given time period
+
+sum by (function, module) (avg_over_time({gauge_name}{function_label}[5m]))"
+    );
+    let concurrent_calls_doc = format!(
+        "- [Concurrent calls]({})",
+        make_prometheus_url(&prometheus_url, &concurrent_calls)
+    );
+
     // Create the RustDoc string
     format!(
         "\n\n---
@@ -143,10 +182,12 @@ View the live metrics for this function:
 {request_rate_doc}
 {error_rate_doc}
 {latency_doc}
+{concurrent_calls_doc}
 
 This function has the following metrics associated with it:
-- `{counter_name}{{function=\"{function_name}\"}}`
-- `{bucket_name}{{function=\"{function_name}\"}}`",
+- `{counter_name}{function_label}`
+- `{bucket_name}{function_label}`
+- `{gauge_name}{function_label}`"
     )
 }
 
