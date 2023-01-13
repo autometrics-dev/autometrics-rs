@@ -163,9 +163,9 @@ histogram_quantile(0.95, {latency})"
 
     // Concurrent calls
     let concurrent_calls = format!(
-        "# Average number of concurrent requests over the given time period
+        "# Concurrent calls to the `{function_name}` function
 
-sum by (function, module) (avg_over_time({gauge_name}{function_label}[5m]))"
+{gauge_name}{function_label}"
     );
     let concurrent_calls_doc = format!(
         "- [Concurrent calls]({})",

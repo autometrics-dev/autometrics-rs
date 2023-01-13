@@ -19,6 +19,7 @@ pub mod __private {
             .init()
     }
 
+    /// Increment the gauge by 1 and then decrement it again when the returned value is dropped
     pub fn create_concurrency_tracker(name: &'static str, labels: [KeyValue; 2]) -> GaugeGuard {
         let counter = global::meter("")
             .i64_up_down_counter(name)
