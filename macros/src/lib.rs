@@ -165,7 +165,7 @@ histogram_quantile(0.95, {latency})"
     let concurrent_calls = format!(
         "# Concurrent calls to the `{function_name}` function
 
-{gauge_name}{function_label}"
+sum by (function, module) {gauge_name}{function_label}"
     );
     let concurrent_calls_doc = format!(
         "- [Concurrent calls]({})",
