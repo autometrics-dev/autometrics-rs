@@ -73,21 +73,14 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
     let track_metrics = quote! {
         {
-            use autometrics::__private::{Context, create_labels, create_labels_with_result, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
+            use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
 
-            let module_label = str_replace!(module_path!(), "::", "_");
-            let context = Context::current();
             let duration = __autometrics_start.elapsed().as_secs_f64();
 
+            let module_label = str_replace!(module_path!(), "::", "_");
+            let labels = ret.__autometrics_get_labels(#function_name, module_label);
             let histogram = register_histogram(#histogram_name);
-
-            // Note that the Rust compiler should optimize away this if/else statement because
-            // it's smart enough to figure out that only one branch will ever be hit for a given function
-            if let Some(result) = ret.__metrics_attributes_get_result_label() {
-                histogram.record(&context, duration, &create_labels_with_result(#function_name, module_label, result));
-            } else {
-                histogram.record(&context, duration, &create_labels(#function_name, module_label));
-            }
+            histogram.record(&Context::current(), duration, &labels);
         }
     };
 

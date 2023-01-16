@@ -1,4 +1,4 @@
-mod result_labels;
+mod labels;
 
 pub use autometrics_macros::autometrics;
 
@@ -6,9 +6,9 @@ pub use autometrics_macros::autometrics;
 #[doc(hidden)]
 pub mod __private {
     use opentelemetry::metrics::{Histogram, UpDownCounter};
-    use opentelemetry::{global, Key, KeyValue, Value};
+    use opentelemetry::{global, KeyValue};
 
-    pub use crate::result_labels::*;
+    pub use crate::labels::*;
     pub use const_format::str_replace;
     pub use opentelemetry::Context;
 
@@ -46,39 +46,5 @@ pub mod __private {
         fn drop(&mut self) {
             self.counter.add(&self.context, -1, &self.labels);
         }
-    }
-
-    pub fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
-        [
-            KeyValue {
-                key: Key::from_static_str("function"),
-                value: Value::String(function_name.into()),
-            },
-            KeyValue {
-                key: Key::from_static_str("module"),
-                value: Value::String(module.into()),
-            },
-        ]
-    }
-
-    pub fn create_labels_with_result(
-        function_name: &'static str,
-        module: &'static str,
-        result: &'static str,
-    ) -> [KeyValue; 3] {
-        [
-            KeyValue {
-                key: Key::from_static_str("function"),
-                value: Value::String(function_name.into()),
-            },
-            KeyValue {
-                key: Key::from_static_str("module"),
-                value: Value::String(module.into()),
-            },
-            KeyValue {
-                key: Key::from_static_str("result"),
-                value: Value::String(result.into()),
-            },
-        ]
     }
 }
