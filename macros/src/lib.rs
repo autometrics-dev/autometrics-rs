@@ -9,9 +9,20 @@ mod parse;
 const DEFAULT_METRIC_BASE_NAME: &str = "function";
 const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 
+/// # Autometrics
+///
 /// Autometrics instruments your functions with automatically generated metrics
 /// and writes Prometheus queries for you, making it easy for you to observe and
 /// understand how your system performs in production.
+///
+/// By default, Autometrics uses a histogram and a gauge to track
+/// the request rate, error rate, latency, and concurrent calls to each instrumented function.
+///
+/// It attaches the following labels:
+/// - `function` - the name of the function
+/// - `module` - the module path of the function (with `::` replaced by `_`)
+/// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
+/// - (optional) `ok`/`error` - if the inner type implements `Into<&'static str>`, that value will be used as this label's value
 #[proc_macro_attribute]
 pub fn autometrics(
     args: proc_macro::TokenStream,

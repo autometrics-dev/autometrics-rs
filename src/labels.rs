@@ -59,7 +59,7 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
         if let Some(value) = value_as_static_str {
             let value_label = KeyValue {
                 key: Key::from_static_str(result),
-                value: Value::String(value.into()),
+                value: Value::String(snake_case(value).into()),
             };
             LabelArray::Four([function_label, module_label, result_label, value_label])
         } else {
@@ -153,3 +153,28 @@ impl GetStaticStr for f64 {}
 impl GetStaticStr for char {}
 impl GetStaticStr for bool {}
 impl GetStaticStr for () {}
+
+// Copied from https://github.com/SkylerLipthay/case/blob/33ef733c5e6da8d0898ff17e125cd3b9c086bcf0/src/lib.rs#L144-L162
+fn snake_case(string: &str) -> String {
+    // The first character is never prepended with an underscore, so skip it even if it is an
+    // uppercase ASCII character.
+    let underscore_count = string
+        .chars()
+        .skip(1)
+        .filter(|&c| c.is_ascii_uppercase())
+        .count();
+    let mut result = String::with_capacity(string.len() + underscore_count);
+
+    for (i, c) in string.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if i != 0 {
+                result.push('_');
+            }
+            result.push(c.to_ascii_lowercase());
+        } else {
+            result.push(c);
+        }
+    }
+
+    result
+}
