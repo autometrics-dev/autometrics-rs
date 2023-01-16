@@ -75,11 +75,10 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         {
             use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
 
-            let duration = __autometrics_start.elapsed().as_secs_f64();
-
             let module_label = str_replace!(module_path!(), "::", "_");
             let labels = ret.__autometrics_get_labels(#function_name, module_label);
             let histogram = register_histogram(#histogram_name);
+            let duration = __autometrics_start.elapsed().as_secs_f64();
             histogram.record(&Context::current(), duration, &labels);
         }
     };
