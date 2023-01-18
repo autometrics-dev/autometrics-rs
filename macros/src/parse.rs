@@ -1,14 +1,18 @@
+use proc_macro2::Span;
 use syn::parse::{Parse, ParseStream};
 use syn::{Error, LitStr, Result, Token};
 
-#[derive(Default)]
 pub(crate) struct Args {
     pub name: Option<String>,
+    pub span: Span,
 }
 
 impl Parse for Args {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut args = Args::default();
+        let mut args = Args {
+            name: None,
+            span: input.span(),
+        };
         while !input.is_empty() {
             let lookahead = input.lookahead1();
             if lookahead.peek(kw::name) {

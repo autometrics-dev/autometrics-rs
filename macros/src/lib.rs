@@ -1,8 +1,10 @@
 use crate::parse::Args;
+use base64::engine::{general_purpose::URL_SAFE_NO_PAD as BASE64, Engine};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ItemFn, Result};
+use syn::{parse_macro_input, Error, ItemFn, Result};
+use url::Url;
 
 mod parse;
 
@@ -55,6 +57,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     // The PROMETHEUS_URL can be configured by passing the environment variable during build time
     let prometheus_url =
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
+    let prometheus_url = Url::parse(&prometheus_url)
+        .map_err(|e| Error::new(args.span, format!("Invalid PROMETHEUS_URL: {:?}", e)))?;
 
     let base_name = if let Some(name) = &args.name {
         name.as_str()
@@ -94,12 +98,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         }
     };
 
-    let metrics_docs = create_metrics_docs(
-        &prometheus_url,
-        &histogram_name,
-        &gauge_name,
-        &function_name,
-    );
+    let metrics_docs =
+        create_metrics_docs(prometheus_url, &histogram_name, &gauge_name, &function_name);
 
     Ok(quote! {
         #(#attrs)*
@@ -122,7 +122,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 /// Create Prometheus queries for the generated metric and
 /// package them up into a RustDoc string
 fn create_metrics_docs(
-    prometheus_url: &str,
+    prometheus_url: Url,
     histogram_name: &str,
     gauge_name: &str,
     function_name: &str,
@@ -137,19 +137,23 @@ fn create_metrics_docs(
     let request_rate_doc = format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows
 
 {request_rate}");
-    let request_rate_doc = format!(
-        "- [Request Rate]({})",
-        make_prometheus_url(&prometheus_url, &request_rate_doc)
-    );
+    let request_rate_doc =
+        make_prometheus_link_and_preview(prometheus_url.clone(), &request_rate_doc, "Request Rate");
+    // let request_rate_doc = format!(
+    // "[Request Rate ![Request Rate]({url})]({url})",
+    // url = make_prometheus_url(&prometheus_url, &request_rate_doc)
+    // );
 
     // Error rate
     let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
 
 sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
-    let error_rate_doc = format!(
-        "- [Error Rate]({})",
-        make_prometheus_url(&prometheus_url, &error_rate)
-    );
+    let error_rate_doc =
+        make_prometheus_link_and_preview(prometheus_url.clone(), &error_rate, "Error Rate");
+    // let error_rate_doc = format!(
+    // "- [Error Rate]({})",
+    // make_prometheus_url(prometheus_url.clone(), &error_rate)
+    // );
 
     // Latency
     let latency =
@@ -159,9 +163,14 @@ sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",res
 histogram_quantile(0.99, {latency}) or
 histogram_quantile(0.95, {latency})"
     );
-    let latency_doc = format!(
-        "- [Latency (95th and 99th percentiles)]({})",
-        make_prometheus_url(&prometheus_url, &latency)
+    // let latency_doc = format!(
+    // "- [Latency (95th and 99th percentiles)]({})",
+    // make_prometheus_url(prometheus_url.clone(), &latency)
+    // );
+    let latency_doc = make_prometheus_link_and_preview(
+        prometheus_url.clone(),
+        &latency,
+        "Latency (95th and 99th percentiles)",
     );
 
     // Concurrent calls
@@ -170,10 +179,12 @@ histogram_quantile(0.95, {latency})"
 
 sum by (function, module) {gauge_name}{function_label}"
     );
-    let concurrent_calls_doc = format!(
-        "- [Concurrent calls]({})",
-        make_prometheus_url(&prometheus_url, &concurrent_calls)
-    );
+    // let concurrent_calls_doc = format!(
+    // "- [Concurrent calls]({})",
+    // make_prometheus_url(prometheus_url, &concurrent_calls)
+    // );
+    let concurrent_calls_doc =
+        make_prometheus_link_and_preview(prometheus_url, &concurrent_calls, "Concurrent Calls");
 
     // Create the RustDoc string
     format!(
@@ -182,26 +193,47 @@ sum by (function, module) {gauge_name}{function_label}"
 ## Autometrics
 
 View the live metrics for this function:
+
+<ul>
 {request_rate_doc}
 {error_rate_doc}
 {latency_doc}
 {concurrent_calls_doc}
-
-This function has the following metrics associated with it:
-- `{counter_name}{function_label}`
-- `{bucket_name}{function_label}`
-- `{gauge_name}{function_label}`"
+</ul>"
     )
 }
 
-fn make_prometheus_url(url: &str, query: &str) -> String {
-    let mut url = url.to_string();
-    if !url.ends_with('/') {
-        url.push('/');
+fn make_prometheus_url(mut url: Url, query: &str) -> String {
+    {
+        url.path_segments_mut().unwrap().push("graph");
     }
-    url.push_str("graph?g0.expr=");
-    url.push_str(&urlencoding::encode(query));
-    // Go straight to the graph tab
-    url.push_str("&g0.tab=0");
-    url
+    {
+        let mut qs = url.query_pairs_mut();
+        qs.append_pair("g0.expr", query);
+        qs.append_pair("g0.tab", "0");
+    }
+    url.to_string()
+}
+
+fn make_prometheus_link_and_preview(url: Url, query: &str, title: &str) -> String {
+    let host = url.host().unwrap();
+    let port = if let Some(port) = url.port() {
+        format!(":{port}")
+    } else {
+        String::new()
+    };
+    let query_url = make_prometheus_url(url.clone(), query);
+    let encoded = BASE64.encode(&query_url);
+    let image_url = format!("vscode-remote-resource://{host}{port}/render?url={encoded}");
+
+    format!(
+        "
+<li>
+    <a href=\"{query_url}\">
+        <div><b>{title}</b></div>
+        <div><img src=\"{image_url}\" width=\"400\" title=\"{title}\"/></div>
+    </a>
+</li>
+    "
+    )
 }

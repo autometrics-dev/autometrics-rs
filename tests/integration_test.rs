@@ -2,6 +2,7 @@ use autometrics::autometrics;
 use opentelemetry::sdk::export::metrics::aggregation;
 use opentelemetry::sdk::metrics::{controllers, processors, selectors};
 use opentelemetry_prometheus::{PrometheusExporter, TextEncoder};
+use strum::IntoStaticStr;
 
 fn init_meter() -> PrometheusExporter {
     let controller = controllers::basic(
@@ -14,6 +15,14 @@ fn init_meter() -> PrometheusExporter {
     .build();
 
     opentelemetry_prometheus::exporter(controller).init()
+}
+
+#[derive(IntoStaticStr)]
+#[strum(serialize_all = "snake_case")]
+enum Error {
+    BadRequest,
+    NotFound,
+    Other,
 }
 
 #[test]

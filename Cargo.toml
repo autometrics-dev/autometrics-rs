@@ -10,3 +10,4 @@ opentelemetry = { version = "0.18.0", features = ["metrics"] }
 
 [dev-dependencies]
 opentelemetry-prometheus = { version = "*", features = ["prometheus-encoding"] }
+strum = { version = "*", features = ["derive"] }
