@@ -62,8 +62,8 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     } else {
         DEFAULT_METRIC_BASE_NAME
     };
-    let histogram_name = format!("{base_name}_duration_seconds");
-    let gauge_name = format!("{base_name}_concurrent_calls");
+    let histogram_name = format!("{base_name}.calls.duration");
+    let gauge_name = format!("{base_name}.calls.concurrent");
 
     let setup = quote! {
         let __autometrics_start = ::std::time::Instant::now();
@@ -75,7 +75,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
             // The str_replace macro produces a static str rather than a String.
             // Note that we cannot determine the module path at macro expansion time
             // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
-            let module_label = str_replace!(module_path!(), "::", "_");
+            let module_label = str_replace!(module_path!(), "::", ".");
             let labels = create_labels(#function_name, module_label);
 
             // This increments a gauge and decrements the gauge again when the return value is dropped
@@ -87,7 +87,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         {
             use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
 
-            let module_label = str_replace!(module_path!(), "::", "_");
+            let module_label = str_replace!(module_path!(), "::", ".");
             let labels = ret.__autometrics_get_labels(#function_name, module_label);
             let histogram = register_histogram(#histogram_name);
             let duration = __autometrics_start.elapsed().as_secs_f64();
@@ -128,6 +128,8 @@ fn create_metrics_docs(
     gauge_name: &str,
     function_name: &str,
 ) -> String {
+    let histogram_name = to_prometheus_string(histogram_name);
+    let gauge_name = to_prometheus_string(gauge_name);
     let counter_name = format!("{histogram_name}_count");
     let bucket_name = format!("{histogram_name}_bucket");
     let function_label = format!("{{function=\"{function_name}\"}}");
@@ -187,12 +189,7 @@ View the live metrics for this function:
 {request_rate_doc}
 {error_rate_doc}
 {latency_doc}
-{concurrent_calls_doc}
-
-This function has the following metrics associated with it:
-- `{counter_name}{function_label}`
-- `{bucket_name}{function_label}`
-- `{gauge_name}{function_label}`"
+{concurrent_calls_doc}"
     )
 }
 
@@ -208,4 +205,11 @@ fn make_prometheus_url(url: &str, query: &str) -> String {
     // Go straight to the graph tab
     url.push_str("&g0.tab=0");
     url
+}
+
+fn to_prometheus_string(string: &str) -> String {
+    string
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect()
 }
