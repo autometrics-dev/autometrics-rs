@@ -1,4 +1,5 @@
 use crate::parse::Args;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
@@ -145,7 +146,8 @@ fn create_metrics_docs(
     // Error rate
     let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
 
-sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) /
+{request_rate}");
     let error_rate_doc = format!(
         "- [Error Rate]({})",
         make_prometheus_url(&prometheus_url, &error_rate)
@@ -196,11 +198,13 @@ This function has the following metrics associated with it:
 
 fn make_prometheus_url(url: &str, query: &str) -> String {
     let mut url = url.to_string();
+    let query = utf8_percent_encode(query, NON_ALPHANUMERIC).to_string();
+
     if !url.ends_with('/') {
         url.push('/');
     }
     url.push_str("graph?g0.expr=");
-    url.push_str(&urlencoding::encode(query));
+    url.push_str(&query);
     // Go straight to the graph tab
     url.push_str("&g0.tab=0");
     url
