@@ -1,4 +1,5 @@
 use crate::parse::Args;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
@@ -9,9 +10,20 @@ mod parse;
 const DEFAULT_METRIC_BASE_NAME: &str = "function";
 const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 
+/// # Autometrics
+///
 /// Autometrics instruments your functions with automatically generated metrics
 /// and writes Prometheus queries for you, making it easy for you to observe and
 /// understand how your system performs in production.
+///
+/// By default, Autometrics uses a histogram and a gauge to track
+/// the request rate, error rate, latency, and concurrent calls to each instrumented function.
+///
+/// It attaches the following labels:
+/// - `function` - the name of the function
+/// - `module` - the module path of the function (with `::` replaced by `_`)
+/// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
+/// - (optional) `ok`/`error` - if the inner type implements `Into<&'static str>`, that value will be used as this label's value
 #[proc_macro_attribute]
 pub fn autometrics(
     args: proc_macro::TokenStream,
@@ -73,21 +85,13 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
     let track_metrics = quote! {
         {
-            use autometrics::__private::{Context, create_labels, create_labels_with_result, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
+            use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
 
             let module_label = str_replace!(module_path!(), "::", "_");
-            let context = Context::current();
-            let duration = __autometrics_start.elapsed().as_secs_f64();
-
+            let labels = ret.__autometrics_get_labels(#function_name, module_label);
             let histogram = register_histogram(#histogram_name);
-
-            // Note that the Rust compiler should optimize away this if/else statement because
-            // it's smart enough to figure out that only one branch will ever be hit for a given function
-            if let Some(result) = ret.__metrics_attributes_get_result_label() {
-                histogram.record(&context, duration, &create_labels_with_result(#function_name, module_label, result));
-            } else {
-                histogram.record(&context, duration, &create_labels(#function_name, module_label));
-            }
+            let duration = __autometrics_start.elapsed().as_secs_f64();
+            histogram.record(&Context::current(), duration, &labels);
         }
     };
 
@@ -142,7 +146,8 @@ fn create_metrics_docs(
     // Error rate
     let error_rate = format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
 
-sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) / {request_rate}");
+sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) /
+{request_rate}");
     let error_rate_doc = format!(
         "- [Error Rate]({})",
         make_prometheus_url(&prometheus_url, &error_rate)
@@ -193,11 +198,13 @@ This function has the following metrics associated with it:
 
 fn make_prometheus_url(url: &str, query: &str) -> String {
     let mut url = url.to_string();
+    let query = utf8_percent_encode(query, NON_ALPHANUMERIC).to_string();
+
     if !url.ends_with('/') {
         url.push('/');
     }
     url.push_str("graph?g0.expr=");
-    url.push_str(&urlencoding::encode(query));
+    url.push_str(&query);
     // Go straight to the graph tab
     url.push_str("&g0.tab=0");
     url
