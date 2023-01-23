@@ -13,13 +13,31 @@ Autometrics currently generates the following queries for each instrumented func
 ## Example
 
 ```rust
-use autometrics::autometrics;
+use autometrics::{autometrics, global_metrics_exporter, encode_global_metrics};
+use axum::{routing::get, Router};
+use http::StatusCode;
 
 /// Example HTTP handler function
 #[autometrics]
 pub async fn get_index_handler(db: Database, request: Request<Body>) -> Result<String, ()> {
   let foo = db.load_something_important().await;
   Ok("It worked!".to_string())
+}
+
+/// Export the collected metrics in the Prometheus format
+pub fn get_metrics() -> (StatusCode, String) {
+  match encode_global_metrics() {
+    Ok(metrics) => (StatusCode::OK, metrics),
+    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+  }
+}
+
+pub fn main() {
+  let _exporter = global_metrics_exporter();
+
+  let app = Router::new()
+    .route("/", get(get_index_handler))
+    .route("/metrics", get(get_metrics));
 }
 ```
 
@@ -60,6 +78,34 @@ In the above example, functions that return `Result<_, MyError>` would have an a
 Autometrics only supports `&'static str`s as labels to avoid the footgun of attaching labels with too many possible values. The [Prometheus docs](https://prometheus.io/docs/practices/naming/#labels) explain why this is important in the following warning:
 
 > CAUTION: Remember that every unique combination of key-value label pairs represents a new time series, which can dramatically increase the amount of data stored. Do not use labels to store dimensions with high cardinality (many different label values), such as user IDs, email addresses, or other unbounded sets of values.
+
+## Exporting Prometheus Metrics
+
+Autometrics includes optional functions to help collect and prepare metrics to be collected by Prometheus.
+
+In your `Cargo.toml` file, enable the optional `prometheus-exporter` feature:
+
+```toml
+autometrics = { git = "ssh://git@github.com/fiberplane/autometrics-rs.git", branch = "main", features = ["prometheus-exporter"] }
+```
+
+Then, call the `global_metrics_exporter` function in your `main` function:
+```rust
+pub fn main() {
+  let _exporter = global_metrics_exporter();
+  // ...
+}
+```
+
+And create a route on your API (probably mounted under `/metrics`) that returns the following:
+```rust
+pub fn get_metrics() -> (StatusCode, String) {
+  match encode_global_metrics() {
+    Ok(metrics) => (StatusCode::OK, metrics),
+    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+  }
+}
+```
 
 ## Configuring
 

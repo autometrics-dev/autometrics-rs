@@ -1,5 +1,8 @@
 mod labels;
+mod prometheus;
 
+#[cfg(feature = "prometheus-exporter")]
+pub use self::prometheus::*;
 pub use autometrics_macros::autometrics;
 
 // Not public API.
