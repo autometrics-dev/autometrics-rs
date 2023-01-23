@@ -7,6 +7,7 @@ use prometheus::{Error, TextEncoder};
 const HISTOGRAM_BUCKETS: [f64; 10] = [
     10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 350.0, 500.0, 1000.0,
 ];
+static GLOBAL_EXPORTER: Lazy<PrometheusExporter> = Lazy::new(|| initialize_metrics_exporter());
 
 /// Initialize the global Prometheus metrics collector and exporter.
 ///
@@ -22,8 +23,8 @@ const HISTOGRAM_BUCKETS: [f64; 10] = [
 /// let _exporter = global_metrics_exporter();
 /// # }
 /// ```
-pub fn global_metrics_exporter() -> Lazy<PrometheusExporter> {
-    Lazy::new(|| initialize_metrics_exporter())
+pub fn global_metrics_exporter() -> PrometheusExporter {
+    GLOBAL_EXPORTER.clone()
 }
 
 /// Prometheus needs a metrics endpoint to scrape metrics from.
@@ -42,13 +43,12 @@ pub fn global_metrics_exporter() -> Lazy<PrometheusExporter> {
 /// }
 /// ```
 pub fn encode_global_metrics() -> Result<String, Error> {
-    let exporter = global_metrics_exporter();
-    let metric_families = exporter.registry().gather();
+    let metric_families = GLOBAL_EXPORTER.registry().gather();
     let encoder = TextEncoder::new();
     encoder.encode_to_string(&metric_families)
 }
 
-pub fn initialize_metrics_exporter() -> PrometheusExporter {
+fn initialize_metrics_exporter() -> PrometheusExporter {
     let controller = controllers::basic(
         processors::factory(
             selectors::simple::histogram(HISTOGRAM_BUCKETS),
