@@ -34,8 +34,11 @@ pub fn global_metrics_exporter() -> Lazy<PrometheusExporter> {
 /// For example, using Axum, you might have a handler:
 /// ```rust
 /// // Mounted at the route `/metrics`
-/// pub fn metrics_get() -> String {
-///   autometrics::encode_global_metrics().unwrap()
+/// pub fn metrics_get() -> (StatusCode, String) {
+///   match autometrics::encode_global_metrics() {
+///     Ok(metrics) => (StatusCode::OK, metrics),
+///     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+///   }
 /// }
 /// ```
 pub fn encode_global_metrics() -> Result<String, Error> {

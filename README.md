@@ -15,6 +15,7 @@ Autometrics currently generates the following queries for each instrumented func
 ```rust
 use autometrics::{autometrics, global_metrics_exporter, encode_global_metrics};
 use axum::{routing::get, Router};
+use http::StatusCode;
 
 /// Example HTTP handler function
 #[autometrics]
@@ -24,8 +25,11 @@ pub async fn get_index_handler(db: Database, request: Request<Body>) -> Result<S
 }
 
 /// Export the collected metrics in the Prometheus format
-pub fn get_metrics() -> String {
-  encode_global_metrics().unwrap()
+pub fn get_metrics() -> (StatusCode, String) {
+  match encode_global_metrics() {
+    Ok(metrics) => (StatusCode::OK, metrics),
+    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+  }
 }
 
 pub fn main() {
@@ -95,8 +99,11 @@ pub fn main() {
 
 And create a route on your API (probably mounted under `/metrics`) that returns the following:
 ```rust
-pub fn get_metrics() -> String {
-  encode_global_metrics().unwrap()
+pub fn get_metrics() -> (StatusCode, String) {
+  match encode_global_metrics() {
+    Ok(metrics) => (StatusCode::OK, metrics),
+    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+  }
 }
 ```
 
