@@ -3,10 +3,18 @@ name = "autometrics"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+prometheus-exporter = ["once_cell", "opentelemetry-prometheus", "prometheus"]
+
 [dependencies]
 autometrics-macros = { path = "./macros" }
 const_format = { version = "0.2.30", features = ["rust_1_51"] }
 opentelemetry = { version = "0.18.0", features = ["metrics"] }
+
+# Used for prometheus-exporter feature
+once_cell = { version = "1.17.0", optional = true }
+opentelemetry-prometheus = { version = "0.11.0", optional = true }
+prometheus = { version = "0.13.3", optional = true}
 
 [dev-dependencies]
 opentelemetry-prometheus = { version = "*", features = ["prometheus-encoding"] }
