@@ -4,7 +4,9 @@ use opentelemetry::sdk::metrics::{controllers, processors, selectors};
 use opentelemetry_prometheus::PrometheusExporter;
 use prometheus::{Error, TextEncoder};
 
-const HISTOGRAM_BUCKETS: [f64; 9] = [10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 500.0, 1000.0];
+const HISTOGRAM_BUCKETS: [f64; 10] = [
+    10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 350.0, 500.0, 1000.0,
+];
 
 /// Initialize the global Prometheus metrics collector and exporter.
 ///
