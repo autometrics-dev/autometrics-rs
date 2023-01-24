@@ -10,10 +10,16 @@ pub use autometrics_macros::autometrics;
 pub mod __private {
     use opentelemetry::metrics::{Counter, Histogram, UpDownCounter};
     use opentelemetry::{global, KeyValue};
+    use tokio::task_local;
 
     pub use crate::labels::*;
     pub use const_format::str_replace;
     pub use opentelemetry::Context;
+
+    task_local! {
+      /// Task-local value used for tracking which function called the current function
+      pub static CALLER: &'static str;
+    }
 
     pub fn register_counter(name: &'static str) -> Counter<f64> {
         global::meter("")

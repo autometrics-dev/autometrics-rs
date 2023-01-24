@@ -46,11 +46,19 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let vis = item.vis;
     let attrs = item.attrs;
     let function_name = sig.ident.to_string();
-    // If the function is async we need to add a .await after the block
-    let (maybe_async, maybe_await) = if sig.asyncness.is_some() {
-        (quote! { async move }, quote! { .await })
+    // Handle async functions
+    let block = if sig.asyncness.is_some() {
+        quote! {
+            autometrics::__private::CALLER.scope(#function_name, async move {
+                #block
+            }).await
+        }
     } else {
-        (TokenStream::new(), TokenStream::new())
+        quote! {
+            autometrics::__private::CALLER.sync_scope(#function_name, move || {
+                #block
+            })
+        }
     };
 
     // The PROMETHEUS_URL can be configured by passing the environment variable during build time
@@ -87,6 +95,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let track_metrics = quote! {
         {
             use autometrics::__private::{
+                CALLER,
                 Context,
                 create_labels,
                 GetLabels,
@@ -98,19 +107,19 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
             let module_label = str_replace!(module_path!(), "::", ".");
             let context = Context::current();
+            let duration = __autometrics_start.elapsed().as_secs_f64();
 
             // Track the function calls
-            let labels = ret.__autometrics_get_labels(#function_name, module_label);
-            let counter = register_counter(#function_name);
-            counter.add(&context, 1.0, &labels);
+            let counter_labels = ret.__autometrics_get_labels(#function_name, module_label, CALLER.get());
+            let counter = register_counter(#counter_name);
+            counter.add(&context, 1.0, &counter_labels);
 
             // Track the latency
-            let histogram = register_histogram(#histogram_name);
-            let duration = __autometrics_start.elapsed().as_secs_f64();
             // Histograms are more expensive than counters because they track every bucket
             // for every label combination, so we only use the function name and module labels for it
-            let labels = create_labels(#function_name, module_label);
-            histogram.record(&context, duration, &labels);
+            let histogram_labels = create_labels(#function_name, module_label);
+            let histogram = register_histogram(#histogram_name);
+            histogram.record(&context, duration, &histogram_labels);
         }
     };
 
@@ -131,7 +140,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         #vis #sig {
             #setup
 
-            let ret = #maybe_async { #block } #maybe_await;
+            let ret = #block;
 
             #track_metrics
 
