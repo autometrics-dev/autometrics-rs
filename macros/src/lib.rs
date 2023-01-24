@@ -16,7 +16,7 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// and writes Prometheus queries for you, making it easy for you to observe and
 /// understand how your system performs in production.
 ///
-/// By default, Autometrics uses a histogram and a gauge to track
+/// By default, Autometrics uses a counter, histogram, and a gauge to track
 /// the request rate, error rate, latency, and concurrent calls to each instrumented function.
 ///
 /// It attaches the following labels:
@@ -62,6 +62,7 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     } else {
         DEFAULT_METRIC_BASE_NAME
     };
+    let counter_name = format!("{base_name}.calls.count");
     let histogram_name = format!("{base_name}.calls.duration");
     let gauge_name = format!("{base_name}.calls.concurrent");
 
@@ -85,18 +86,37 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
     let track_metrics = quote! {
         {
-            use autometrics::__private::{Context, GetLabels, GetLabelsFromResult, register_histogram, str_replace};
+            use autometrics::__private::{
+                Context,
+                create_labels,
+                GetLabels,
+                GetLabelsFromResult,
+                register_counter,
+                register_histogram,
+                str_replace
+            };
 
             let module_label = str_replace!(module_path!(), "::", ".");
+            let context = Context::current();
+
+            // Track the function calls
             let labels = ret.__autometrics_get_labels(#function_name, module_label);
+            let counter = register_counter(#function_name);
+            counter.add(&context, 1.0, &labels);
+
+            // Track the latency
             let histogram = register_histogram(#histogram_name);
             let duration = __autometrics_start.elapsed().as_secs_f64();
-            histogram.record(&Context::current(), duration, &labels);
+            // Histograms are more expensive than counters because they track every bucket
+            // for every label combination, so we only use the function name and module labels for it
+            let labels = create_labels(#function_name, module_label);
+            histogram.record(&context, duration, &labels);
         }
     };
 
     let metrics_docs = create_metrics_docs(
         &prometheus_url,
+        &counter_name,
         &histogram_name,
         &gauge_name,
         &function_name,
@@ -124,13 +144,14 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 /// package them up into a RustDoc string
 fn create_metrics_docs(
     prometheus_url: &str,
+    counter_name: &str,
     histogram_name: &str,
     gauge_name: &str,
     function_name: &str,
 ) -> String {
+    let counter_name = to_prometheus_string(counter_name);
     let histogram_name = to_prometheus_string(histogram_name);
     let gauge_name = to_prometheus_string(gauge_name);
-    let counter_name = format!("{histogram_name}_count");
     let bucket_name = format!("{histogram_name}_bucket");
     let function_label = format!("{{function=\"{function_name}\"}}");
 
