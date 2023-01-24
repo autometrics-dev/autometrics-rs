@@ -8,17 +8,24 @@ pub use autometrics_macros::autometrics;
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
-    use opentelemetry::metrics::{Histogram, UpDownCounter};
+    use opentelemetry::metrics::{Counter, Histogram, UpDownCounter};
     use opentelemetry::{global, KeyValue};
 
     pub use crate::labels::*;
     pub use const_format::str_replace;
     pub use opentelemetry::Context;
 
+    pub fn register_counter(name: &'static str) -> Counter<f64> {
+        global::meter("")
+            .f64_counter(name)
+            .with_description("Autometrics counter for tracking function calls")
+            .init()
+    }
+
     pub fn register_histogram(name: &'static str) -> Histogram<f64> {
         global::meter("")
             .f64_histogram(name)
-            .with_description("Autometrics histogram for tracking function calls")
+            .with_description("Autometrics histogram for tracking function latency")
             .init()
     }
 
