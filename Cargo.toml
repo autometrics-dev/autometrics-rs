@@ -10,7 +10,6 @@ prometheus-exporter = ["once_cell", "opentelemetry-prometheus", "prometheus"]
 autometrics-macros = { path = "./macros" }
 const_format = { version = "0.2", features = ["rust_1_51"] }
 opentelemetry = { version = "0.18", features = ["metrics"] }
-tokio = { version = "1", features = ["rt"] }
 
 # Used for prometheus-exporter feature
 once_cell = { version = "1.17", optional = true }

@@ -1,5 +1,6 @@
 mod labels;
 mod prometheus;
+mod task_local;
 
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus::*;
@@ -8,10 +9,10 @@ pub use autometrics_macros::autometrics;
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
+    use crate::task_local::LocalKey;
     use opentelemetry::metrics::{Counter, Histogram, UpDownCounter};
     use opentelemetry::{global, KeyValue};
     use std::{cell::RefCell, thread_local};
-    use tokio::task::LocalKey;
 
     pub use crate::labels::*;
     pub use const_format::str_replace;
