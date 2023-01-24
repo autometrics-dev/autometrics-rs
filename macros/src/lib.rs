@@ -19,10 +19,13 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// By default, Autometrics uses a counter, histogram, and a gauge to track
 /// the request rate, error rate, latency, and concurrent calls to each instrumented function.
 ///
-/// It attaches the following labels:
+/// For all of the generated metrics, Autometrics attaches the following labels:
 /// - `function` - the name of the function
 /// - `module` - the module path of the function (with `::` replaced by `_`)
+///
+/// For the function call counter, Autometrics attaches these additional labels:
 /// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
+/// - `caller` - the name of the (autometrics-instrumented) function that called the current function
 /// - (optional) `ok`/`error` - if the inner type implements `Into<&'static str>`, that value will be used as this label's value
 #[proc_macro_attribute]
 pub fn autometrics(
@@ -46,8 +49,32 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
     let vis = item.vis;
     let attrs = item.attrs;
     let function_name = sig.ident.to_string();
-    // Handle async functions
-    let block = if sig.asyncness.is_some() {
+
+    // The PROMETHEUS_URL can be configured by passing the environment variable during build time
+    let prometheus_url =
+        env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
+
+    // Set up metric names
+    let base_name = if let Some(name) = &args.name {
+        name.as_str()
+    } else {
+        DEFAULT_METRIC_BASE_NAME
+    };
+    let counter_name = format!("{base_name}.calls.count");
+    let histogram_name = format!("{base_name}.calls.duration");
+    let gauge_name = format!("{base_name}.calls.concurrent");
+
+    // Build the documentation we'll add to the function's RustDocs
+    let metrics_docs = create_metrics_docs(
+        &prometheus_url,
+        &counter_name,
+        &histogram_name,
+        &gauge_name,
+        &function_name,
+    );
+
+    // Wrap the body of the original function, using a slightly different approach based on whether the function is async
+    let call_function = if sig.asyncness.is_some() {
         quote! {
             autometrics::__private::CALLER.scope(#function_name, async move {
                 #block
@@ -61,76 +88,6 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         }
     };
 
-    // The PROMETHEUS_URL can be configured by passing the environment variable during build time
-    let prometheus_url =
-        env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
-
-    let base_name = if let Some(name) = &args.name {
-        name.as_str()
-    } else {
-        DEFAULT_METRIC_BASE_NAME
-    };
-    let counter_name = format!("{base_name}.calls.count");
-    let histogram_name = format!("{base_name}.calls.duration");
-    let gauge_name = format!("{base_name}.calls.concurrent");
-
-    let setup = quote! {
-        let __autometrics_start = ::std::time::Instant::now();
-
-        let __autometrics_concurrency_tracker = {
-            use autometrics::__private::{create_labels, create_concurrency_tracker, str_replace};
-
-            // Metric labels must use underscores as separators rather than colons.
-            // The str_replace macro produces a static str rather than a String.
-            // Note that we cannot determine the module path at macro expansion time
-            // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
-            let module_label = str_replace!(module_path!(), "::", ".");
-            let labels = create_labels(#function_name, module_label);
-
-            // This increments a gauge and decrements the gauge again when the return value is dropped
-            create_concurrency_tracker(#gauge_name, labels)
-        };
-    };
-
-    let track_metrics = quote! {
-        {
-            use autometrics::__private::{
-                CALLER,
-                Context,
-                create_labels,
-                GetLabels,
-                GetLabelsFromResult,
-                register_counter,
-                register_histogram,
-                str_replace
-            };
-
-            let module_label = str_replace!(module_path!(), "::", ".");
-            let context = Context::current();
-            let duration = __autometrics_start.elapsed().as_secs_f64();
-
-            // Track the function calls
-            let counter_labels = ret.__autometrics_get_labels(#function_name, module_label, CALLER.get());
-            let counter = register_counter(#counter_name);
-            counter.add(&context, 1.0, &counter_labels);
-
-            // Track the latency
-            // Histograms are more expensive than counters because they track every bucket
-            // for every label combination, so we only use the function name and module labels for it
-            let histogram_labels = create_labels(#function_name, module_label);
-            let histogram = register_histogram(#histogram_name);
-            histogram.record(&context, duration, &histogram_labels);
-        }
-    };
-
-    let metrics_docs = create_metrics_docs(
-        &prometheus_url,
-        &counter_name,
-        &histogram_name,
-        &gauge_name,
-        &function_name,
-    );
-
     Ok(quote! {
         #(#attrs)*
 
@@ -138,11 +95,48 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         #[doc=#metrics_docs]
 
         #vis #sig {
-            #setup
+            // Time the function
+            let __autometrics_start = ::std::time::Instant::now();
 
-            let ret = #block;
+            // Track the number of concurrent requests (the gauge will be decremented when this value
+            // is dropped at the end of the function)
+            let __autometrics_concurrency_tracker = {
+                use autometrics::__private::{create_labels, create_concurrency_tracker, str_replace};
 
-            #track_metrics
+                // Note that we cannot determine the module path at macro expansion time
+                // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
+                let module_label = str_replace!(module_path!(), "::", ".");
+                let labels = create_labels(#function_name, module_label);
+
+                // This increments a gauge and decrements the gauge again when the return value is dropped
+                create_concurrency_tracker(#gauge_name, labels)
+            };
+
+            let ret = #call_function;
+
+            // Track the number of function calls
+            {
+                use autometrics::__private::{
+                    create_labels, register_counter, register_histogram, str_replace, Context, GetLabels,
+                    GetLabelsFromResult, CALLER,
+                };
+
+                let module_label = str_replace!(module_path!(), "::", ".");
+                let context = Context::current();
+                let duration = __autometrics_start.elapsed().as_secs_f64();
+
+                // Track the function calls
+                let counter_labels = ret.__autometrics_get_labels(#function_name, module_label, CALLER.get());
+                let counter = register_counter(#counter_name);
+                counter.add(&context, 1.0, &counter_labels);
+
+                // Track the latency
+                // Histograms are more expensive than counters because they track every bucket
+                // for every label combination, so we only use the function name and module labels for it
+                let histogram_labels = create_labels(#function_name, module_label);
+                let histogram = register_histogram(#histogram_name);
+                histogram.record(&context, duration, &histogram_labels);
+            }
 
             ret
         }
