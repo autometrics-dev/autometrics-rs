@@ -156,40 +156,52 @@ fn create_metrics_docs(
     let gauge_name = to_prometheus_string(gauge_name);
     let bucket_name = format!("{}_bucket", to_prometheus_string(histogram_name));
 
-    let request_rate = request_rate_query_with_comment(&counter_name, &function_name);
-    let request_rate_url = make_prometheus_url(&prometheus_url, &request_rate);
-    let request_rate_doc = format!("- [Request Rate]({request_rate_url})",);
+    let request_rate = request_rate_query(&counter_name, "function", &function_name);
+    let request_rate_url = make_prometheus_url(&prometheus_url, &request_rate, &format!("Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows"));
+    let callee_request_rate = request_rate_query(&counter_name, "caller", &function_name);
+    let callee_request_rate_url = make_prometheus_url(&prometheus_url, &callee_request_rate, &format!("Rate of calls to functions called by `{function_name}` per second, averaged over 5 minute windows"));
 
-    let error_ratio = &error_ratio_query(&counter_name, &function_name);
-    let error_ratio_url = make_prometheus_url(&prometheus_url, &error_ratio);
-    let error_ratio_doc = format!("- [Error Rate]({error_ratio_url})",);
+    let error_ratio = &error_ratio_query(&counter_name, "function", &function_name);
+    let error_ratio_url = make_prometheus_url(&prometheus_url, &error_ratio, &format!("Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows"));
+    let callee_error_ratio = &error_ratio_query(&counter_name, "caller", &function_name);
+    let callee_error_ratio_url = make_prometheus_url(&prometheus_url, &callee_error_ratio, &format!("Percentage of calls to functions called by `{function_name}` that return errors, averaged over 5 minute windows"));
 
-    let latency = latency_query(&bucket_name, &function_name);
-    let latency_url = make_prometheus_url(&prometheus_url, &latency);
-    let latency_doc = format!("- [Latency (95th and 99th percentiles)]({latency_url})",);
+    let latency = latency_query(&bucket_name, "function", &function_name);
+    let latency_url = make_prometheus_url(
+        &prometheus_url,
+        &latency,
+        &format!("95th and 99th percentile latencies for the `{function_name}` function"),
+    );
 
-    // Concurrent calls
-    let concurrent_calls = concurrent_calls_query(&gauge_name, &function_name);
-    let concurrent_calls_url = make_prometheus_url(&prometheus_url, &concurrent_calls);
-    let concurrent_calls_doc = format!("- [Concurrent calls]({concurrent_calls_url})",);
+    let concurrent_calls = concurrent_calls_query(&gauge_name, "function", &function_name);
+    let concurrent_calls_url = make_prometheus_url(
+        &prometheus_url,
+        &concurrent_calls,
+        &format!("Concurrent calls to the `{function_name}` function"),
+    );
 
-    // Create the RustDoc string
     format!(
         "\n\n---
 
 ## Autometrics
 
-View the live metrics for this function:
-{request_rate_doc}
-{error_ratio_doc}
-{latency_doc}
-{concurrent_calls_doc}"
+View the live metrics for the `{function_name}` function:
+- [Request Rate]({request_rate_url})
+- [Error Ratio]({error_ratio_url})
+- [Latency (95th and 99th percentiles)]({latency_url})
+- [Concurrent Calls]({concurrent_calls_url})
+
+Or, dig into the metrics of *functions called by* `{function_name}`:
+- [Request Rate]({callee_request_rate_url})
+- [Error Ratio]({callee_error_ratio_url})
+"
     )
 }
 
-fn make_prometheus_url(url: &str, query: &str) -> String {
+fn make_prometheus_url(url: &str, query: &str, comment: &str) -> String {
     let mut url = url.to_string();
-    let query = utf8_percent_encode(query, NON_ALPHANUMERIC).to_string();
+    let comment_and_query = format!("# {comment}\n\n{query}");
+    let query = utf8_percent_encode(&comment_and_query, NON_ALPHANUMERIC).to_string();
 
     if !url.ends_with('/') {
         url.push('/');
@@ -208,41 +220,26 @@ fn to_prometheus_string(string: &str) -> String {
         .collect()
 }
 
-fn request_rate_query(counter_name: &str, function_name: &str) -> String {
-    format!("sum by (function, module) (rate({counter_name}{{function=\"{function_name}\"}}[5m]))")
+fn request_rate_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
+    format!("sum by (function, module) (rate({counter_name}{{{label_key}=\"{label_value}\"}}[5m]))")
 }
 
-fn request_rate_query_with_comment(counter_name: &str, function_name: &str) -> String {
-    let request_rate = request_rate_query(counter_name, function_name);
-
-    format!("# Rate of calls to the `{function_name}` function per second, averaged over 5 minute windows
-
-
-{request_rate}")
+fn error_ratio_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
+    let request_rate = request_rate_query(counter_name, label_key, label_value);
+    format!("sum by (function, module) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"err\"}}[5m])) /
+{request_rate}", )
 }
 
-fn error_ratio_query(counter_name: &str, function_name: &str) -> String {
-    format!("# Percentage of calls to the `{function_name}` function that return errors, averaged over 5 minute windows
-
-sum by (function, module) (rate({counter_name}{{function=\"{function_name}\",result=\"err\"}}[5m])) /
-{}", request_rate_query(&counter_name, &function_name))
-}
-
-fn latency_query(bucket_name: &str, function_name: &str) -> String {
+fn latency_query(bucket_name: &str, label_key: &str, label_value: &str) -> String {
     let latency = format!(
-        "sum by (le, function, module) (rate({bucket_name}{{function=\"{function_name}\"}}[5m]))"
+        "sum by (le, function, module) (rate({bucket_name}{{{label_key}=\"{label_value}\"}}[5m]))"
     );
     format!(
-        "# 95th and 99th percentile latencies
-histogram_quantile(0.99, {latency}) or
+        "histogram_quantile(0.99, {latency}) or
 histogram_quantile(0.95, {latency})"
     )
 }
 
-fn concurrent_calls_query(gauge_name: &str, function_name: &str) -> String {
-    format!(
-        "# Concurrent calls to the `{function_name}` function
-
-sum by (function, module) {gauge_name}{{function=\"{function_name}\"}}"
-    )
+fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) -> String {
+    format!("sum by (function, module) {gauge_name}{{{label_key}=\"{label_value}\"}}")
 }
