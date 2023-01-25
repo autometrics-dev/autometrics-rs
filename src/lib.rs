@@ -1,7 +1,6 @@
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
 mod prometheus;
-#[cfg(not(feature = "tokio"))]
 mod task_local;
 mod tracker;
 
@@ -14,12 +13,8 @@ pub use autometrics_macros::autometrics;
 pub mod __private {
     use std::{cell::RefCell, thread_local};
 
-    #[cfg(not(feature = "tokio"))]
-    use crate::task_local::LocalKey;
-    #[cfg(feature = "tokio")]
-    use tokio::task::LocalKey;
-
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
+    use crate::task_local::LocalKey;
     pub use crate::tracker::AutometricsTracker;
     pub use const_format::str_replace;
 

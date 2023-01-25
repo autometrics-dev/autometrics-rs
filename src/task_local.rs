@@ -1,5 +1,4 @@
-// Copied from the tokio::task::LocalKey and included in case
-// someone does not want to include the tokio dependency with the `rt` feature:
+// Copied the implementation of tokio::task::LocalKey from here:
 // https://github.com/tokio-rs/tokio/blob/c90757f07a1b15d7e26a710003d8e98a83db1ffc/tokio/src/task/task_local.rs
 
 use std::cell::RefCell;
