@@ -6,7 +6,7 @@ It creates metrics for you and then offers customized Prometheus queries for you
 
 Autometrics currently generates the following queries for each instrumented function:
 - Request rate
-- Error rate
+- Error ratio
 - Latency (95th and 99th percentiles)
 - Concurrent requests
 

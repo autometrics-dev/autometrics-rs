@@ -3,6 +3,7 @@ use std::ops::Deref;
 
 const FUNCTION_KEY: Key = Key::from_static_str("function");
 const MODULE_KEY: Key = Key::from_static_str("module");
+const CALLER_KEY: Key = Key::from_static_str("caller");
 const RESULT_KEY: Key = Key::from_static_str("result");
 
 pub fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
@@ -31,11 +32,21 @@ pub fn create_labels(function_name: &'static str, module: &'static str) -> [KeyV
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
 pub trait GetLabelsFromResult {
-    fn __autometrics_get_labels(&self, function: &'static str, module: &'static str) -> LabelArray;
+    fn __autometrics_get_labels(
+        &self,
+        function: &'static str,
+        module: &'static str,
+        caller: &'static str,
+    ) -> LabelArray;
 }
 
 impl<T, E> GetLabelsFromResult for Result<T, E> {
-    fn __autometrics_get_labels(&self, function: &'static str, module: &'static str) -> LabelArray {
+    fn __autometrics_get_labels(
+        &self,
+        function: &'static str,
+        module: &'static str,
+        caller: &'static str,
+    ) -> LabelArray {
         let (result, value_as_static_str) = match self {
             Ok(ok) => ("ok", ok.__autometrics_static_str()),
             Err(err) => ("error", err.__autometrics_static_str()),
@@ -49,6 +60,10 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
             key: MODULE_KEY,
             value: Value::String(module.into()),
         };
+        let caller_label = KeyValue {
+            key: CALLER_KEY,
+            value: Value::String(caller.into()),
+        };
         let result_label = KeyValue {
             key: RESULT_KEY,
             value: Value::String(result.into()),
@@ -61,16 +76,22 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
                 key: Key::from_static_str(result),
                 value: Value::String(value.into()),
             };
-            LabelArray::Four([function_label, module_label, result_label, value_label])
+            LabelArray::Five([
+                function_label,
+                module_label,
+                caller_label,
+                result_label,
+                value_label,
+            ])
         } else {
-            LabelArray::Three([function_label, module_label, result_label])
+            LabelArray::Four([function_label, module_label, caller_label, result_label])
         }
     }
 }
 
 pub enum LabelArray {
-    Three([KeyValue; 3]),
     Four([KeyValue; 4]),
+    Five([KeyValue; 5]),
 }
 
 impl Deref for LabelArray {
@@ -78,8 +99,8 @@ impl Deref for LabelArray {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            LabelArray::Three(l) => l,
             LabelArray::Four(l) => l,
+            LabelArray::Five(l) => l,
         }
     }
 }
@@ -89,6 +110,7 @@ pub trait GetLabels {
         &self,
         function: &'static str,
         module: &'static str,
+        _caller: &'static str,
     ) -> [KeyValue; 2] {
         create_labels(function, module)
     }

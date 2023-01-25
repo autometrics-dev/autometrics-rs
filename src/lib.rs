@@ -1,5 +1,7 @@
 mod labels;
 mod prometheus;
+#[cfg(not(feature = "tokio"))]
+mod task_local;
 
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus::*;
@@ -10,10 +12,29 @@ pub use autometrics_macros::autometrics;
 pub mod __private {
     use opentelemetry::metrics::{Counter, Histogram, UpDownCounter};
     use opentelemetry::{global, KeyValue};
+    use std::{cell::RefCell, thread_local};
+
+    #[cfg(not(feature = "tokio"))]
+    use crate::task_local::LocalKey;
+    #[cfg(feature = "tokio")]
+    use tokio::task::LocalKey;
 
     pub use crate::labels::*;
     pub use const_format::str_replace;
     pub use opentelemetry::Context;
+
+    /// Task-local value used for tracking which function called the current function
+    pub static CALLER: LocalKey<&'static str> = {
+        // This does the same thing as the tokio::thread_local macro with the exception that
+        // it initializes the value with the empty string.
+        // The tokio macro does not allow you to get the value before setting it.
+        // However, in our case, we want it to simply return the empty string rather than panicking.
+        thread_local! {
+            static CALLER_KEY: RefCell<Option<&'static str>> = const { RefCell::new(Some("")) };
+        }
+
+        LocalKey { inner: CALLER_KEY }
+    };
 
     pub fn register_counter(name: &'static str) -> Counter<f64> {
         global::meter("")
