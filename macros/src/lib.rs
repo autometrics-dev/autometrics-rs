@@ -95,50 +95,25 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
         #[doc=#metrics_docs]
 
         #vis #sig {
-            // Time the function
-            let __autometrics_start = ::std::time::Instant::now();
-
-            // Track the number of concurrent requests (the gauge will be decremented when this value
-            // is dropped at the end of the function)
-            let __autometrics_concurrency_tracker = {
-                use autometrics::__private::{create_labels, create_concurrency_tracker, str_replace};
+            let __autometrics_tracker = {
+                use autometrics::__private::{AutometricsTracker, str_replace};
 
                 // Note that we cannot determine the module path at macro expansion time
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
-                let module_label = str_replace!(module_path!(), "::", ".");
-                let labels = create_labels(#function_name, module_label);
+                const module_label: &'static str = str_replace!(module_path!(), "::", ".");
 
-                // This increments a gauge and decrements the gauge again when the return value is dropped
-                create_concurrency_tracker(#gauge_name, labels)
+                AutometricsTracker::start(#function_name, module_label, #gauge_name)
             };
 
-            let ret = #call_function;
+            let result = #call_function;
 
-            // Track the number of function calls
             {
-                use autometrics::__private::{
-                    create_labels, register_counter, register_histogram, str_replace, Context, GetLabels,
-                    GetLabelsFromResult, CALLER,
-                };
-
-                let module_label = str_replace!(module_path!(), "::", ".");
-                let context = Context::current();
-                let duration = __autometrics_start.elapsed().as_secs_f64();
-
-                // Track the function calls
-                let counter_labels = ret.__autometrics_get_labels(#function_name, module_label, CALLER.get());
-                let counter = register_counter(#counter_name);
-                counter.add(&context, 1.0, &counter_labels);
-
-                // Track the latency
-                // Histograms are more expensive than counters because they track every bucket
-                // for every label combination, so we only use the function name and module labels for it
-                let histogram_labels = create_labels(#function_name, module_label);
-                let histogram = register_histogram(#histogram_name);
-                histogram.record(&context, duration, &histogram_labels);
+                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
+                let counter_labels = result.__autometrics_get_labels(__autometrics_tracker.function, __autometrics_tracker.module, CALLER.get());
+                __autometrics_tracker.finish(#histogram_name, #counter_name, &counter_labels);
             }
 
-            ret
+            result
         }
     })
 }

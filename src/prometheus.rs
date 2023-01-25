@@ -1,8 +1,8 @@
 use once_cell::sync::Lazy;
-use opentelemetry::sdk::export::metrics::aggregation;
-use opentelemetry::sdk::metrics::{controllers, processors, selectors};
-use opentelemetry_prometheus::PrometheusExporter;
-use prometheus::{Error, TextEncoder};
+use opentelemetry_prometheus::{exporter, PrometheusExporter};
+use opentelemetry_sdk::export::metrics::aggregation;
+use opentelemetry_sdk::metrics::{controllers, processors, selectors};
+use prometheus::{default_registry, Error, TextEncoder};
 
 const HISTOGRAM_BUCKETS: [f64; 10] = [
     10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 350.0, 500.0, 1000.0,
@@ -58,9 +58,8 @@ fn initialize_metrics_exporter() -> PrometheusExporter {
     )
     .build();
 
-    opentelemetry_prometheus::exporter(controller)
-        // Use the prometheus crate's default registry so it still works with custom
-        // metrics defined through the prometheus crate
-        .with_registry(prometheus::default_registry().clone())
-        .init()
+    // Use the prometheus crate's default registry so it still works with custom
+    // metrics defined through the prometheus crate
+    let registry = default_registry().clone();
+    exporter(controller).with_registry(registry).init()
 }

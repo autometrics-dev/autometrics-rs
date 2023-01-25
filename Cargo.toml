@@ -4,19 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["tokio"]
 prometheus-exporter = ["once_cell", "opentelemetry-prometheus", "prometheus"]
 
 [dependencies]
 autometrics-macros = { path = "./macros" }
 const_format = { version = "0.2", features = ["rust_1_51"] }
-opentelemetry = { version = "0.18", features = ["metrics"] }
-tokio = { version = "1", features = ["rt"], optional = true }
+opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"] }
+opentelemetry_sdk = { verison = "0.18", default-features = false, features = ["metrics"] }
 
 # Used for prometheus-exporter feature
 once_cell = { version = "1.17", optional = true }
 opentelemetry-prometheus = { version = "0.11", optional = true }
-prometheus = { version = "0.13", optional = true}
+prometheus = { version = "0.13", default-features = false, optional = true }
 
 [dev-dependencies]
 opentelemetry-prometheus = { version = "*", features = ["prometheus-encoding"] }
