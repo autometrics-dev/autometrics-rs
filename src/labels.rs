@@ -122,7 +122,20 @@ impl GetLabels for f32 {}
 impl GetLabels for f64 {}
 impl GetLabels for char {}
 impl GetLabels for bool {}
+impl GetLabels for str {}
 impl GetLabels for () {}
+impl<A> GetLabels for (A,) {}
+impl<A, B> GetLabels for (A, B) {}
+impl<A, B, C> GetLabels for (A, B, C) {}
+impl<A, B, C, D> GetLabels for (A, B, C, D) {}
+impl<A, B, C, D, E> GetLabels for (A, B, C, D, E) {}
+impl<A, B, C, D, E, F> GetLabels for (A, B, C, D, E, F) {}
+impl<A, B, C, D, E, F, G> GetLabels for (A, B, C, D, E, F, G) {}
+impl<A, B, C, D, E, F, G, H> GetLabels for (A, B, C, D, E, F, G, H) {}
+impl<A, B, C, D, E, F, G, H, I> GetLabels for (A, B, C, D, E, F, G, H, I) {}
+impl<A, B, C, D, E, F, G, H, I, J> GetLabels for (A, B, C, D, E, F, G, H, I, J) {}
+impl<A, B, C, D, E, F, G, H, I, J, K> GetLabels for (A, B, C, D, E, F, G, H, I, J, K) {}
+impl<A, B, C, D, E, F, G, H, I, J, K, L> GetLabels for (A, B, C, D, E, F, G, H, I, J, K, L) {}
 
 trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
@@ -161,7 +174,20 @@ impl GetStaticStr for f32 {}
 impl GetStaticStr for f64 {}
 impl GetStaticStr for char {}
 impl GetStaticStr for bool {}
+impl GetStaticStr for str {}
 impl GetStaticStr for () {}
+impl<A> GetStaticStr for (A,) {}
+impl<A, B> GetStaticStr for (A, B) {}
+impl<A, B, C> GetStaticStr for (A, B, C) {}
+impl<A, B, C, D> GetStaticStr for (A, B, C, D) {}
+impl<A, B, C, D, E> GetStaticStr for (A, B, C, D, E) {}
+impl<A, B, C, D, E, F> GetStaticStr for (A, B, C, D, E, F) {}
+impl<A, B, C, D, E, F, G> GetStaticStr for (A, B, C, D, E, F, G) {}
+impl<A, B, C, D, E, F, G, H> GetStaticStr for (A, B, C, D, E, F, G, H) {}
+impl<A, B, C, D, E, F, G, H, I> GetStaticStr for (A, B, C, D, E, F, G, H, I) {}
+impl<A, B, C, D, E, F, G, H, I, J> GetStaticStr for (A, B, C, D, E, F, G, H, I, J) {}
+impl<A, B, C, D, E, F, G, H, I, J, K> GetStaticStr for (A, B, C, D, E, F, G, H, I, J, K) {}
+impl<A, B, C, D, E, F, G, H, I, J, K, L> GetStaticStr for (A, B, C, D, E, F, G, H, I, J, K, L) {}
 
 pub(crate) fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
     [
