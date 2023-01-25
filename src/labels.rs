@@ -6,19 +6,6 @@ const MODULE_KEY: Key = Key::from_static_str("module");
 const CALLER_KEY: Key = Key::from_static_str("caller");
 const RESULT_KEY: Key = Key::from_static_str("result");
 
-pub fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
-    [
-        KeyValue {
-            key: FUNCTION_KEY,
-            value: Value::String(function_name.into()),
-        },
-        KeyValue {
-            key: MODULE_KEY,
-            value: Value::String(module.into()),
-        },
-    ]
-}
-
 // The following is a convoluted way to figure out if the return type resolves to a Result
 // or not. We cannot simply parse the code using syn to figure out if it's a Result
 // because syn doesn't do type resolution and thus would count any renamed version
@@ -137,7 +124,7 @@ impl GetLabels for char {}
 impl GetLabels for bool {}
 impl GetLabels for () {}
 
-pub trait GetStaticStrFromIntoStaticStr<'a> {
+trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
 }
 
@@ -150,7 +137,7 @@ where
     }
 }
 
-pub trait GetStaticStr {
+trait GetStaticStr {
     fn __autometrics_static_str(&self) -> Option<&'static str> {
         None
     }
@@ -175,3 +162,16 @@ impl GetStaticStr for f64 {}
 impl GetStaticStr for char {}
 impl GetStaticStr for bool {}
 impl GetStaticStr for () {}
+
+pub(crate) fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
+    [
+        KeyValue {
+            key: FUNCTION_KEY,
+            value: Value::String(function_name.into()),
+        },
+        KeyValue {
+            key: MODULE_KEY,
+            value: Value::String(module.into()),
+        },
+    ]
+}
