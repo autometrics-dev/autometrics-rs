@@ -11,10 +11,10 @@ pub use autometrics_macros::autometrics;
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
+    use crate::task_local::LocalKey;
     use std::{cell::RefCell, thread_local};
 
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
-    use crate::task_local::LocalKey;
     pub use crate::tracker::AutometricsTracker;
     pub use const_format::str_replace;
 
