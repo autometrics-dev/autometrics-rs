@@ -1,5 +1,5 @@
 use crate::labels::create_labels;
-use opentelemetry::{global, metrics::UpDownCounter, Context, KeyValue};
+use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::time::Instant;
 
 /// Tracks the number of function calls, concurrent calls, and latency

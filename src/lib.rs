@@ -1,4 +1,5 @@
 mod labels;
+#[cfg(feature = "prometheus-exporter")]
 mod prometheus;
 #[cfg(not(feature = "tokio"))]
 mod task_local;

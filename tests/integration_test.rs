@@ -1,7 +1,7 @@
 use autometrics::autometrics;
-use opentelemetry::sdk::export::metrics::aggregation;
-use opentelemetry::sdk::metrics::{controllers, processors, selectors};
 use opentelemetry_prometheus::{PrometheusExporter, TextEncoder};
+use opentelemetry_sdk::export::metrics::aggregation;
+use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 
 fn init_meter() -> PrometheusExporter {
     let controller = controllers::basic(

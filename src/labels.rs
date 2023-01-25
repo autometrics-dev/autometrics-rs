@@ -1,4 +1,4 @@
-use opentelemetry::{Key, KeyValue, Value};
+use opentelemetry_api::{Key, KeyValue, Value};
 use std::ops::Deref;
 
 const FUNCTION_KEY: Key = Key::from_static_str("function");
