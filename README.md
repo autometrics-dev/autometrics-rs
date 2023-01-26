@@ -1,6 +1,10 @@
 # Autometrics :chart_with_upwards_trend: :sparkles:
 > Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries.
 
+[![Documentation](https://docs.rs/autometrics/badge.svg)](https://docs.rs/autometrics)
+[![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
+[![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
+
 Metrics are powerful and relatively inexpensive, but they are still hard to use. Developers need to:
 - Think about what metrics we want to track and which metric type to use (counter, gauge... :sleep:)
 - Write PromQL or other query languages to get the data
