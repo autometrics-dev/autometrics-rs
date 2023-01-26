@@ -1,51 +1,55 @@
-# Autometrics
-> Understand your system easily using automatically generated metrics and pre-built Prometheus queries.
+# Autometrics :chart_with_upwards_trend: :sparkles:
+> Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries.
 
-Autometrics provides a macro for instrument functions throughout your code base.
-It creates metrics for you and then offers customized Prometheus queries for you to run to observe your system in production.
+Metrics are powerful and relatively inexpensive but are unfortunately hard to use. Developers need to:
+- Think about what metrics to track (and whether you want a counter, gauge, etc)
+- Understand and write PromQL or other query languages to get the data
+- Verify that the data you get back is actually what you're looking for
 
-Autometrics currently generates the following queries for each instrumented function:
-- Request rate
-- Error ratio
-- Latency (95th and 99th percentiles)
-- Concurrent requests
+Autometrics makes it easy to add metrics to any function in your code base. It also helps you understand the data by automatically writing
+common Prometheus for each function and enabling you to explore your production metrics directly from your editor/IDE.
 
-## Example
+### :one: Add `#[autometrics]` to your code
 
 ```rust
-use autometrics::{autometrics, global_metrics_exporter, encode_global_metrics};
-use axum::{routing::get, Router};
-use http::StatusCode;
-
-/// Example HTTP handler function
 #[autometrics]
-pub async fn get_index_handler(db: Database, request: Request<Body>) -> Result<String, ()> {
-  let foo = db.load_something_important().await;
-  Ok("It worked!".to_string())
-}
-
-/// Export the collected metrics in the Prometheus format
-pub fn get_metrics() -> (StatusCode, String) {
-  match encode_global_metrics() {
-    Ok(metrics) => (StatusCode::OK, metrics),
-    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-  }
-}
-
-pub fn main() {
-  let _exporter = global_metrics_exporter();
-
-  let app = Router::new()
-    .route("/", get(get_index_handler))
-    .route("/metrics", get(get_metrics));
+async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiError> {
+  // ...
 }
 ```
 
-If you hovered over the `get_index_handler` definition in VS Code with Rust Analyzer installed, you would see:
+### :two: Hover over the function name to see the generated queries
 
-<img src="./assets/vs-code-example.png" alt="VS Code Hover Example" height="200">
+<img src="./assets/vs-code-example.png" alt="VS Code Hover Example" width="500">
 
-And clicking each of the metric links would take you straight to the Prometheus chart for that specific function.
+### :three: Click a query link to go directly to the Prometheus chart for that function
+
+<img src="./assets/prometheus-chart.png" alt="Prometheus Chart" width="500">
+
+### :four: Profit. (Or, observability?)
+
+## See it in action
+
+1. Install [prometheus](https://prometheus.io/download/) locally
+2. Run the [axum example](./examples/axum.rs):
+```
+cargo run --features="prometheus-exporter" --example axum
+```
+3. Hover over the [function names](./examples/axum.rs#L21) to see the generated query links
+(like in the image above) and try clicking on them to go straight to that Prometheus chart.
+
+## How it works
+
+The `autometrics` macro rewrites your functions to include a variety of useful metrics.
+It adds a counter for tracking function calls and errors (for functions that return `Result`s),
+a histogram for latency, and a gauge for concurrent requests.
+
+We currently use the [`opentelemetry`](https://crates.io/crates/opentelemetry) crate for producing metrics
+in the [OpenTelemetry](https://opentelemetry.io/) format. This can be converted to the Prometheus export format, as well
+as others, using different [exporters](https://github.com/open-telemetry/opentelemetry-rust#related-crates).
+
+Autometrics can generate the PromQL queries and Prometheus links for each function because it is creating
+the metrics using specific names and labeling conventions.
 
 ## API
 
@@ -112,7 +116,7 @@ pub fn get_metrics() -> (StatusCode, String) {
 ### Custom Prometheus URL
 By default, Autometrics creates Prometheus query links that point to `http://localhost:9090`.
 
-You can configure a custom Prometheus URL by adding the following to your `build.rs` file:
+You can configure a custom Prometheus URL using a build-time environment variable by adding the following to your `build.rs` file:
 
 ```rust
 let prometheus_url = "https://your-prometheus-url.example";
@@ -128,4 +132,4 @@ fn main() {
   println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
 }
 ```
-Note that when using Rust Analyzer, you'll need to reload the workspace in order for the changed URL to take effect.
+Note that when using Rust Analyzer, you may need to reload the workspace in order for the changed URL to take effect.

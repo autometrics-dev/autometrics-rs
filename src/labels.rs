@@ -103,26 +103,44 @@ pub trait GetLabels {
     }
 }
 
-impl<T> GetLabels for &T {}
+/// Implement the given trait for &T and all primitive types.
+macro_rules! impl_trait_for_types {
+    ($trait:ident) => {
+        impl<T> $trait for &T {}
+        impl $trait for i8 {}
+        impl $trait for i16 {}
+        impl $trait for i32 {}
+        impl $trait for i64 {}
+        impl $trait for i128 {}
+        impl $trait for isize {}
+        impl $trait for u8 {}
+        impl $trait for u16 {}
+        impl $trait for u32 {}
+        impl $trait for u64 {}
+        impl $trait for u128 {}
+        impl $trait for usize {}
+        impl $trait for f32 {}
+        impl $trait for f64 {}
+        impl $trait for char {}
+        impl $trait for bool {}
+        impl $trait for str {}
+        impl $trait for () {}
+        impl<A> $trait for (A,) {}
+        impl<A, B> $trait for (A, B) {}
+        impl<A, B, C> $trait for (A, B, C) {}
+        impl<A, B, C, D> $trait for (A, B, C, D) {}
+        impl<A, B, C, D, E> $trait for (A, B, C, D, E) {}
+        impl<A, B, C, D, E, F> $trait for (A, B, C, D, E, F) {}
+        impl<A, B, C, D, E, F, G> $trait for (A, B, C, D, E, F, G) {}
+        impl<A, B, C, D, E, F, G, H> $trait for (A, B, C, D, E, F, G, H) {}
+        impl<A, B, C, D, E, F, G, H, I> $trait for (A, B, C, D, E, F, G, H, I) {}
+        impl<A, B, C, D, E, F, G, H, I, J> $trait for (A, B, C, D, E, F, G, H, I, J) {}
+        impl<A, B, C, D, E, F, G, H, I, J, K> $trait for (A, B, C, D, E, F, G, H, I, J, K) {}
+        impl<A, B, C, D, E, F, G, H, I, J, K, L> $trait for (A, B, C, D, E, F, G, H, I, J, K, L) {}
+    };
+}
 
-// Implement for primitives
-impl GetLabels for i8 {}
-impl GetLabels for i16 {}
-impl GetLabels for i32 {}
-impl GetLabels for i64 {}
-impl GetLabels for i128 {}
-impl GetLabels for isize {}
-impl GetLabels for u8 {}
-impl GetLabels for u16 {}
-impl GetLabels for u32 {}
-impl GetLabels for u64 {}
-impl GetLabels for u128 {}
-impl GetLabels for usize {}
-impl GetLabels for f32 {}
-impl GetLabels for f64 {}
-impl GetLabels for char {}
-impl GetLabels for bool {}
-impl GetLabels for () {}
+impl_trait_for_types!(GetLabels);
 
 trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
@@ -142,26 +160,7 @@ trait GetStaticStr {
         None
     }
 }
-
-impl<T> GetStaticStr for &T {}
-
-impl GetStaticStr for i8 {}
-impl GetStaticStr for i16 {}
-impl GetStaticStr for i32 {}
-impl GetStaticStr for i64 {}
-impl GetStaticStr for i128 {}
-impl GetStaticStr for isize {}
-impl GetStaticStr for u8 {}
-impl GetStaticStr for u16 {}
-impl GetStaticStr for u32 {}
-impl GetStaticStr for u64 {}
-impl GetStaticStr for u128 {}
-impl GetStaticStr for usize {}
-impl GetStaticStr for f32 {}
-impl GetStaticStr for f64 {}
-impl GetStaticStr for char {}
-impl GetStaticStr for bool {}
-impl GetStaticStr for () {}
+impl_trait_for_types!(GetStaticStr);
 
 pub(crate) fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
     [
