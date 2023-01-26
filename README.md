@@ -6,12 +6,12 @@
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
 Metrics are powerful and relatively inexpensive, but they are still hard to use. Developers need to:
-- Think about what metrics we want to track and which metric type to use (counter, gauge... :sleep:)
-- Write PromQL or other query languages to get the data
-- Verify that the data we get actually answers your question
+- Think about what metrics to track and which metric type to use (counter, gauge... :confused:)
+- Figure out how to write PromQL or another query language to get some data :confounded:
+- Verify that the data returned actually answers the right question :tired_face:
 
 Autometrics makes it easy to add metrics to any function in your codebase.
-Then, it helps you understand the data by automatically writing common Prometheus for each function.
+Then, automatically generates common Prometheus for each function to help you easily understand the data.
 Explore your production metrics directly from your editor/IDE.
 
 ### :one: Add `#[autometrics]` to your code
