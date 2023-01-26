@@ -18,7 +18,7 @@ mod util;
 // Starting simple, hover over the function name to see the Autometrics graph links in the Rust Docs!
 /// This is a simple endpoint that never errors
 #[autometrics]
-async fn root() -> &'static str {
+async fn get_index() -> &'static str {
     "Hello, World!"
 }
 
@@ -141,7 +141,7 @@ async fn main() {
     let _exporter = global_metrics_exporter();
 
     let app = Router::new()
-        .route("/", get(root))
+        .route("/", get(get_index))
         .route("/users", post(create_user))
         .route("/random-error", get(get_random_error))
         // Expose the metrics for Prometheus to scrape
