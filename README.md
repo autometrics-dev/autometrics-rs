@@ -95,7 +95,7 @@ Autometrics includes optional functions to help collect and prepare metrics to b
 In your `Cargo.toml` file, enable the optional `prometheus-exporter` feature:
 
 ```toml
-autometrics = { git = "ssh://git@github.com/fiberplane/autometrics-rs.git", branch = "main", features = ["prometheus-exporter"] }
+autometrics = { version = "*", features = ["prometheus-exporter"] }
 ```
 
 Then, call the `global_metrics_exporter` function in your `main` function:
