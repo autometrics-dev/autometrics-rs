@@ -4,7 +4,7 @@
 //! -- and easily understand the data with automatically generated Prometheus queries for each function.
 //!
 //! ## Example
-//! See the [example](../examples/axum.rs) for a full example of how to use Autometrics.
+//! See the [example](https://github.com/fiberplane/autometrics-rs/blob/main/examples/axum.rs) for a full example of how to use Autometrics.
 //!
 //! ## Usage
 //! 1. Annotate any function with `#[autometrics]` to collect metrics for that function:
