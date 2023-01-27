@@ -1,4 +1,4 @@
-# Autometrics :chart_with_upwards_trend: :sparkles:
+# Autometrics 📈✨
 > Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries.
 
 [![Documentation](https://docs.rs/autometrics/badge.svg)](https://docs.rs/autometrics)
@@ -6,15 +6,15 @@
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
 Metrics are powerful and relatively inexpensive, but they are still hard to use. Developers need to:
-- Think about what metrics to track and which metric type to use (counter, gauge... :confused:)
-- Figure out how to write PromQL or another query language to get some data :confounded:
-- Verify that the data returned actually answers the right question :tired_face:
+- Think about what metrics to track and which metric type to use (counter, gauge... 😕)
+- Figure out how to write PromQL or another query language to get some data 😖
+- Verify that the data returned actually answers the right question 😫
 
 Autometrics makes it easy to add metrics to any function in your codebase.
-Then, automatically generates common Prometheus for each function to help you easily understand the data.
+Then, it automatically generates common Prometheus for each function to help you easily understand the data.
 Explore your production metrics directly from your editor/IDE.
 
-### :one: Add `#[autometrics]` to your code
+### 1️⃣ Add `#[autometrics]` to your code
 
 ```rust
 #[autometrics]
@@ -23,15 +23,15 @@ async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiE
 }
 ```
 
-### :two: Hover over the function name to see the generated queries
+### 2️⃣ Hover over the function name to see the generated queries
 
 <img src="./assets/vs-code-example.png" alt="VS Code Hover Example" width="500">
 
-### :three: Click a query link to go directly to the Prometheus chart for that function
+### 3️⃣ Click a query link to go directly to the Prometheus chart for that function
 
 <img src="./assets/prometheus-chart.png" alt="Prometheus Chart" width="500">
 
-### :four: Go back to shipping features :rocket:
+### 4️⃣ Go back to shipping features 🚀
 
 ## See it in action
 
