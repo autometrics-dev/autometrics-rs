@@ -1,13 +1,18 @@
 # Autometrics :chart_with_upwards_trend: :sparkles:
 > Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries.
 
-Metrics are powerful and relatively inexpensive but are unfortunately hard to use. Developers need to:
-- Think about what metrics to track (and whether you want a counter, gauge, etc)
-- Understand and write PromQL or other query languages to get the data
-- Verify that the data you get back is actually what you're looking for
+[![Documentation](https://docs.rs/autometrics/badge.svg)](https://docs.rs/autometrics)
+[![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
+[![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics makes it easy to add metrics to any function in your code base. It also helps you understand the data by automatically writing
-common Prometheus for each function and enabling you to explore your production metrics directly from your editor/IDE.
+Metrics are powerful and relatively inexpensive, but they are still hard to use. Developers need to:
+- Think about what metrics to track and which metric type to use (counter, gauge... :confused:)
+- Figure out how to write PromQL or another query language to get some data :confounded:
+- Verify that the data returned actually answers the right question :tired_face:
+
+Autometrics makes it easy to add metrics to any function in your codebase.
+Then, automatically generates common Prometheus for each function to help you easily understand the data.
+Explore your production metrics directly from your editor/IDE.
 
 ### :one: Add `#[autometrics]` to your code
 
@@ -26,7 +31,7 @@ async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiE
 
 <img src="./assets/prometheus-chart.png" alt="Prometheus Chart" width="500">
 
-### :four: Profit. (Or, observability?)
+### :four: Go back to shipping features :rocket:
 
 ## See it in action
 
@@ -116,14 +121,8 @@ pub fn get_metrics() -> (StatusCode, String) {
 ### Custom Prometheus URL
 By default, Autometrics creates Prometheus query links that point to `http://localhost:9090`.
 
-You can configure a custom Prometheus URL using a build-time environment variable by adding the following to your `build.rs` file:
+You can configure a custom Prometheus URL using a build-time environment in your `build.rs` file:
 
-```rust
-let prometheus_url = "https://your-prometheus-url.example";
-println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
-```
-
-For example:
 ```rust
 // build.rs
 
@@ -132,4 +131,4 @@ fn main() {
   println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
 }
 ```
-Note that when using Rust Analyzer, you may need to reload the workspace in order for the changed URL to take effect.
+Note that when using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
