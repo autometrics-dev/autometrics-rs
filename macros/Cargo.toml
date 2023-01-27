@@ -2,6 +2,14 @@
 name = "autometrics-macros"
 version = "0.1.0"
 edition = "2021"
+authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
+description = "Macros for the autometrics crate"
+documentation = "https://docs.rs/autometrics"
+readme = "../README.md"
+repository = "https://github.com/fiberplane/autometrics-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["metrics", "prometheus", "opentelemetry"]
+categories = ["development-tools::profiling"]
 
 [lib]
 proc-macro = true
