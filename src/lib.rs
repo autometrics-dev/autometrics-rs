@@ -5,6 +5,7 @@ mod task_local;
 mod tracker;
 
 #[cfg(feature = "prometheus-exporter")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
 pub use self::prometheus::*;
 pub use autometrics_macros::autometrics;
 

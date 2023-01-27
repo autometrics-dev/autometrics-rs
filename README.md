@@ -101,7 +101,7 @@ autometrics = { version = "*", features = ["prometheus-exporter"] }
 Then, call the `global_metrics_exporter` function in your `main` function:
 ```rust
 pub fn main() {
-  let _exporter = global_metrics_exporter();
+  let _exporter = autometrics::global_metrics_exporter();
   // ...
 }
 ```
@@ -109,7 +109,7 @@ pub fn main() {
 And create a route on your API (probably mounted under `/metrics`) that returns the following:
 ```rust
 pub fn get_metrics() -> (StatusCode, String) {
-  match encode_global_metrics() {
+  match autometrics::encode_global_metrics() {
     Ok(metrics) => (StatusCode::OK, metrics),
     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
   }
