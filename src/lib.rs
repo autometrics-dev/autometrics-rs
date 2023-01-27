@@ -1,3 +1,46 @@
+//! # Autometrics
+//!
+//! Autometrics is a library that makes it easy to collect metrics for any function
+//! -- and easily understand the data with automatically generated Prometheus queries for each function.
+//!
+//! ## Example
+//! See the [example](https://github.com/fiberplane/autometrics-rs/blob/main/examples/axum.rs) for a full example of how to use Autometrics.
+//!
+//! ## Usage
+//! 1. Annotate any function with `#[autometrics]` to collect metrics for that function:
+//!
+//! ```rust
+//! #[autometrics]
+//! async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiError> {
+//!   // ...
+//! }
+//! ```
+//!
+//! 2. Call the `global_metrics_exporter` function in your `main` function:
+//! ```rust
+//! pub fn main() {
+//!   let _exporter = autometrics::global_metrics_exporter();
+//!   // ...
+//! }
+//! ```
+//!
+//! 3. Create a route on your API (probably mounted under `/metrics`) for Prometheus to scrape:
+//! ```rust
+//! pub fn get_metrics() -> (StatusCode, String) {
+//!   match autometrics::encode_global_metrics() {
+//!     Ok(metrics) => (StatusCode::OK, metrics),
+//!     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+//!   }
+//! }
+//! ```
+//!
+//! 4. Hover over any autometrics-enabled function to see the links to graphs of the generated metrics
+//! 5. Click on the link to see the graph of the live metrics for that function
+//!
+//! ## Feature flags
+//!
+//! - `prometheus-exporter`: Exports a Prometheus metrics collector and exporter
+//!
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
 mod prometheus;
@@ -5,6 +48,7 @@ mod task_local;
 mod tracker;
 
 #[cfg(feature = "prometheus-exporter")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
 pub use self::prometheus::*;
 pub use autometrics_macros::autometrics;
 
