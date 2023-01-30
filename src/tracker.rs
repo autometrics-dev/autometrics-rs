@@ -1,4 +1,4 @@
-use crate::labels::create_labels;
+use crate::labels::{Label, FUNCTION_KEY, MODULE_KEY};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::time::Instant;
 
@@ -14,7 +14,10 @@ pub struct AutometricsTracker {
 
 impl AutometricsTracker {
     pub fn start(function: &'static str, module: &'static str, gauge_name: &'static str) -> Self {
-        let function_and_module_labels = create_labels(function, module);
+        let function_and_module_labels = [
+            KeyValue::new(FUNCTION_KEY, function),
+            KeyValue::new(MODULE_KEY, module),
+        ];
 
         // Increase the number of concurrent requests
         let concurrency_tracker = global::meter("")
@@ -34,15 +37,19 @@ impl AutometricsTracker {
         }
     }
 
-    pub fn finish(
+    pub fn finish<'a>(
         self,
         histogram_name: &'static str,
         counter_name: &'static str,
-        counter_labels: &[KeyValue],
+        counter_labels: &[Label],
     ) {
         let duration = self.start.elapsed().as_secs_f64();
 
         // Track the function calls
+        let counter_labels: Vec<KeyValue> = counter_labels
+            .into_iter()
+            .map(|(k, v)| KeyValue::new(*k, *v))
+            .collect();
         let counter = global::meter("")
             .f64_counter(counter_name)
             .with_description("Autometrics counter for tracking function calls")

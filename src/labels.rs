@@ -1,10 +1,11 @@
-use opentelemetry_api::{Key, KeyValue, Value};
 use std::ops::Deref;
 
-const FUNCTION_KEY: Key = Key::from_static_str("function");
-const MODULE_KEY: Key = Key::from_static_str("module");
-const CALLER_KEY: Key = Key::from_static_str("caller");
-const RESULT_KEY: Key = Key::from_static_str("result");
+pub(crate) const FUNCTION_KEY: &'static str = "function";
+pub(crate) const MODULE_KEY: &'static str = "module";
+pub(crate) const CALLER_KEY: &'static str = "caller";
+pub(crate) const RESULT_KEY: &'static str = "result";
+
+pub(crate) type Label = (&'static str, &'static str);
 
 // The following is a convoluted way to figure out if the return type resolves to a Result
 // or not. We cannot simply parse the code using syn to figure out if it's a Result
@@ -39,30 +40,15 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
             Err(err) => ("error", err.__autometrics_static_str()),
         };
 
-        let function_label = KeyValue {
-            key: FUNCTION_KEY,
-            value: Value::String(function.into()),
-        };
-        let module_label = KeyValue {
-            key: MODULE_KEY,
-            value: Value::String(module.into()),
-        };
-        let caller_label = KeyValue {
-            key: CALLER_KEY,
-            value: Value::String(caller.into()),
-        };
-        let result_label = KeyValue {
-            key: RESULT_KEY,
-            value: Value::String(result.into()),
-        };
+        let function_label = (FUNCTION_KEY, function);
+        let module_label = (MODULE_KEY, module);
+        let caller_label = (CALLER_KEY, caller);
+        let result_label = (RESULT_KEY, result);
 
         // Add another label for the return value if the type implements Into<&'static str>.
         // This is most likely useful for enums representing error (or potentially success) types.
         if let Some(value) = value_as_static_str {
-            let value_label = KeyValue {
-                key: Key::from_static_str(result),
-                value: Value::String(value.into()),
-            };
+            let value_label = (result, value);
             LabelArray::Five([
                 function_label,
                 module_label,
@@ -77,12 +63,12 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
 }
 
 pub enum LabelArray {
-    Four([KeyValue; 4]),
-    Five([KeyValue; 5]),
+    Four([Label; 4]),
+    Five([Label; 5]),
 }
 
 impl Deref for LabelArray {
-    type Target = [KeyValue];
+    type Target = [Label];
 
     fn deref(&self) -> &Self::Target {
         match self {
@@ -98,8 +84,8 @@ pub trait GetLabels {
         function: &'static str,
         module: &'static str,
         _caller: &'static str,
-    ) -> [KeyValue; 2] {
-        create_labels(function, module)
+    ) -> [Label; 2] {
+        [(FUNCTION_KEY, function), (MODULE_KEY, module)]
     }
 }
 
@@ -161,16 +147,3 @@ trait GetStaticStr {
     }
 }
 impl_trait_for_types!(GetStaticStr);
-
-pub(crate) fn create_labels(function_name: &'static str, module: &'static str) -> [KeyValue; 2] {
-    [
-        KeyValue {
-            key: FUNCTION_KEY,
-            value: Value::String(function_name.into()),
-        },
-        KeyValue {
-            key: MODULE_KEY,
-            value: Value::String(module.into()),
-        },
-    ]
-}
