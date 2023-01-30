@@ -14,12 +14,19 @@ Autometrics makes it easy to add metrics to any function in your codebase.
 Then, it automatically generates common Prometheus for each function to help you easily understand the data.
 Explore your production metrics directly from your editor/IDE.
 
-### 1️⃣ Add `#[autometrics]` to your code
+### 1️⃣ Add `#[autometrics]` to any function or `impl` block
 
 ```rust
 #[autometrics]
 async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiError> {
   // ...
+}
+
+#[autometrics]
+impl Database {
+  async fn save_user(&self, user: User) -> Result<User, DbError> {
+    // ...
+  }
 }
 ```
 
@@ -60,7 +67,9 @@ the metrics using specific names and labeling conventions.
 
 ### `#[autometrics]` Macro
 
-For most use cases, you can simply add the `#[autometrics]` attribute to any function you want to collect metrics for. We recommend using it for any important function in your code base (HTTP handlers, database calls, etc), possibly excluding simple utilities that are infallible or have negligible execution time.
+Add the `#[autometrics]` attribute to any function or `impl` block you want to collect metrics for.
+
+We recommend using it for any important function in your code base (HTTP handlers, database calls, etc), possibly excluding simple utilities that are infallible or have negligible execution time.
 
 ### Result Type Labels
 
