@@ -7,13 +7,22 @@
 //! See the [example](https://github.com/fiberplane/autometrics-rs/blob/main/examples/axum.rs) for a full example of how to use Autometrics.
 //!
 //! ## Usage
-//! 1. Annotate any function with `#[autometrics]` to collect metrics for that function:
+//! 1. Annotate any function with `#[autometrics]` to collect metrics for that function.
+//!   You can also annotate an entire `impl` block to collect metrics for all of the functions in that block.
 //!
 //! ```rust
 //! #[autometrics]
 //! async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiError> {
 //!   // ...
 //! }
+//!
+//! #[autometrics]
+//! impl Database {
+//!   async fn save_user(&self, user: User) -> Result<User, DbError> {
+//!     // ...
+//!   }
+//! }
+//!
 //! ```
 //!
 //! 2. Call the `global_metrics_exporter` function in your `main` function:
