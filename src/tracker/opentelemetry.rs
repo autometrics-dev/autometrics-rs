@@ -1,19 +1,27 @@
+use super::TrackMetrics;
 use crate::labels::{Label, FUNCTION_KEY, MODULE_KEY};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::time::Instant;
 
 /// Tracks the number of function calls, concurrent calls, and latency
-pub struct AutometricsTracker {
-    pub module: &'static str,
-    pub function: &'static str,
+pub struct OpenTelemetryTracker {
+    module: &'static str,
+    function: &'static str,
     concurrency_tracker: UpDownCounter<i64>,
     function_and_module_labels: [KeyValue; 2],
     start: Instant,
     context: Context,
 }
 
-impl AutometricsTracker {
-    pub fn start(function: &'static str, module: &'static str, gauge_name: &'static str) -> Self {
+impl TrackMetrics for OpenTelemetryTracker {
+    fn function(&self) -> &'static str {
+        self.function
+    }
+    fn module(&self) -> &'static str {
+        self.module
+    }
+
+    fn start(function: &'static str, module: &'static str, gauge_name: &'static str) -> Self {
         let function_and_module_labels = [
             KeyValue::new(FUNCTION_KEY, function),
             KeyValue::new(MODULE_KEY, module),
@@ -37,7 +45,7 @@ impl AutometricsTracker {
         }
     }
 
-    pub fn finish<'a>(
+    fn finish<'a>(
         self,
         histogram_name: &'static str,
         counter_name: &'static str,

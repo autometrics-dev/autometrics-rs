@@ -102,7 +102,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 
         #vis #sig {
             let __autometrics_tracker = {
-                use autometrics::__private::{AutometricsTracker, str_replace};
+                use autometrics::__private::{AutometricsTracker, TrackMetrics, str_replace};
 
                 // Note that we cannot determine the module path at macro expansion time
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
@@ -114,8 +114,8 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
             let result = #call_function;
 
             {
-                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
-                let counter_labels = (&result).__autometrics_get_labels(__autometrics_tracker.function, __autometrics_tracker.module, CALLER.get());
+                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult, TrackMetrics};
+                let counter_labels = (&result).__autometrics_get_labels(__autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get());
                 __autometrics_tracker.finish(#histogram_name, #counter_name, &counter_labels);
             }
 

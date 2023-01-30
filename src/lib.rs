@@ -61,11 +61,6 @@ mod tracker;
 pub use self::prometheus::*;
 pub use autometrics_macros::autometrics;
 
-#[cfg(not(feature = "opentelemetry"))]
-compile_error!(
-    "autometrics requires one of the following feature flags to be enabled: opentelemetry"
-);
-
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
@@ -73,7 +68,7 @@ pub mod __private {
     use std::{cell::RefCell, thread_local};
 
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
-    pub use crate::tracker::AutometricsTracker;
+    pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
 
     /// Task-local value used for tracking which function called the current function
