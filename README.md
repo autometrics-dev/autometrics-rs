@@ -56,12 +56,9 @@ The `autometrics` macro rewrites your functions to include a variety of useful m
 It adds a counter for tracking function calls and errors (for functions that return `Result`s),
 a histogram for latency, and a gauge for concurrent requests.
 
-We currently use the [`opentelemetry`](https://crates.io/crates/opentelemetry) crate for producing metrics
-in the [OpenTelemetry](https://opentelemetry.io/) format. This can be converted to the Prometheus export format, as well
-as others, using different [exporters](https://github.com/open-telemetry/opentelemetry-rust#related-crates).
+Autometrics supports using different underlying libraries for producing the metrics. See [below](#metrics-collection-libraries) for how to configure the metrics library.
 
-Autometrics can generate the PromQL queries and Prometheus links for each function because it is creating
-the metrics using specific names and labeling conventions.
+Finally, autometrics can generate the PromQL queries and Prometheus links for each function because it is creating the metrics using specific names and labeling conventions.
 
 ## API
 
@@ -141,3 +138,17 @@ fn main() {
 }
 ```
 Note that when using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
+
+### Metrics Collection Libraries
+
+By default, autometrics uses the [`opentelemetry`](https://crates.io/crates/opentelemetry) crate to collect metrics.
+
+If you are already using one of the following crates, you can configure autometrics to use that instead:
+- [`prometheus`](https://crates.io/crates/prometheus):
+```toml
+autometrics = { version = "*", features = ["prometheus"], default-features = false }
+```
+- [`metrics`](https://crates.io/crates/metrics)
+```toml
+autometrics = { version = "*", features = ["metrics"], default-features = false }
+```
