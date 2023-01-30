@@ -49,3 +49,31 @@ pub async fn get_index_handler() -> Result<String, ()> {
 fn other_function() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }
+
+pub struct Db {}
+
+#[autometrics]
+impl Db {
+    pub fn new() -> Self {
+        Db {}
+    }
+
+    pub fn get_user(&self, id: i32) -> Result<String, ()> {
+        Ok(format!("User {}", id))
+    }
+
+    pub fn get_users(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+trait Foo<'a> {
+    fn foo(&'a self) -> Result<String, ()>;
+}
+
+#[autometrics]
+impl<'a> Foo<'a> for Db {
+    fn foo(&self) -> Result<String, ()> {
+        Ok("Bar".to_string())
+    }
+}

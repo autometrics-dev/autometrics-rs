@@ -1,9 +1,9 @@
-use crate::parse::Args;
+use crate::parse::{Args, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ItemFn, Result};
+use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
 mod parse;
 
@@ -33,9 +33,14 @@ pub fn autometrics(
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let args = parse_macro_input!(args as Args);
-    let item = parse_macro_input!(item as ItemFn);
+    let item = parse_macro_input!(item as Item);
 
-    let output = match autometrics_inner(args, item) {
+    let result = match item {
+        Item::Function(item) => instrument_function(&args, item),
+        Item::Impl(item) => instrument_impl_block(&args, item),
+    };
+
+    let output = match result {
         Ok(output) => output,
         Err(err) => err.into_compile_error(),
     };
@@ -43,7 +48,8 @@ pub fn autometrics(
     output.into()
 }
 
-fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
+/// Add autometrics instrumentation to a single function
+fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -109,13 +115,40 @@ fn autometrics_inner(args: Args, item: ItemFn) -> Result<TokenStream> {
 
             {
                 use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
-                let counter_labels = result.__autometrics_get_labels(__autometrics_tracker.function, __autometrics_tracker.module, CALLER.get());
+                let counter_labels = (&result).__autometrics_get_labels(__autometrics_tracker.function, __autometrics_tracker.module, CALLER.get());
                 __autometrics_tracker.finish(#histogram_name, #counter_name, &counter_labels);
             }
 
             result
         }
     })
+}
+
+/// Add autometrics instrumentation to an entire impl block
+fn instrument_impl_block(args: &Args, mut item: ItemImpl) -> Result<TokenStream> {
+    // Replace all of the method items in place
+    item.items = item
+        .items
+        .into_iter()
+        .map(|item| match item {
+            ImplItem::Method(method) => {
+                let item_fn = ItemFn {
+                    attrs: method.attrs,
+                    vis: method.vis,
+                    sig: method.sig,
+                    block: Box::new(method.block),
+                };
+                let tokens = match instrument_function(args, item_fn) {
+                    Ok(tokens) => tokens,
+                    Err(err) => err.to_compile_error(),
+                };
+                ImplItem::Verbatim(tokens)
+            }
+            _ => item,
+        })
+        .collect();
+
+    Ok(quote! { #item })
 }
 
 /// Create Prometheus queries for the generated metric and
