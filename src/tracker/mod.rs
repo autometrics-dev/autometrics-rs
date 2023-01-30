@@ -1,5 +1,7 @@
 use crate::labels::Label;
 
+#[cfg(feature = "metrics")]
+mod metrics;
 #[cfg(feature = "opentelemetry")]
 mod opentelemetry;
 #[cfg(feature = "prometheus")]
