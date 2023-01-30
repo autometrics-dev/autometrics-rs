@@ -1,8 +1,4 @@
-use super::{
-    TrackMetrics, COUNTER_DESCRIPTION, COUNTER_NAME, GAUGE_DESCRIPTION, GAUGE_NAME,
-    HISTOGRAM_DESCRIPTION, HISTOGRAM_NAME,
-};
-use crate::labels::{Label, FUNCTION_KEY, MODULE_KEY};
+use crate::{constants::*, labels::Label, tracker::TrackMetrics};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::time::Instant;
 

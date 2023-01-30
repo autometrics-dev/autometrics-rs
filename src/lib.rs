@@ -50,15 +50,16 @@
 //!
 //! - `prometheus-exporter`: Exports a Prometheus metrics collector and exporter
 //!
+mod constants;
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
-mod prometheus;
+mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
 #[cfg(feature = "prometheus-exporter")]
 #[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
-pub use self::prometheus::*;
+pub use self::prometheus_exporter::*;
 pub use autometrics_macros::autometrics;
 
 // Not public API.

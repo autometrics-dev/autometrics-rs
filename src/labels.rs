@@ -1,9 +1,5 @@
+use crate::constants::*;
 use std::ops::Deref;
-
-pub(crate) const FUNCTION_KEY: &'static str = "function";
-pub(crate) const MODULE_KEY: &'static str = "module";
-pub(crate) const CALLER_KEY: &'static str = "caller";
-pub(crate) const RESULT_KEY: &'static str = "result";
 
 pub(crate) type Label = (&'static str, &'static str);
 
@@ -36,8 +32,8 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
         caller: &'static str,
     ) -> LabelArray {
         let (result, value_as_static_str) = match self {
-            Ok(ok) => ("ok", ok.__autometrics_static_str()),
-            Err(err) => ("error", err.__autometrics_static_str()),
+            Ok(ok) => (OK_KEY, ok.__autometrics_static_str()),
+            Err(err) => (ERROR_KEY, err.__autometrics_static_str()),
         };
 
         let function_label = (FUNCTION_KEY, function);

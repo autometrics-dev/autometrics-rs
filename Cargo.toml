@@ -12,8 +12,10 @@ keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::profiling"]
 
 [features]
-default = ["opentelemetry"]
+default = ["prometheus"]
+metrics = []
 opentelemetry = ["opentelemetry_api"]
+prometheus = ["dep:prometheus", "once_cell"]
 prometheus-exporter = ["once_cell", "opentelemetry-prometheus", "opentelemetry_sdk", "prometheus"]
 
 [dependencies]
