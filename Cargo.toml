@@ -12,12 +12,16 @@ keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::profiling"]
 
 [features]
+default = ["opentelemetry"]
+opentelemetry = ["opentelemetry_api"]
 prometheus-exporter = ["once_cell", "opentelemetry-prometheus", "opentelemetry_sdk", "prometheus"]
 
 [dependencies]
 autometrics-macros = { version = "0.1.0", path = "./macros" }
 const_format = { version = "0.2", features = ["rust_1_51"] }
-opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"] }
+
+# Used for opentelemetry feature
+opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 
 # Used for prometheus-exporter feature
 once_cell = { version = "1.17", optional = true }

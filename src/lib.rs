@@ -61,6 +61,11 @@ mod tracker;
 pub use self::prometheus::*;
 pub use autometrics_macros::autometrics;
 
+#[cfg(not(feature = "opentelemetry"))]
+compile_error!(
+    "autometrics requires one of the following feature flags to be enabled: opentelemetry"
+);
+
 // Not public API.
 #[doc(hidden)]
 pub mod __private {
