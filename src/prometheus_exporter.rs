@@ -1,3 +1,5 @@
+#[cfg(feature = "metrics")]
+use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
 use opentelemetry_prometheus::{exporter, PrometheusExporter};
 use opentelemetry_sdk::export::metrics::aggregation;
@@ -7,7 +9,31 @@ use prometheus::{default_registry, Error, TextEncoder};
 const HISTOGRAM_BUCKETS: [f64; 10] = [
     10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 350.0, 500.0, 1000.0,
 ];
-static GLOBAL_EXPORTER: Lazy<PrometheusExporter> = Lazy::new(|| initialize_metrics_exporter());
+static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
+
+#[derive(Clone)]
+pub struct GlobalPrometheus {
+    exporter: PrometheusExporter,
+    #[cfg(feature = "metrics")]
+    handle: PrometheusHandle,
+}
+
+impl GlobalPrometheus {
+    fn encode_metrics(&self) -> Result<String, Error> {
+        let metric_families = self.exporter.registry().gather();
+        let encoder = TextEncoder::new();
+        #[allow(unused_mut)]
+        let mut output = encoder.encode_to_string(&metric_families)?;
+
+        #[cfg(feature = "metrics")]
+        {
+            output.push('\n');
+            output.push_str(&self.handle.render());
+        }
+
+        Ok(output)
+    }
+}
 
 /// Initialize the global Prometheus metrics collector and exporter.
 ///
@@ -23,7 +49,7 @@ static GLOBAL_EXPORTER: Lazy<PrometheusExporter> = Lazy::new(|| initialize_metri
 /// let _exporter = global_metrics_exporter();
 /// # }
 /// ```
-pub fn global_metrics_exporter() -> PrometheusExporter {
+pub fn global_metrics_exporter() -> GlobalPrometheus {
     GLOBAL_EXPORTER.clone()
 }
 
@@ -43,12 +69,10 @@ pub fn global_metrics_exporter() -> PrometheusExporter {
 /// }
 /// ```
 pub fn encode_global_metrics() -> Result<String, Error> {
-    let metric_families = GLOBAL_EXPORTER.registry().gather();
-    let encoder = TextEncoder::new();
-    encoder.encode_to_string(&metric_families)
+    GLOBAL_EXPORTER.encode_metrics()
 }
 
-fn initialize_metrics_exporter() -> PrometheusExporter {
+fn initialize_metrics_exporter() -> GlobalPrometheus {
     let controller = controllers::basic(
         processors::factory(
             selectors::simple::histogram(HISTOGRAM_BUCKETS),
@@ -61,5 +85,16 @@ fn initialize_metrics_exporter() -> PrometheusExporter {
     // Use the prometheus crate's default registry so it still works with custom
     // metrics defined through the prometheus crate
     let registry = default_registry().clone();
-    exporter(controller).with_registry(registry).init()
+    let prometheus_exporter = exporter(controller).with_registry(registry).init();
+
+    GlobalPrometheus {
+        exporter: prometheus_exporter,
+
+        #[cfg(feature = "metrics")]
+        handle: PrometheusBuilder::new()
+            .set_buckets(&HISTOGRAM_BUCKETS)
+            .expect("Failed to set histogram buckets")
+            .install_recorder()
+            .expect("Failed to install recorder"),
+    }
 }

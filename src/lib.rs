@@ -50,15 +50,16 @@
 //!
 //! - `prometheus-exporter`: Exports a Prometheus metrics collector and exporter
 //!
+mod constants;
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
-mod prometheus;
+mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
 #[cfg(feature = "prometheus-exporter")]
 #[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
-pub use self::prometheus::*;
+pub use self::prometheus_exporter::*;
 pub use autometrics_macros::autometrics;
 
 // Not public API.
@@ -68,7 +69,7 @@ pub mod __private {
     use std::{cell::RefCell, thread_local};
 
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
-    pub use crate::tracker::AutometricsTracker;
+    pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
 
     /// Task-local value used for tracking which function called the current function

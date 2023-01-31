@@ -1,25 +1,35 @@
-use crate::labels::create_labels;
+use crate::{constants::*, labels::Label, tracker::TrackMetrics};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::time::Instant;
 
 /// Tracks the number of function calls, concurrent calls, and latency
-pub struct AutometricsTracker {
-    pub module: &'static str,
-    pub function: &'static str,
+pub struct OpenTelemetryTracker {
+    module: &'static str,
+    function: &'static str,
     concurrency_tracker: UpDownCounter<i64>,
     function_and_module_labels: [KeyValue; 2],
     start: Instant,
     context: Context,
 }
 
-impl AutometricsTracker {
-    pub fn start(function: &'static str, module: &'static str, gauge_name: &'static str) -> Self {
-        let function_and_module_labels = create_labels(function, module);
+impl TrackMetrics for OpenTelemetryTracker {
+    fn function(&self) -> &'static str {
+        self.function
+    }
+    fn module(&self) -> &'static str {
+        self.module
+    }
+
+    fn start(function: &'static str, module: &'static str) -> Self {
+        let function_and_module_labels = [
+            KeyValue::new(FUNCTION_KEY, function),
+            KeyValue::new(MODULE_KEY, module),
+        ];
 
         // Increase the number of concurrent requests
         let concurrency_tracker = global::meter("")
-            .i64_up_down_counter(gauge_name)
-            .with_description("Autometrics gauge for tracking concurrent function calls")
+            .i64_up_down_counter(GAUGE_NAME)
+            .with_description(GAUGE_DESCRIPTION)
             .init();
         let context = Context::current();
         concurrency_tracker.add(&context, 1, &function_and_module_labels);
@@ -34,25 +44,24 @@ impl AutometricsTracker {
         }
     }
 
-    pub fn finish(
-        self,
-        histogram_name: &'static str,
-        counter_name: &'static str,
-        counter_labels: &[KeyValue],
-    ) {
+    fn finish<'a>(self, counter_labels: &[Label]) {
         let duration = self.start.elapsed().as_secs_f64();
 
         // Track the function calls
+        let counter_labels: Vec<KeyValue> = counter_labels
+            .into_iter()
+            .map(|(k, v)| KeyValue::new(*k, *v))
+            .collect();
         let counter = global::meter("")
-            .f64_counter(counter_name)
-            .with_description("Autometrics counter for tracking function calls")
+            .f64_counter(COUNTER_NAME)
+            .with_description(COUNTER_DESCRIPTION)
             .init();
         counter.add(&self.context, 1.0, &counter_labels);
 
         // Track the latency
         let histogram = global::meter("")
-            .f64_histogram(histogram_name)
-            .with_description("Autometrics histogram for tracking function latency")
+            .f64_histogram(HISTOGRAM_NAME)
+            .with_description(HISTOGRAM_DESCRIPTION)
             .init();
         histogram.record(&self.context, duration, &self.function_and_module_labels);
 

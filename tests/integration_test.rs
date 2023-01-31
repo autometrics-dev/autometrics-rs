@@ -34,7 +34,7 @@ fn main() {
     assert_ne!(result, "");
 }
 
-#[autometrics(name = "util_function_call")]
+#[autometrics]
 fn add(a: i32, b: i32) -> i32 {
     a + b
 }
