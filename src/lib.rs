@@ -1,8 +1,8 @@
 // Use the unstable `doc_cfg` feature when docs.rs is building the documentation
 // https://stackoverflow.com/questions/61417452/how-to-get-a-feature-requirement-tag-in-the-documentation-generated-by-cargo-do/61417700#61417700
-#![feature(doc_auto_cfg)]
-#![feature(doc_cfg_hide)]
-#![doc(cfg_hide(doc))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg_hide))]
+#![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 
 //! # Autometrics
 //!
