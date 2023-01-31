@@ -152,7 +152,7 @@ If you are already using one of the following crates, you can configure autometr
 ```toml
 autometrics = { version = "*", features = ["prometheus"], default-features = false }
 ```
-- [`metrics`](https://crates.io/crates/metrics)
+- [`metrics`](https://crates.io/crates/metrics):
 ```toml
 autometrics = { version = "*", features = ["metrics"], default-features = false }
 ```
