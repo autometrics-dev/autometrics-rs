@@ -18,7 +18,7 @@ fn describe_metrics() {
 pub struct MetricsTracker {
     module: &'static str,
     function: &'static str,
-    gauge: Gauge,
+    gauge: Option<Gauge>,
     start: Instant,
 }
 
@@ -31,11 +31,16 @@ impl TrackMetrics for MetricsTracker {
         self.module
     }
 
-    fn start(function: &'static str, module: &'static str) -> Self {
+    fn start(function: &'static str, module: &'static str, track_concurrency: bool) -> Self {
         describe_metrics();
 
-        let gauge = register_gauge!(GAUGE_NAME, "function" => function, "module" => module);
-        gauge.increment(1.0);
+        let gauge = if track_concurrency {
+            let gauge = register_gauge!(GAUGE_NAME, "function" => function, "module" => module);
+            gauge.increment(1.0);
+            Some(gauge)
+        } else {
+            None
+        };
 
         Self {
             module,
@@ -50,6 +55,8 @@ impl TrackMetrics for MetricsTracker {
         register_counter!(COUNTER_NAME, counter_labels).increment(1);
         register_histogram!(HISTOGRAM_NAME, "function" => self.function, "module" => self.module)
             .record(duration);
-        self.gauge.decrement(1.0);
+        if let Some(gauge) = self.gauge {
+            gauge.decrement(1.0);
+        }
     }
 }

@@ -20,14 +20,19 @@ impl Parse for Item {
 }
 
 #[derive(Default)]
-pub(crate) struct Args {}
+pub(crate) struct Args {
+    pub track_concurrency: bool,
+}
 
 impl Parse for Args {
     fn parse(input: ParseStream) -> Result<Self> {
-        let args = Args::default();
+        let mut args = Args::default();
         while !input.is_empty() {
             let lookahead = input.lookahead1();
-            if lookahead.peek(Token![,]) {
+            if lookahead.peek(kw::track_concurrency) {
+                let _ = input.parse::<kw::track_concurrency>()?;
+                args.track_concurrency = true;
+            } else if lookahead.peek(Token![,]) {
                 let _ = input.parse::<Token![,]>()?;
             } else {
                 return Err(lookahead.error());
@@ -35,4 +40,8 @@ impl Parse for Args {
         }
         Ok(args)
     }
+}
+
+mod kw {
+    syn::custom_keyword!(track_concurrency);
 }

@@ -19,8 +19,8 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// and writes Prometheus queries for you, making it easy for you to observe and
 /// understand how your system performs in production.
 ///
-/// By default, Autometrics uses a counter, histogram, and a gauge to track
-/// the request rate, error rate, latency, and concurrent calls to each instrumented function.
+/// By default, Autometrics uses a counter and a histogram to track
+/// the request rate, error rate, latency of calls to your functions.
 ///
 /// For all of the generated metrics, Autometrics attaches the following labels:
 /// - `function` - the name of the function
@@ -30,6 +30,16 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
 /// - `caller` - the name of the (autometrics-instrumented) function that called the current function
 /// - (optional) `ok`/`error` - if the inner type implements `Into<&'static str>`, that value will be used as this label's value
+///
+/// ## Optional Parameters
+///
+/// ### `track_concurrency`
+///
+/// Example: `#[autometrics(track_concurrency)]`
+///
+/// Pass this argument to track the number of concurrent calls to the function (using a gauge).
+/// This may be most useful for top-level functions such as the main HTTP handler that
+/// passes requests off to other functions.
 #[proc_macro_attribute]
 pub fn autometrics(
     args: proc_macro::TokenStream,
@@ -52,7 +62,8 @@ pub fn autometrics(
 }
 
 /// Add autometrics instrumentation to a single function
-fn instrument_function(_args: &Args, item: ItemFn) -> Result<TokenStream> {
+fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
+    let track_concurrency = args.track_concurrency;
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -64,7 +75,7 @@ fn instrument_function(_args: &Args, item: ItemFn) -> Result<TokenStream> {
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
     // Build the documentation we'll add to the function's RustDocs
-    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name);
+    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, track_concurrency);
 
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
@@ -95,7 +106,7 @@ fn instrument_function(_args: &Args, item: ItemFn) -> Result<TokenStream> {
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
                 const module_label: &'static str = str_replace!(module_path!(), "::", ".");
 
-                AutometricsTracker::start(#function_name, module_label)
+                AutometricsTracker::start(#function_name, module_label, #track_concurrency)
             };
 
             let result = #call_function;
@@ -140,7 +151,7 @@ fn instrument_impl_block(args: &Args, mut item: ItemImpl) -> Result<TokenStream>
 
 /// Create Prometheus queries for the generated metric and
 /// package them up into a RustDoc string
-fn create_metrics_docs(prometheus_url: &str, function: &str) -> String {
+fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: bool) -> String {
     let request_rate = request_rate_query(&COUNTER_NAME_PROMETHEUS, "function", &function);
     let request_rate_url = make_prometheus_url(
         &prometheus_url,
@@ -164,12 +175,19 @@ fn create_metrics_docs(prometheus_url: &str, function: &str) -> String {
         &format!("95th and 99th percentile latencies for the `{function}` function"),
     );
 
-    let concurrent_calls = concurrent_calls_query(&GAUGE_NAME_PROMETHEUS, "function", &function);
-    let concurrent_calls_url = make_prometheus_url(
-        &prometheus_url,
-        &concurrent_calls,
-        &format!("Concurrent calls to the `{function}` function"),
-    );
+    // Only include the concurrent calls query if the user has enabled it for this function
+    let concurrent_calls_doc = if track_concurrency {
+        let concurrent_calls =
+            concurrent_calls_query(&GAUGE_NAME_PROMETHEUS, "function", &function);
+        let concurrent_calls_url = make_prometheus_url(
+            &prometheus_url,
+            &concurrent_calls,
+            &format!("Concurrent calls to the `{function}` function"),
+        );
+        format!("\n- [Concurrent Calls]({concurrent_calls_url}")
+    } else {
+        String::new()
+    };
 
     format!(
         "\n\n---
@@ -179,8 +197,7 @@ fn create_metrics_docs(prometheus_url: &str, function: &str) -> String {
 View the live metrics for the `{function}` function:
 - [Request Rate]({request_rate_url})
 - [Error Ratio]({error_ratio_url})
-- [Latency (95th and 99th percentiles)]({latency_url})
-- [Concurrent Calls]({concurrent_calls_url})
+- [Latency (95th and 99th percentiles)]({latency_url}){concurrent_calls_doc}
 
 Or, dig into the metrics of *functions called by* `{function}`:
 - [Request Rate]({callee_request_rate_url})

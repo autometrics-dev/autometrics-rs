@@ -6,7 +6,7 @@ use std::time::Instant;
 pub struct OpenTelemetryTracker {
     module: &'static str,
     function: &'static str,
-    concurrency_tracker: UpDownCounter<i64>,
+    concurrency_tracker: Option<UpDownCounter<i64>>,
     function_and_module_labels: [KeyValue; 2],
     start: Instant,
     context: Context,
@@ -20,19 +20,24 @@ impl TrackMetrics for OpenTelemetryTracker {
         self.module
     }
 
-    fn start(function: &'static str, module: &'static str) -> Self {
+    fn start(function: &'static str, module: &'static str, track_concurrency: bool) -> Self {
         let function_and_module_labels = [
             KeyValue::new(FUNCTION_KEY, function),
             KeyValue::new(MODULE_KEY, module),
         ];
 
-        // Increase the number of concurrent requests
-        let concurrency_tracker = global::meter("")
-            .i64_up_down_counter(GAUGE_NAME)
-            .with_description(GAUGE_DESCRIPTION)
-            .init();
         let context = Context::current();
-        concurrency_tracker.add(&context, 1, &function_and_module_labels);
+        let concurrency_tracker = if track_concurrency {
+            // Increase the number of concurrent requests
+            let concurrency_tracker = global::meter("")
+                .i64_up_down_counter(GAUGE_NAME)
+                .with_description(GAUGE_DESCRIPTION)
+                .init();
+            concurrency_tracker.add(&context, 1, &function_and_module_labels);
+            Some(concurrency_tracker)
+        } else {
+            None
+        };
 
         Self {
             function,
@@ -66,7 +71,8 @@ impl TrackMetrics for OpenTelemetryTracker {
         histogram.record(&self.context, duration, &self.function_and_module_labels);
 
         // Decrease the number of concurrent requests
-        self.concurrency_tracker
-            .add(&self.context, -1, &self.function_and_module_labels);
+        if let Some(concurrency_tracker) = self.concurrency_tracker {
+            concurrency_tracker.add(&self.context, -1, &self.function_and_module_labels);
+        }
     }
 }

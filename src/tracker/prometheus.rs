@@ -49,6 +49,7 @@ pub struct PrometheusTracker {
     module: &'static str,
     function: &'static str,
     start: Instant,
+    track_concurrency: bool,
 }
 
 impl TrackMetrics for PrometheusTracker {
@@ -60,13 +61,16 @@ impl TrackMetrics for PrometheusTracker {
         self.module
     }
 
-    fn start(function: &'static str, module: &'static str) -> Self {
-        GAUGE.with_label_values(&[function, module]).inc();
+    fn start(function: &'static str, module: &'static str, track_concurrency: bool) -> Self {
+        if track_concurrency {
+            GAUGE.with_label_values(&[function, module]).inc();
+        }
 
         Self {
             function,
             module,
             start: Instant::now(),
+            track_concurrency,
         }
     }
 
@@ -92,6 +96,8 @@ impl TrackMetrics for PrometheusTracker {
             .with_label_values(&[self.function, self.module])
             .observe(duration);
 
-        GAUGE.with_label_values(&[self.function, self.module]).dec();
+        if self.track_concurrency {
+            GAUGE.with_label_values(&[self.function, self.module]).dec();
+        }
     }
 }
