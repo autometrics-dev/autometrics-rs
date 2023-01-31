@@ -5,12 +5,12 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Metrics are powerful and relatively inexpensive, but they are still hard to use. Developers need to:
-- Think about what metrics to track and which metric type to use (counter, gauge... 😕)
+Metrics are a powerful and relatively inexpensive tool for understanding your system in production. However, they are still hard to use. Developers need to:
+- Think about what metrics to track and which metric type to use (counter, histogram... 😕)
 - Figure out how to write PromQL or another query language to get some data 😖
 - Verify that the data returned actually answers the right question 😫
 
-Autometrics makes it easy to add metrics to any function in your codebase.
+**Autometrics makes it easy to add metrics to any function in your codebase.**
 Then, it automatically generates common Prometheus for each function to help you easily understand the data.
 Explore your production metrics directly from your editor/IDE.
 
@@ -54,7 +54,7 @@ cargo run --features="prometheus-exporter" --example axum
 
 The `autometrics` macro rewrites your functions to include a variety of useful metrics.
 It adds a counter for tracking function calls and errors (for functions that return `Result`s),
-a histogram for latency, and a gauge for concurrent requests.
+a histogram for latency, and, optionally, a gauge for concurrent requests.
 
 Autometrics supports using different underlying libraries for producing the metrics. See [below](#metrics-collection-libraries) for how to configure the metrics library.
 
@@ -67,6 +67,10 @@ Finally, autometrics can generate the PromQL queries and Prometheus links for ea
 Add the `#[autometrics]` attribute to any function or `impl` block you want to collect metrics for.
 
 We recommend using it for any important function in your code base (HTTP handlers, database calls, etc), possibly excluding simple utilities that are infallible or have negligible execution time.
+
+#### Optional Parameters
+
+- `track_concurrency` - if enabled (by passing `#[autometrics(track_concurrency)]`), autometrics will also track the number of concurrent calls to that function using a gauge. This may be most useful for top-level functions such as the main HTTP handler that passes off requests to other functions.
 
 ### Result Type Labels
 
@@ -148,7 +152,7 @@ If you are already using one of the following crates, you can configure autometr
 ```toml
 autometrics = { version = "*", features = ["prometheus"], default-features = false }
 ```
-- [`metrics`](https://crates.io/crates/metrics)
+- [`metrics`](https://crates.io/crates/metrics):
 ```toml
 autometrics = { version = "*", features = ["metrics"], default-features = false }
 ```

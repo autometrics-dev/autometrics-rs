@@ -40,7 +40,7 @@ fn add(a: i32, b: i32) -> i32 {
 }
 
 /// Example HTTP handler function
-#[autometrics]
+#[autometrics(track_concurrency)]
 pub async fn get_index_handler() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }
