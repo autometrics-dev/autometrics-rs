@@ -1,3 +1,9 @@
+// Use the unstable `doc_cfg` feature when docs.rs is building the documentation
+// https://stackoverflow.com/questions/61417452/how-to-get-a-feature-requirement-tag-in-the-documentation-generated-by-cargo-do/61417700#61417700
+#![feature(doc_auto_cfg)]
+#![feature(doc_cfg_hide)]
+#![doc(cfg_hide(doc))]
+
 //! # Autometrics
 //!
 //! Autometrics is a library that makes it easy to collect metrics for any function
@@ -58,11 +64,7 @@ mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
-// Use the unstable `doc_cfg` feature when docs.rs is building the documentation
-// https://stackoverflow.com/questions/61417452/how-to-get-a-feature-requirement-tag-in-the-documentation-generated-by-cargo-do/61417700#61417700
-#[cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "prometheus-exporter")]
-#[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
 pub use self::prometheus_exporter::*;
 pub use autometrics_macros::autometrics;
 
