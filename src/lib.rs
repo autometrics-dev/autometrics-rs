@@ -50,6 +50,7 @@
 //!
 //! - `prometheus-exporter`: Exports a Prometheus metrics collector and exporter
 //!
+
 mod constants;
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
@@ -57,6 +58,9 @@ mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
+// Use the unstable `doc_cfg` feature when docs.rs is building the documentation
+// https://stackoverflow.com/questions/61417452/how-to-get-a-feature-requirement-tag-in-the-documentation-generated-by-cargo-do/61417700#61417700
+#[cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "prometheus-exporter")]
 #[cfg_attr(docsrs, doc(cfg(feature = "prometheus-exporter")))]
 pub use self::prometheus_exporter::*;
