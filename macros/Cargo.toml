@@ -18,4 +18,5 @@ proc-macro = true
 percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"
+rust_decimal = "1.28"
 syn =  { version = "1", features = ["full"] }

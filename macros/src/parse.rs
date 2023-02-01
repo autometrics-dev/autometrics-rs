@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use syn::parse::{Parse, ParseStream};
 use syn::{ItemFn, ItemImpl, LitFloat, LitInt, Result, Token};
 
@@ -46,9 +47,9 @@ impl Parse for Args {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct Alerts {
-    pub success_rate: Option<f64>,
+    pub success_rate: Option<Decimal>,
     pub latency: Option<Latency>,
 }
 
@@ -66,7 +67,7 @@ impl Parse for Alerts {
 
                 let _ = content.parse::<Token![=]>()?;
 
-                let success_rate = content.parse::<IntOrFloat>()?.0 / 100.0;
+                let success_rate = content.parse::<IntOrFloat>()?.0 / Decimal::from(100);
                 let _ = content.parse::<Token![%]>()?;
 
                 alerts.success_rate = Some(success_rate);
@@ -82,9 +83,10 @@ impl Parse for Alerts {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct Latency {
-    pub target_seconds: f64,
-    pub percentile: f64,
+    pub target_seconds: Decimal,
+    pub percentile: Decimal,
 }
 
 // Parse latency in the form latency(99.9% < 200ms)
@@ -94,7 +96,7 @@ impl Parse for Latency {
         let content;
         let _ = syn::parenthesized!(content in input);
 
-        let percentile = content.parse::<IntOrFloat>()?.0 / 100.0;
+        let percentile = content.parse::<IntOrFloat>()?.0 / Decimal::from(100);
 
         let _ = content.parse::<Token![%]>()?;
         let _ = content.parse::<Token![<]>()?;
@@ -102,7 +104,7 @@ impl Parse for Latency {
         let IntOrFloat(target_seconds, unit) = content.parse()?;
         let target_seconds = match unit {
             Some(Unit::Seconds) => target_seconds,
-            Some(Unit::Milliseconds) => target_seconds / 1000.0,
+            Some(Unit::Milliseconds) => target_seconds / Decimal::from(1000),
             _ => return Err(content.error("expected unit of time (s or ms)")),
         };
 
@@ -118,7 +120,7 @@ enum Unit {
     Milliseconds,
 }
 
-struct IntOrFloat(f64, Option<Unit>);
+struct IntOrFloat(Decimal, Option<Unit>);
 
 impl Parse for IntOrFloat {
     fn parse(input: ParseStream) -> Result<Self> {

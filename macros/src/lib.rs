@@ -3,7 +3,7 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, spanned::Spanned, ImplItem, ItemFn, ItemImpl, Result};
+use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
 mod parse;
 
