@@ -57,6 +57,8 @@
 //! - `prometheus-exporter`: Exports a Prometheus metrics collector and exporter
 //!
 
+#[cfg(feature = "alerts")]
+mod alerts;
 mod constants;
 mod labels;
 #[cfg(feature = "prometheus-exporter")]
@@ -66,6 +68,8 @@ mod tracker;
 
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus_exporter::*;
+#[cfg(feature = "alerts")]
+pub use crate::alerts::*;
 pub use autometrics_macros::autometrics;
 
 // Not public API.
@@ -74,9 +78,12 @@ pub mod __private {
     use crate::task_local::LocalKey;
     use std::{cell::RefCell, thread_local};
 
+    #[cfg(feature = "alerts")]
+    pub use crate::alerts::{Alert, METRICS};
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
+    pub use linkme::distributed_slice;
 
     /// Task-local value used for tracking which function called the current function
     pub static CALLER: LocalKey<&'static str> = {

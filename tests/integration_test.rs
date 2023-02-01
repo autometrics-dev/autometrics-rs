@@ -47,7 +47,7 @@ pub async fn get_index_handler() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }
 
-#[autometrics(track_concurrency)]
+#[autometrics(track_concurrency, alerts(latency(99.999% < 50ms)))]
 fn other_function() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }

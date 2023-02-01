@@ -1,7 +1,7 @@
 use crate::parse::{Args, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use std::env;
 use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
@@ -92,6 +92,46 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         }
     };
 
+    #[cfg(feature = "alerts")]
+    let alert_definition = if let Some(alerts) = &args.alerts {
+        let function_name_uppercase = format_ident!("AUTOMETRICS_{}", function_name.to_uppercase());
+        let success_rate = if let Some(success_rate) = alerts.success_rate {
+            let success_rate = success_rate.to_string();
+            quote! { Some(#success_rate) }
+        } else {
+            quote! { None }
+        };
+        let (latency_target, latency_percentile) = if let Some(latency) = &alerts.latency {
+            let latency_target = latency.target_seconds.to_string();
+            let latency_percentile = latency.percentile.to_string();
+            (
+                quote! { Some(#latency_target) },
+                quote! { Some(#latency_percentile) },
+            )
+        } else {
+            (quote! { None }, quote! { None })
+        };
+
+        quote! {
+            {
+                use autometrics::__private::{distributed_slice, Alert, METRICS};
+
+               #[distributed_slice(METRICS)]
+                static #function_name_uppercase: Alert = Alert {
+                    function: #function_name,
+                    module: module_label,
+                    success_rate: #success_rate,
+                    latency_target: #latency_target,
+                    latency_percentile: #latency_percentile,
+                };
+            }
+        }
+    } else {
+        TokenStream::new()
+    };
+    #[cfg(not(feature = "alerts"))]
+    let alert_definition = TokenStream::new();
+
     Ok(quote! {
         #(#attrs)*
 
@@ -105,6 +145,8 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
                 // Note that we cannot determine the module path at macro expansion time
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
                 const module_label: &'static str = str_replace!(module_path!(), "::", ".");
+
+                #alert_definition
 
                 AutometricsTracker::start(#function_name, module_label, #track_concurrency)
             };
