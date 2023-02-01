@@ -116,7 +116,13 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
             {
                 use autometrics::__private::{distributed_slice, Alert, METRICS};
 
-               #[distributed_slice(METRICS)]
+                // This is a bit nuts. For every function that has alert
+                // definition defined, we create a static record in a
+                // distributed slice that is "gathered into a contiguous section
+                // of the binary by the linker". We then iterate over this list of
+                // instrumented functions to generate the alerts.
+                // See https://github.com/dtolnay/linkme for how this "shenanigans" works
+                #[distributed_slice(METRICS)]
                 static #function_name_uppercase: Alert = Alert {
                     function: #function_name,
                     module: module_label,
