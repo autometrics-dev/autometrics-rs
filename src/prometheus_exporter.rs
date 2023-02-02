@@ -12,6 +12,7 @@ const HISTOGRAM_BUCKETS: [f64; 10] = [
 static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
 
 #[derive(Clone)]
+#[doc(hidden)]
 pub struct GlobalPrometheus {
     exporter: PrometheusExporter,
     #[cfg(feature = "metrics")]
