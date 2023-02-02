@@ -23,6 +23,7 @@ prometheus-exporter = [
   "opentelemetry_sdk",
   "prometheus"
 ]
+doc-images = []
 
 [dependencies]
 autometrics-macros = { version = "0.2.0", path = "./macros" }
@@ -40,6 +41,9 @@ once_cell = { version = "1.17", optional = true }
 opentelemetry-prometheus = { version = "0.11", optional = true }
 opentelemetry_sdk = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 prometheus = { version = "0.13", default-features = false, optional = true }
+
+# Use for doc-images feature
+embed-doc-image = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 axum = "0.6.4"

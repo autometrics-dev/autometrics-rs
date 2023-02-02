@@ -164,16 +164,10 @@ fn main() {
 ```
 Note that when using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
 
-### Metrics Collection Libraries
 
-By default, autometrics uses the [`opentelemetry`](https://crates.io/crates/opentelemetry) crate to collect metrics.
+### Feature flags
 
-If you are already using one of the following crates, you can configure autometrics to use that instead:
-- [`prometheus`](https://crates.io/crates/prometheus):
-```toml
-autometrics = { version = "*", features = ["prometheus"], default-features = false }
-```
-- [`metrics`](https://crates.io/crates/metrics):
-```toml
-autometrics = { version = "*", features = ["metrics"], default-features = false }
-```
+- `metrics` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
+- `opentelemetry` (enabled by default) - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics
+- `prometheus` - use the [prometheus](https://crates.io/crates/prometheus) crate for producing metrics
+- `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the `metrics`/`opentelemetry`/`prometheus` features)
