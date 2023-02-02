@@ -4,10 +4,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg_hide))]
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 #![doc = include_str!("../README.md")]
-#![cfg_attr(feature = "doc-images",
-cfg_attr(all(),
-doc = ::embed_doc_image::embed_image!("vs-code-example", "assets/vs-code-example.png"),
-doc = ::embed_doc_image::embed_image!("prometheus-chart", "assets/prometheus-chart.png")))]
 
 mod constants;
 mod labels;
