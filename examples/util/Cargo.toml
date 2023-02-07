@@ -1,0 +1,9 @@
+[package]
+name = "autometrics-example-util"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+tokio = { version = "1", features = ["time"] }

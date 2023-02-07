@@ -1,0 +1,26 @@
+[package]
+name = "autometrics-macros"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[lib]
+proc-macro = true
+
+[features]
+alerts = ["rust_decimal"]
+
+[dependencies]
+percent-encoding = "2.2"
+proc-macro2 = "1"
+quote = "1"
+syn =  { version = "1", features = ["full"] }
+
+# Used for the alerts feature
+rust_decimal = { version = "1.28", optional = true }

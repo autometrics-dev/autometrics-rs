@@ -1,70 +1,20 @@
-[package]
-name = "autometrics"
+[workspace.package]
 version = "0.2.3"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = "Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries"
 documentation = "https://docs.rs/autometrics"
-readme = "README.md"
 repository = "https://github.com/fiberplane/autometrics-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::profiling"]
 
-[features]
-default = ["opentelemetry"]
-metrics = ["dep:metrics"]
-opentelemetry = ["opentelemetry_api"]
-prometheus = ["dep:prometheus", "once_cell"]
-prometheus-exporter = [
-  "metrics-exporter-prometheus",
-  "once_cell",
-  "opentelemetry-prometheus",
-  "opentelemetry_sdk",
-  "prometheus"
+[workspace]
+default-members = ["autometrics", "autometrics-macros"]
+members = [
+  "autometrics",
+  "autometrics-macros",
+  "examples/*"
 ]
-alerts = ["autometrics-macros/alerts", "linkme"]
-
-[dependencies]
-autometrics-macros = { version = "0.2.0", path = "./macros" }
-const_format = { version = "0.2", features = ["rust_1_51"] }
-
-# Used for opentelemetry feature
-opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
-
-# Use for metrics feature
-metrics = { version = "0.20", default-features = false, optional = true }
-
-# Used for prometheus-exporter feature
-metrics-exporter-prometheus = { version = "0.11", default-features = false, optional = true }
-once_cell = { version = "1.17", optional = true }
-opentelemetry-prometheus = { version = "0.11", optional = true }
-opentelemetry_sdk = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
-prometheus = { version = "0.13", default-features = false, optional = true }
-
-# Used for alerts feature
-linkme = { version = "0.3", optional = true }
-
-[dev-dependencies]
-axum = "0.6.4"
-opentelemetry-prometheus = { version = "0.11" }
-rand = "0.8.5"
-reqwest = { version = "0.11.14", features = ["json"] }
-serde = { version = "1.0.152", features = ["derive"] }
-strum = { version = "0.24.1", features = ["derive"] }
-thiserror = "1.0.38"
-tokio = { version = "1.24.2", features = ["full"] }
-
-[[example]]
-name = "axum"
-required-features = ["prometheus-exporter"]
-path = "examples/axum.rs"
-
-[[example]]
-name = "alerts"
-required-features = ["alerts"]
-path = "examples/alerts.rs"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+exclude = ["examples/data", "examples/target"]
+resolver = "2"

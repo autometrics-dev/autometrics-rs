@@ -39,7 +39,7 @@ impl Database {
 1. Install [prometheus](https://prometheus.io/download/) locally
 2. Run the [axum example](./examples/axum.rs):
 ```
-cargo run --features="prometheus-exporter" --example axum
+cargo run example-axum
 ```
 3. Hover over the [function names](./examples/axum.rs#L21) to see the generated query links
 (like in the image above) and try clicking on them to go straight to that Prometheus chart.

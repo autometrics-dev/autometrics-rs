@@ -3,8 +3,7 @@ use std::process::{Command, Stdio};
 use std::{io::ErrorKind, time::Duration};
 use tokio::time::sleep;
 
-const PROMETHEUS_CONFIG_PATH: &str =
-    concat!(env!("CARGO_MANIFEST_DIR"), "/examples/prometheus.yml");
+const PROMETHEUS_CONFIG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/prometheus.yml");
 
 pub fn run_prometheus() {
     match Command::new("prometheus")
@@ -14,12 +13,17 @@ pub fn run_prometheus() {
         .spawn()
     {
         Err(err) if err.kind() == ErrorKind::NotFound => {
-            eprintln!("Failed to start prometheus (do you have the prometheus binary installed and in your path?)");
+            panic!("Failed to start prometheus (do you have the prometheus binary installed and in your path?)");
         }
         Err(err) => {
-            eprintln!("Failed to start prometheus: {}", err);
+            panic!("Failed to start prometheus: {}", err);
         }
-        Ok(_) => {}
+        Ok(_) => {
+            eprintln!(
+                "Running Prometheus on port 9090 (using config file: {})\n",
+                PROMETHEUS_CONFIG_PATH
+            );
+        }
     }
 }
 
