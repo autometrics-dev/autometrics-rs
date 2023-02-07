@@ -248,7 +248,7 @@ fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: 
     let latency_url = make_prometheus_url(
         &prometheus_url,
         &latency,
-        &format!("95th and 99th percentile latencies for the `{function}` function"),
+        &format!("95th and 99th percentile latencies (in seconds) for the `{function}` function"),
     );
 
     // Only include the concurrent calls query if the user has enabled it for this function

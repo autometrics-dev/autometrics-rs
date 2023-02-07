@@ -6,9 +6,7 @@ use opentelemetry_sdk::export::metrics::aggregation;
 use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::{default_registry, Error, TextEncoder};
 
-const HISTOGRAM_BUCKETS: [f64; 10] = [
-    10.0, 25.0, 50.0, 75.0, 100.0, 150.0, 200.0, 350.0, 500.0, 1000.0,
-];
+const HISTOGRAM_BUCKETS: [f64; 10] = [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.35, 0.5, 1.0];
 static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
 
 #[derive(Clone)]
