@@ -31,6 +31,7 @@ pub mod __private {
     pub use crate::labels::{GetLabels, GetLabelsFromResult};
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
+    #[cfg(feature = "alerts")]
     pub use linkme::distributed_slice;
 
     /// Task-local value used for tracking which function called the current function

@@ -6,9 +6,7 @@
 
 **Autometrics is a macro that makes it trivial to add useful metrics to any function in your codebase.**
 
-Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments.
-
-(Coming Soon!) Autometrics will also generate dashboards ([#15](https://github.com/fiberplane/autometrics-rs/issues/15)) and alerts ([#16](https://github.com/fiberplane/autometrics-rs/issues/16)) from simple annotations in your code. Implementations in other programming languages are also in the works!
+Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments. It can even generate Prometheus [alerting rules](#alerting) for you and soon it will support generating Grafana dashboards.
 
 ### 1️⃣ Add `#[autometrics]` to any function or `impl` block
 
@@ -117,9 +115,11 @@ Simply hover over the function names of the nested function calls in your IDE to
 
 ### More to come!
 
-Stay tuned for automatically generated dashboards, alerts, and more!
+Stay tuned for automatically generated dashboards!
 
-## Exporting Prometheus Metrics
+## Optional Features
+
+### Exporting Prometheus Metrics
 
 Autometrics includes optional functions to help collect and prepare metrics to be collected by Prometheus.
 
@@ -147,6 +147,33 @@ pub fn get_metrics() -> (StatusCode, String) {
 }
 ```
 
+### Alerting
+
+Autometrics can generate [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) for Prometheus.
+
+In your `Cargo.toml` file, enable the optional `alerts` feature:
+
+```toml
+autometrics = { version = "*", features = ["alerts"] }
+```
+
+Then, pass the `alerts` argument to the `autometrics` macro **for 1-3 top-level functions**:
+```rust
+#[autometrics(alerts(success_rate = 99.9%, latency(99% <= 200ms)))]
+pub async fn handle_http_requests(req: Request) -> Result<Response, Error> {
+  // ...
+}
+```
+
+Use the `generate_alerts` function to produce the Prometheus rules YAML file:
+```rust
+use autometrics::generate_alerts;
+
+fn print_prometheus_alerts() {
+  println!("{}", generate_alerts());
+}
+```
+
 ## Configuring
 
 ### Custom Prometheus URL
@@ -167,7 +194,13 @@ Note that when using Rust Analyzer, you may need to reload the workspace in orde
 
 ### Feature flags
 
-- `metrics` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
+- `alerts` - generate Prometheus [alerting rules](#alerting) to notify you when a given function's error rate or latency is too high
+- `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
+
+#### Metrics Libraries
+
+Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
+
 - `opentelemetry` (enabled by default) - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics
+- `metrics` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
 - `prometheus` - use the [prometheus](https://crates.io/crates/prometheus) crate for producing metrics
-- `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the `metrics`/`opentelemetry`/`prometheus` features)

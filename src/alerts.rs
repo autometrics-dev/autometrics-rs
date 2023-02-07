@@ -1,8 +1,14 @@
 use linkme::distributed_slice;
 
+// This "distributed slice" is used to collect all the alerts defined when a
+// call to the `autometrics` macro has the `alerts` argument.
+// The alert definitions are collected into this slice at compile time.
+// See https://github.com/dtolnay/linkme for how this works.
+#[doc(hidden)]
 #[distributed_slice]
 pub static METRICS: [Alert] = [..];
 
+#[doc(hidden)]
 pub struct Alert {
     pub function: &'static str,
     pub module: &'static str,
@@ -32,6 +38,14 @@ impl Alert {
     }
 }
 
+/// Returns the Prometheus recording and alerting rules as a YAML string.
+///
+/// To generate alerts, add the `alerts` parameter to the `autometrics` macro
+/// for at least one function.
+///
+/// Then, call this function to generate the Prometheus rules. You will need
+/// to output the rules to a file and
+/// [load them into Prometheus](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/).
 pub fn generate_alerts() -> String {
     let groups = METRICS
         .iter()
