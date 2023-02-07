@@ -64,12 +64,6 @@ trait Objective {
     fn error_query(&self, window: &str) -> String;
     fn total_query(&self, window: &str) -> String;
 
-    fn error_rate_query(&self, window: &str) -> String {
-        let errors = self.error_query(window);
-        let total = self.total_query(window);
-        format!("{errors} / {total}")
-    }
-
     fn id(&self) -> String {
         format!("{}-{}", self.module(), self.function())
     }
@@ -98,21 +92,34 @@ trait Objective {
     fn error_ratio_recording_rules(&self) -> String {
         let id = self.id();
         let slo_type = self.slo_type();
-        let labels = self.recording_labels();
+        let recording_labels = self.recording_labels();
+        let filter_labels = self.filter_labels();
         let mut rules = format!(
             "- name: autometrics-slo-sli-recordings-{id}-{slo_type}
   rules:\n"
         );
 
-        for window in ["5m", "30m", "1h", "2h", "6h", "1d", "3d", "30d"] {
-            let query = self.error_rate_query(window);
+        for window in ["5m", "30m", "1h", "2h", "6h", "1d", "3d"] {
+            let errors = self.error_query(window);
+            let total = self.total_query(window);
             rules.push_str(&format!(
                 "  - record: slo:sli_error:ratio_rate{window}
-    expr: {query}
-    {labels}
+    expr: {errors} / {total}
+    {recording_labels}
       window: {window}\n"
             ));
         }
+
+        // 30d query is a bit different
+        rules.push_str(&format!(
+            "  - record: slo:sli_error:ratio_rate30d
+    expr: |
+      sum_over_time(slo:sli_error:ratio_rate5m{filter_labels}[30d])
+      / ignoring(window)
+      count_over_time(slo:sli_error:ratio_rate5m{filter_labels}[30d])
+    {recording_labels}
+      window: 30d\n"
+        ));
 
         rules
     }
