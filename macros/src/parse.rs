@@ -99,7 +99,17 @@ impl Parse for Latency {
         let percentile = content.parse::<IntOrFloat>()?.0 / Decimal::from(100);
 
         let _ = content.parse::<Token![%]>()?;
-        let _ = content.parse::<Token![<]>()?;
+        // Handle if the next token is either: <, <=, or =
+        let lookahead = content.lookahead1();
+        if lookahead.peek(Token![<=]) {
+            let _ = content.parse::<Token![<=]>()?;
+        } else if lookahead.peek(Token![<]) {
+            let _ = content.parse::<Token![<]>()?;
+        } else if lookahead.peek(Token![=]) {
+            let _ = content.parse::<Token![=]>()?;
+        } else {
+            return Err(lookahead.error());
+        }
 
         let IntOrFloat(target_seconds, unit) = content.parse()?;
         let target_seconds = match unit {
