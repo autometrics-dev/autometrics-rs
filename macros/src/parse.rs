@@ -23,6 +23,7 @@ impl Parse for Item {
 #[derive(Default)]
 pub(crate) struct Args {
     pub track_concurrency: bool,
+    #[cfg(feature = "alerts")]
     pub alerts: Option<Alerts>,
 }
 
@@ -47,6 +48,7 @@ impl Parse for Args {
     }
 }
 
+#[cfg(feature = "alerts")]
 #[derive(Default, Debug)]
 pub(crate) struct Alerts {
     pub success_rate: Option<Decimal>,
@@ -83,6 +85,7 @@ impl Parse for Alerts {
     }
 }
 
+#[cfg(feature = "alerts")]
 #[derive(Debug)]
 pub(crate) struct Latency {
     pub target_seconds: Decimal,
@@ -125,11 +128,13 @@ impl Parse for Latency {
     }
 }
 
+#[cfg(feature = "alerts")]
 enum Unit {
     Seconds,
     Milliseconds,
 }
 
+#[cfg(feature = "alerts")]
 struct IntOrFloat(Decimal, Option<Unit>);
 
 impl Parse for IntOrFloat {
@@ -157,7 +162,11 @@ impl Parse for IntOrFloat {
 
 mod kw {
     syn::custom_keyword!(track_concurrency);
+
+    #[cfg(feature = "alerts")]
     syn::custom_keyword!(alerts);
+    #[cfg(feature = "alerts")]
     syn::custom_keyword!(success_rate);
+    #[cfg(feature = "alerts")]
     syn::custom_keyword!(latency);
 }
