@@ -96,14 +96,14 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
     let alert_definition = if let Some(alerts) = &args.alerts {
         let function_name_uppercase = format_ident!("AUTOMETRICS_{}", function_name.to_uppercase());
         let success_rate = if let Some(success_rate) = alerts.success_rate {
-            let success_rate = success_rate.to_string();
+            let success_rate = success_rate.normalize().to_string();
             quote! { Some(#success_rate) }
         } else {
             quote! { None }
         };
         let latency = if let Some(latency) = &alerts.latency {
-            let latency_target = latency.target_seconds.to_string();
-            let latency_percentile = latency.percentile.to_string();
+            let latency_target = latency.target_seconds.normalize().to_string();
+            let latency_percentile = latency.percentile.normalize().to_string();
             quote! { Some((#latency_target, #latency_percentile)) }
         } else {
             quote! { None }
