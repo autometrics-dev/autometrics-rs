@@ -101,15 +101,12 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         } else {
             quote! { None }
         };
-        let (latency_target, latency_percentile) = if let Some(latency) = &alerts.latency {
+        let latency = if let Some(latency) = &alerts.latency {
             let latency_target = latency.target_seconds.to_string();
             let latency_percentile = latency.percentile.to_string();
-            (
-                quote! { Some(#latency_target) },
-                quote! { Some(#latency_percentile) },
-            )
+            quote! { Some((#latency_target, #latency_percentile)) }
         } else {
-            (quote! { None }, quote! { None })
+            quote! { None }
         };
 
         quote! {
@@ -127,8 +124,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
                     function: #function_name,
                     module: module_label,
                     success_rate: #success_rate,
-                    latency_target: #latency_target,
-                    latency_percentile: #latency_percentile,
+                    latency: #latency,
                 };
             }
         }
