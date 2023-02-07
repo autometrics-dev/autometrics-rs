@@ -179,7 +179,7 @@ trait Objective {
         format!(
             "- name: autometrics-slo-alerts-{id}-{slo_type}
   rules:
-  - alert: HighErrorRate
+  - alert: HighErrorRate-{id}-{slo_type}
     expr: |
       (
         max(slo:sli_error:ratio_rate5m{labels} > (14.4 * {error_rate}))
@@ -197,7 +197,7 @@ trait Objective {
     annotations:
       summary: High error rate for function '{function}' in module '{module}'
       title: (page) '{function}' in module '{module}' SLO error budget burn rate is too fast.
-  - alert: HighErrorRate
+  - alert: HighErrorRate-{id}-{slo_type}
     expr: |
       (
         max(slo:sli_error:ratio_rate2h{labels} > (3 * {error_rate}))
