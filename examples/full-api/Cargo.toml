@@ -1,5 +1,5 @@
 [package]
-name = "example-axum"
+name = "example-full-api"
 version = "0.0.0"
 publish = false
 edition = "2021"
@@ -8,9 +8,10 @@ edition = "2021"
 autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.6", features = ["json"] }
+clap = { version = "4.1", features = ["derive"] }
 rand = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0.152", features = ["derive"] }
-strum = { version = "0.24.1", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+strum = { version = "0.24", features = ["derive"] }
 thiserror = "1"
 tokio = { version = "1", features = ["full"] }
