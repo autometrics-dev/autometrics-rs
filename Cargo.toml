@@ -1,5 +1,6 @@
 [workspace.package]
-version = "0.2.3"
+name = "autometrics"
+version = "0.2.4"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = "Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries"
