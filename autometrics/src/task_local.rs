@@ -18,28 +18,6 @@ use std::{fmt, mem, thread};
 /// value is first initialized when the future containing
 /// the task-local is first polled by a futures executor, like Tokio.
 ///
-/// # Examples
-///
-/// ```
-/// # async fn dox() {
-/// tokio::task_local! {
-///     static NUMBER: u32;
-/// }
-///
-/// NUMBER.scope(1, async move {
-///     assert_eq!(NUMBER.get(), 1);
-/// }).await;
-///
-/// NUMBER.scope(2, async move {
-///     assert_eq!(NUMBER.get(), 2);
-///
-///     NUMBER.scope(3, async move {
-///         assert_eq!(NUMBER.get(), 3);
-///     }).await;
-/// }).await;
-/// # }
-/// ```
-///
 /// [`std::thread::LocalKey`]: struct@std::thread::LocalKey
 /// [`task_local!`]: ../macro.task_local.html
 pub struct LocalKey<T: 'static> {
@@ -56,20 +34,6 @@ impl<T: 'static> LocalKey<T> {
     ///
     /// If you poll the returned future inside a call to [`with`] or
     /// [`try_with`] on the same `LocalKey`, then the call to `poll` will panic.
-    ///
-    /// ### Examples
-    ///
-    /// ```
-    /// # async fn dox() {
-    /// tokio::task_local! {
-    ///     static NUMBER: u32;
-    /// }
-    ///
-    /// NUMBER.scope(1, async move {
-    ///     println!("task local value: {}", NUMBER.get());
-    /// }).await;
-    /// # }
-    /// ```
     ///
     /// [`with`]: fn@Self::with
     /// [`try_with`]: fn@Self::try_with
@@ -93,20 +57,6 @@ impl<T: 'static> LocalKey<T> {
     ///
     /// This method panics if called inside a call to [`with`] or [`try_with`]
     /// on the same `LocalKey`.
-    ///
-    /// ### Examples
-    ///
-    /// ```
-    /// # async fn dox() {
-    /// tokio::task_local! {
-    ///     static NUMBER: u32;
-    /// }
-    ///
-    /// NUMBER.sync_scope(1, || {
-    ///     println!("task local value: {}", NUMBER.get());
-    /// });
-    /// # }
-    /// ```
     ///
     /// [`with`]: fn@Self::with
     /// [`try_with`]: fn@Self::try_with
@@ -239,17 +189,6 @@ impl<T: 'static> fmt::Debug for LocalKey<T> {
 ///
 /// ### Examples
 ///
-/// ```
-/// # async fn dox() {
-/// tokio::task_local! {
-///     static NUMBER: u32;
-/// }
-///
-/// NUMBER.scope(1, async move {
-///     println!("task local value: {}", NUMBER.get());
-/// }).await;
-/// # }
-/// ```
 // Doesn't use pin_project due to custom Drop.
 pub struct TaskLocalFuture<T, F>
 where
