@@ -1,0 +1,18 @@
+[package]
+name = "example-custom-metrics"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[features]
+default = ["opentelemetry"]
+metrics = ["autometrics/metrics", "dep:metrics"]
+opentelemetry = ["autometrics/opentelemetry", "dep:opentelemetry", "once_cell"]
+prometheus = ["autometrics/prometheus", "dep:prometheus", "once_cell"]
+
+[dependencies]
+autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
+metrics = { version = "0.20", optional = true }
+once_cell = { version = "1.17", optional = true }
+opentelemetry = { version = "0.18", features = ["metrics"], optional = true }
+prometheus = { version = "0.13", optional = true }
