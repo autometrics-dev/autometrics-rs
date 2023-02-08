@@ -193,7 +193,7 @@ trait Objective {
         max(slo:sli_error:ratio_rate6h{labels} > (6 * {error_rate}))
       )
     labels:
-      severity: pageteam
+      severity: page
     annotations:
       summary: High error rate for function '{function}' in module '{module}'
       title: (page) '{function}' in module '{module}' SLO error budget burn rate is too fast.

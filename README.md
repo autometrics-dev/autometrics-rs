@@ -6,7 +6,7 @@
 
 **Autometrics is a macro that makes it trivial to add useful metrics to any function in your codebase.**
 
-Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments. It can even generate Prometheus [alerting rules](#alerting) for you and soon it will support generating Grafana dashboards.
+Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments. It can even generate Prometheus [alerting rules](#alerts-slos) for you and soon it will support generating Grafana dashboards.
 
 ### 1️⃣ Add `#[autometrics]` to any function or `impl` block
 
@@ -39,7 +39,7 @@ impl Database {
 1. Install [prometheus](https://prometheus.io/download/) locally
 2. Run the [axum example](./examples/axum.rs):
 ```
-cargo run example-axum
+cargo run -p example-axum
 ```
 3. Hover over the [function names](./examples/axum.rs#L21) to see the generated query links
 (like in the image above) and try clicking on them to go straight to that Prometheus chart.
@@ -147,9 +147,9 @@ pub fn get_metrics() -> (StatusCode, String) {
 }
 ```
 
-### Alerting
+### Alerts / SLOs
 
-Autometrics can generate [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) for Prometheus.
+Autometrics can generate [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) for Prometheus based on simple annotations in your code. The specific rules are based on [Sloth](https://sloth.dev/) and the Google SRE Workbook section on [Service-Level Objectives (SLOs)](https://sre.google/workbook/alerting-on-slos/).
 
 In your `Cargo.toml` file, enable the optional `alerts` feature:
 
@@ -165,7 +165,7 @@ pub async fn handle_http_requests(req: Request) -> Result<Response, Error> {
 }
 ```
 
-Use the `generate_alerts` function to produce the Prometheus rules YAML file:
+Use the `generate_alerts` function to produce the [Prometheus rules YAML file](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/):
 ```rust
 use autometrics::generate_alerts;
 
@@ -173,6 +173,10 @@ fn print_prometheus_alerts() {
   println!("{}", generate_alerts());
 }
 ```
+
+Take a look at the [alerts example](./examples/alerts) to see how to integrate generating the alert definitions into your Clap-based binary.
+
+Refer to the Prometheus docs section on [Alerting](https://prometheus.io/docs/alerting/latest/overview/) for more details on configuring Prometheus to use the alerting rules and on how to use [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) to de-duplicate alerts.
 
 ## Configuring
 
@@ -194,7 +198,7 @@ Note that when using Rust Analyzer, you may need to reload the workspace in orde
 
 ### Feature flags
 
-- `alerts` - generate Prometheus [alerting rules](#alerting) to notify you when a given function's error rate or latency is too high
+- `alerts` - generate Prometheus [alerting rules](#alerts-slos) to notify you when a given function's error rate or latency is too high
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
 
 #### Metrics Libraries
