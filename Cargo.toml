@@ -18,4 +18,3 @@ members = [
   "examples/*"
 ]
 exclude = ["examples/data", "examples/target"]
-resolver = "2"
