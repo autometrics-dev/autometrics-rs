@@ -10,7 +10,7 @@ If you want to use autometrics alerts for your application, you'll want to:
 4. Probably use [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) to de-duplicate alerts.
 
 
-## Running the example:
+## Running the example
 
 ```shell
 cargo run -p example-alerts generate-alerts > alerting_rules.yml

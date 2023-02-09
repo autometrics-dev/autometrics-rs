@@ -34,15 +34,19 @@ impl Database {
 
 ### 4️⃣ Go back to shipping features 🚀
 
-## See it in action
+## Examples
+
+To see autometrics in action:
 
 1. Install [prometheus](https://prometheus.io/download/) locally
-2. Run the [axum example](./examples/axum.rs):
+2. Run the [complete example](./examples/full-api):
 ```
-cargo run -p example-axum
+cargo run -p example-full-api serve
 ```
-3. Hover over the [function names](./examples/axum.rs#L21) to see the generated query links
+3. Hover over the [function names](./examples/full-api/src/routes.rs#L13) to see the generated query links
 (like in the image above) and try clicking on them to go straight to that Prometheus chart.
+
+See the other [examples](./examples/) for details on how to use the various features and integrations.
 
 ## Why Autometrics?
 
