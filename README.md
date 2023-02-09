@@ -6,7 +6,7 @@
 
 **Autometrics is a macro that makes it trivial to add useful metrics to any function in your codebase.**
 
-Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments. It can even generate Prometheus [alerting rules](#alerts-slos) for you and soon it will support generating Grafana dashboards.
+Easily understand and debug your production system using automatically generated queries. Autometrics adds links to Prometheus charts directly into each function's doc comments. It can even generate Prometheus [alerting rules](#alerts--slos) for you and soon it will support generating Grafana dashboards.
 
 ### 1️⃣ Add `#[autometrics]` to any function or `impl` block
 
@@ -202,7 +202,7 @@ Note that when using Rust Analyzer, you may need to reload the workspace in orde
 
 ### Feature flags
 
-- `alerts` - generate Prometheus [alerting rules](#alerts-slos) to notify you when a given function's error rate or latency is too high
+- `alerts` - generate Prometheus [alerting rules](#alerts--slos) to notify you when a given function's error rate or latency is too high
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
 
 #### Metrics Libraries
