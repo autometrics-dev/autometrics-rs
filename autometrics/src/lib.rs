@@ -37,7 +37,7 @@ pub mod __private {
 
     #[cfg(feature = "alerts")]
     pub use crate::alerts::{Alert, METRICS};
-    pub use crate::labels::{GetLabels, GetLabelsFromResult};
+    pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
 

@@ -68,3 +68,13 @@ impl<'a> Foo<'a> for Db {
         Ok("Bar".to_string())
     }
 }
+
+#[autometrics(ok_if = Option::is_some)]
+pub fn some_function() -> Option<String> {
+    Some("Hello world!".to_string())
+}
+
+#[autometrics(error_if = Option::is_none)]
+pub fn none_function() -> Option<String> {
+    Some("Hello world!".to_string())
+}
