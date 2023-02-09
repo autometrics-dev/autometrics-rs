@@ -9,6 +9,7 @@ pub struct Database;
 // You can instrument a whole impl block like this:
 #[autometrics]
 impl Database {
+    #[skip_autometrics]
     pub fn new() -> Self {
         Self
     }

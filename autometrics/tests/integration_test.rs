@@ -45,6 +45,7 @@ pub struct Db {}
 
 #[autometrics]
 impl Db {
+    #[skip_autometrics]
     pub fn new() -> Self {
         Db {}
     }

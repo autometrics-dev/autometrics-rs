@@ -64,6 +64,29 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// configured for your histogram. For example, if you want to enforce that a certain percentage of calls
 /// are handled within 200ms, you must have a histogram bucket for 0.2 seconds. If there is no
 /// such bucket, the alert will never fire.
+///
+/// ## Instrumenting `impl` blocks
+///
+/// In addition to instrumenting functions, you can also instrument `impl` blocks.
+///
+/// Example:
+/// ```rust
+/// struct MyStruct;
+///
+/// #[autometrics]
+/// impl MyStruct {
+///     #[skip_autometrics]
+///     pub fn new() -> Self {
+///        Self
+///     }
+///
+///     fn my_function(&self) {
+///        // ...
+///    }
+/// }
+///
+/// This will instrument all functions in the `impl` block, except for those that have the `skip_autometrics` attribute.
+///
 #[proc_macro_attribute]
 pub fn autometrics(
     args: proc_macro::TokenStream,
@@ -205,7 +228,19 @@ fn instrument_impl_block(args: &Args, mut item: ItemImpl) -> Result<TokenStream>
         .items
         .into_iter()
         .map(|item| match item {
-            ImplItem::Method(method) => {
+            ImplItem::Method(mut method) => {
+                // Skip any methods that have the #[skip_autometrics] attribute
+                if method
+                    .attrs
+                    .iter()
+                    .any(|attr| attr.path.is_ident("skip_autometrics"))
+                {
+                    method
+                        .attrs
+                        .retain(|attr| !attr.path.is_ident("skip_autometrics"));
+                    return ImplItem::Method(method);
+                }
+
                 let item_fn = ItemFn {
                     attrs: method.attrs,
                     vis: method.vis,
