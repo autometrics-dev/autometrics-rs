@@ -1,6 +1,6 @@
 use autometrics::{autometrics, encode_global_metrics};
 use autometrics_example_util::{run_prometheus, sleep_random_duration};
-use axum::{http::StatusCode, routing::get, Router};
+use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 use rand::{random, thread_rng, Rng};
 use std::{net::SocketAddr, time::Duration};
 
@@ -25,6 +25,21 @@ pub async fn get_random_error() -> Result<(), ()> {
     } else {
         Ok(())
     }
+}
+
+/// This function doesn't return a Result, but we can determine whether
+/// we want to consider it a success or not by passing a function to the `ok_if` parameter.
+#[autometrics(ok_if = is_success)]
+pub async fn route_that_returns_into_response() -> impl IntoResponse {
+    (StatusCode::OK, "Hello, World!")
+}
+
+/// Determine whether the response was a success or not
+fn is_success<R>(response: &R) -> bool
+where
+    R: Copy + IntoResponse,
+{
+    response.into_response().status().is_success()
 }
 
 /// This handler serializes the metrics into a string for Prometheus to scrape
