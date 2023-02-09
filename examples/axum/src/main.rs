@@ -1,4 +1,5 @@
 use autometrics::{autometrics, encode_global_metrics, global_metrics_exporter};
+use autometrics_example_util::{run_prometheus, sleep_random_duration};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{http::StatusCode, Json, Router};
@@ -8,9 +9,6 @@ use std::{net::SocketAddr, time::Duration};
 use strum::IntoStaticStr;
 use thiserror::Error;
 use tokio::time::sleep;
-use util::{run_prometheus, sleep_random_duration};
-
-mod util;
 
 // This is a full example of how to use Autometrics with Axum and thiserror
 // and how to collect the generated metrics with Prometheus.
@@ -153,9 +151,8 @@ async fn main() {
     println!(
         "The example API server is now running on: {addr}
 
-Wait a few seconds for the traffic generator to create some fake traffic, \
-then hover over one of the HTTP handler functions (in your editor) \
-to bring up the Rust Docs.
+Wait a few seconds for the traffic generator to create some fake traffic.
+Then, hover over one of the HTTP handler functions (in your editor) to bring up the Rust Docs.
 
 Click on one of the Autometrics links to see the graph for that handler's metrics in Prometheus."
     );

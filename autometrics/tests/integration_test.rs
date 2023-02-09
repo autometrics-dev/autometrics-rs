@@ -1,37 +1,17 @@
 use autometrics::autometrics;
-use opentelemetry_prometheus::PrometheusExporter;
-use opentelemetry_sdk::export::metrics::aggregation;
-use opentelemetry_sdk::metrics::{controllers, processors, selectors};
-use prometheus::TextEncoder;
 
-const HISTOGRAM_BUCKETS: [f64; 10] = [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.35, 0.5, 1.0];
-
-fn init_meter() -> PrometheusExporter {
-    let controller = controllers::basic(
-        processors::factory(
-            selectors::simple::histogram(HISTOGRAM_BUCKETS),
-            aggregation::cumulative_temporality_selector(),
-        )
-        .with_memory(true),
-    )
-    .build();
-
-    opentelemetry_prometheus::exporter(controller).init()
-}
-
+#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn main() {
     #[derive(PartialEq, Debug)]
     struct Function(&'static str);
 
-    let exporter = init_meter();
+    let _ = autometrics::global_metrics_exporter();
 
     add(1, 2);
     other_function().unwrap();
 
-    let encoder = TextEncoder::new();
-    let metric_families = exporter.registry().gather();
-    let result = encoder.encode_to_string(&metric_families).unwrap();
+    let result = autometrics::encode_global_metrics().unwrap();
 
     assert_ne!(result, "");
 }
@@ -42,12 +22,21 @@ fn add(a: i32, b: i32) -> i32 {
 }
 
 /// Example HTTP handler function
-#[autometrics(track_concurrency)]
+#[cfg(feature = "alerts")]
+#[autometrics(
+    alerts(success_rate = 99.9%, latency(99.9% < 250ms)),
+)]
 pub async fn get_index_handler() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }
 
+#[cfg(not(feature = "alerts"))]
 #[autometrics]
+pub async fn get_index_handler() -> Result<String, ()> {
+    Ok("Hello world!".to_string())
+}
+
+#[autometrics(track_concurrency)]
 fn other_function() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }

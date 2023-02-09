@@ -35,11 +35,35 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 ///
 /// ### `track_concurrency`
 ///
-/// Example: `#[autometrics(track_concurrency)]`
+/// Example:
+/// ```rust
+/// #[autometrics(track_concurrency)]
+/// ```
 ///
 /// Pass this argument to track the number of concurrent calls to the function (using a gauge).
 /// This may be most useful for top-level functions such as the main HTTP handler that
 /// passes requests off to other functions.
+///
+/// ### `alerts`
+///
+/// **Only available when the `alerts` feature is enabled.**
+///
+/// Example:
+/// ```rust
+/// #[autometrics(alerts(success_rate = 99.9%, latency(99.9% < 200ms)))]
+/// ```
+///
+/// The alerts feature can be used to have autometrics generate Prometheus AlertManager alerts.
+/// You can specify the `success_rate` and/or `latency` target and percentile for the given function.
+///
+/// Add these options **only** to 1-3 top-level functions you want to generate alerts for.
+/// These should be functions like the main HTTP or WebSocket handler.
+/// You almost definitely do not want to be alerted for every function.
+///
+/// ⚠️ **Note about `latency` alerts**: The latency target **MUST** match one of the buckets
+/// configured for your histogram. For example, if you want to enforce that a certain percentage of calls
+/// are handled within 200ms, you must have a histogram bucket for 0.2 seconds. If there is no
+/// such bucket, the alert will never fire.
 #[proc_macro_attribute]
 pub fn autometrics(
     args: proc_macro::TokenStream,
@@ -92,6 +116,56 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         }
     };
 
+    #[cfg(feature = "alerts")]
+    let alert_definition = if let Some(alerts) = &args.alerts {
+        let function_name_uppercase =
+            quote::format_ident!("AUTOMETRICS_{}", function_name.to_uppercase());
+        let success_rate = if let Some(success_rate) = alerts.success_rate {
+            let success_rate = success_rate.normalize().to_string();
+            quote! { Some(#success_rate) }
+        } else {
+            quote! { None }
+        };
+        let latency = if let Some(latency) = &alerts.latency {
+            let latency_target = latency.target_seconds.normalize().to_string();
+            let latency_percentile = latency.percentile.normalize().to_string();
+            quote! { Some((#latency_target, #latency_percentile)) }
+        } else {
+            quote! { None }
+        };
+
+        quote! {
+            {
+                use autometrics::__private::{Alert, METRICS};
+
+                // This is a bit nuts for 2 reasons:
+                // 1. For every function that has alert definition defined, we create a static record in a
+                //    distributed slice that is "gathered into a contiguous section
+                //    of the binary by the linker". We then iterate over this list of
+                //    instrumented functions to generate the alerts.
+                //    See https://github.com/dtolnay/linkme for how this "shenanigans" works
+                // 2. We are intentionally bypassing the normal API and typechecking of the `linkme` crate 😬.
+                //    Instead of calling the `linkme::distributed_slice!` macro, we are calling
+                //    the METRICS macro directly. This is because the distributed_slice macro
+                //    expands to code that calls an import from the linkme crate.
+                //    We're using this workaround because we don't want to require users of this
+                //    crate to also add `linkme` as a dependency.
+                METRICS! {
+                    static #function_name_uppercase: Alert = Alert {
+                        function: #function_name,
+                        module: module_label,
+                        success_rate: #success_rate,
+                        latency: #latency,
+                    };
+                }
+            }
+        }
+    } else {
+        TokenStream::new()
+    };
+    #[cfg(not(feature = "alerts"))]
+    let alert_definition = TokenStream::new();
+
     Ok(quote! {
         #(#attrs)*
 
@@ -105,6 +179,8 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
                 // Note that we cannot determine the module path at macro expansion time
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
                 const module_label: &'static str = str_replace!(module_path!(), "::", ".");
+
+                #alert_definition
 
                 AutometricsTracker::start(#function_name, module_label, #track_concurrency)
             };
