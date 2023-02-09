@@ -6,6 +6,8 @@ For a more complete example also using axum, see the [full API example](../full-
 
 ## Running the example
 
+**Note:** You will need [prometheus](https://prometheus.io/download/) installed locally for the full experience.
+
 ```shell
 cargo run -p example-axum
 ```
