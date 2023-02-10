@@ -3,6 +3,34 @@ use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
 
+pub fn create_label_array(
+    result: &'static str,
+    function: &'static str,
+    module: &'static str,
+    caller: &'static str,
+    return_value_type: Option<&'static str>,
+) -> LabelArray {
+    let function_label = (FUNCTION_KEY, function);
+    let module_label = (MODULE_KEY, module);
+    let caller_label = (CALLER_KEY, caller);
+    let result_label = (RESULT_KEY, result);
+
+    // Add another label for the return value if the type implements Into<&'static str>.
+    // This is most likely useful for enums representing error (or potentially success) types.
+    if let Some(value) = return_value_type {
+        let value_label = (result, value);
+        LabelArray::Five([
+            function_label,
+            module_label,
+            caller_label,
+            result_label,
+            value_label,
+        ])
+    } else {
+        LabelArray::Four([function_label, module_label, caller_label, result_label])
+    }
+}
+
 // The following is a convoluted way to figure out if the return type resolves to a Result
 // or not. We cannot simply parse the code using syn to figure out if it's a Result
 // because syn doesn't do type resolution and thus would count any renamed version
@@ -36,25 +64,7 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
             Err(err) => (ERROR_KEY, err.__autometrics_static_str()),
         };
 
-        let function_label = (FUNCTION_KEY, function);
-        let module_label = (MODULE_KEY, module);
-        let caller_label = (CALLER_KEY, caller);
-        let result_label = (RESULT_KEY, result);
-
-        // Add another label for the return value if the type implements Into<&'static str>.
-        // This is most likely useful for enums representing error (or potentially success) types.
-        if let Some(value) = value_as_static_str {
-            let value_label = (result, value);
-            LabelArray::Five([
-                function_label,
-                module_label,
-                caller_label,
-                result_label,
-                value_label,
-            ])
-        } else {
-            LabelArray::Four([function_label, module_label, caller_label, result_label])
-        }
+        create_label_array(result, function, module, caller, value_as_static_str)
     }
 }
 
@@ -124,7 +134,7 @@ macro_rules! impl_trait_for_types {
 
 impl_trait_for_types!(GetLabels);
 
-trait GetStaticStrFromIntoStaticStr<'a> {
+pub trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
 }
 
@@ -137,7 +147,7 @@ where
     }
 }
 
-trait GetStaticStr {
+pub trait GetStaticStr {
     fn __autometrics_static_str(&self) -> Option<&'static str> {
         None
     }

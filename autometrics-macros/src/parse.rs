@@ -1,5 +1,5 @@
 use syn::parse::{Parse, ParseStream};
-use syn::{ItemFn, ItemImpl, Result, Token};
+use syn::{Expr, ItemFn, ItemImpl, Result, Token};
 
 /// Autometrics can be applied to individual functions or to
 /// (all of the methods within) impl blocks.
@@ -22,6 +22,9 @@ impl Parse for Item {
 #[derive(Default)]
 pub(crate) struct Args {
     pub track_concurrency: bool,
+    pub ok_if: Option<Expr>,
+    pub error_if: Option<Expr>,
+
     #[cfg(feature = "alerts")]
     pub alerts: Option<alerts::Alerts>,
 }
@@ -31,6 +34,8 @@ mod kw {
     syn::custom_keyword!(alerts);
     syn::custom_keyword!(success_rate);
     syn::custom_keyword!(latency);
+    syn::custom_keyword!(ok_if);
+    syn::custom_keyword!(error_if);
 }
 
 impl Parse for Args {
@@ -41,6 +46,24 @@ impl Parse for Args {
             if lookahead.peek(kw::track_concurrency) {
                 let _ = input.parse::<kw::track_concurrency>()?;
                 args.track_concurrency = true;
+            } else if lookahead.peek(kw::ok_if) {
+                if args.ok_if.is_some() {
+                    return Err(input.error("expected only a single `ok_if` argument"));
+                }
+                if args.error_if.is_some() {
+                    return Err(input.error("cannot use both `ok_if` and `error_if`"));
+                }
+                let ok_if = input.parse::<ExprArg<kw::ok_if>>()?;
+                args.ok_if = Some(ok_if.value);
+            } else if lookahead.peek(kw::error_if) {
+                if args.error_if.is_some() {
+                    return Err(input.error("expected only a single `error_if` argument"));
+                }
+                if args.ok_if.is_some() {
+                    return Err(input.error("cannot use both `ok_if` and `error_if`"));
+                }
+                let error_if = input.parse::<ExprArg<kw::error_if>>()?;
+                args.error_if = Some(error_if.value);
             } else if lookahead.peek(kw::alerts) {
                 #[cfg(feature = "alerts")]
                 {
@@ -59,6 +82,23 @@ impl Parse for Args {
             }
         }
         Ok(args)
+    }
+}
+
+struct ExprArg<T> {
+    value: Expr,
+    _p: std::marker::PhantomData<T>,
+}
+
+impl<T: Parse> Parse for ExprArg<T> {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let _ = input.parse::<T>()?;
+        let _ = input.parse::<Token![=]>()?;
+        let value = input.parse()?;
+        Ok(Self {
+            value,
+            _p: std::marker::PhantomData,
+        })
     }
 }
 

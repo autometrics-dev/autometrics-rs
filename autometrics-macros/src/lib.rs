@@ -33,6 +33,28 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 ///
 /// ## Optional Parameters
 ///
+/// ### `ok_if` and `error_if`
+///
+/// Example:
+/// ```rust
+/// #[autometrics(ok_if = Option::is_some)]
+/// ```
+///
+/// If the function does not return a `Result`, you can use `ok_if` and `error_if` to specify
+/// whether the function call was "successful" or not, as far as the metrics are concerned.
+///
+/// For example, if a function returns an HTTP response, you can use `ok_if` or `error_if` to
+/// add the `result` label based on the status code:
+/// ```rust
+/// #[autometrics(ok_if = |res: &http::Response<_>| res.status().is_success())]
+/// pub async fn my_handler(req: http::Request<hyper::Body>) -> http::Response<hyper::Body> {
+///    // ...
+/// }
+/// ```
+///
+/// Note that the function must be callable as `f(&T) -> bool`, where `T` is the return type
+/// of the instrumented function.
+///
 /// ### `track_concurrency`
 ///
 /// Example:
@@ -166,6 +188,35 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
     #[cfg(not(feature = "alerts"))]
     let alert_definition = TokenStream::new();
 
+    let counter_labels = if args.ok_if.is_some() || args.error_if.is_some() {
+        // Apply the predicate to determine whether to consider the result as "ok" or "error"
+        let result_label = if let Some(ok_if) = &args.ok_if {
+            quote! { if #ok_if (&result) { "ok" } else { "error" } }
+        } else if let Some(error_if) = &args.error_if {
+            quote! { if #error_if (&result) { "error" } else { "ok" } }
+        } else {
+            unreachable!()
+        };
+        quote! {
+            {
+                use autometrics::__private::{create_label_array, CALLER, GetStaticStrFromIntoStaticStr, GetStaticStr, TrackMetrics};
+                let result_label = #result_label;
+                // If the return type implements Into<&'static str>, attach that as a label
+                let value_type = (&result).__autometrics_static_str();
+                create_label_array(result_label, __autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get(), value_type)
+            }
+        }
+    } else {
+        // This will use the traits defined in the `labels` module to determine if
+        // the return value was a `Result` and, if so, assign the appropriate labels
+        quote! {
+            {
+                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
+                (&result).__autometrics_get_labels(__autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get())
+            }
+        }
+    };
+
     Ok(quote! {
         #(#attrs)*
 
@@ -188,8 +239,8 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
             let result = #call_function;
 
             {
-                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult, TrackMetrics};
-                let counter_labels = (&result).__autometrics_get_labels(__autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get());
+                use autometrics::__private::TrackMetrics;
+                let counter_labels = #counter_labels;
                 __autometrics_tracker.finish(&counter_labels);
             }
 

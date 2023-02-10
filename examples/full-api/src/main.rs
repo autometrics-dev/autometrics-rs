@@ -1,9 +1,11 @@
 use crate::database::Database;
 use crate::util::generate_random_traffic;
-use autometrics::{generate_alerts, global_metrics_exporter};
+use autometrics::{autometrics, generate_alerts, global_metrics_exporter};
 use autometrics_example_util::run_prometheus;
+use axum::http::Request;
+use axum::middleware::{self, Next};
 use axum::routing::{get, post};
-use axum::Router;
+use axum::{response::Response, Router};
 use clap::Parser;
 use std::net::SocketAddr;
 
@@ -53,6 +55,17 @@ async fn main() {
     }
 }
 
+/// This middleware is applied to all requests so that we can track an overall success rate for the alerts
+#[autometrics(ok_if = is_success, alerts(success_rate = 99.9%, latency(99% <= 250ms)))]
+async fn all_requests_middleware<B>(request: Request<B>, next: Next<B>) -> Response {
+    next.run(request).await
+}
+
+/// This function is used to determine whether a request was successful or not
+fn is_success(response: &Response) -> bool {
+    response.status().is_success()
+}
+
 /// Run the API server as well as Prometheus and a traffic generator
 async fn handle_serve(args: ServeArgs) {
     // Run Prometheus and generate random traffic for the app
@@ -69,6 +82,7 @@ async fn handle_serve(args: ServeArgs) {
         .route("/random-error", get(routes::get_random_error))
         // Expose the metrics for Prometheus to scrape
         .route("/metrics", get(routes::get_metrics))
+        .layer(middleware::from_fn(all_requests_middleware))
         .with_state(Database::new());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
