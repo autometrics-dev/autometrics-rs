@@ -10,7 +10,7 @@
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- 📊 Grafana dashboard showing the performance of all instrumented functions
+- 📊 (Coming Soon!) Grafana dashboard showing the performance of all instrumented functions
 - 🚨 Generates Prometheus alerting rules using SLO best practices from simple annotations in your code
 - ⚙️ Configurable metric collection library (`opentelemetry`, `prometheus`, or `metrics`)
 - ⚡ Minimal runtime overhead
