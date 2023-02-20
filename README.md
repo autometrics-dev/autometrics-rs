@@ -15,7 +15,7 @@
 - ⚙️ Configurable metric collection library (`opentelemetry`, `prometheus`, or `metrics`)
 - ⚡ Minimal runtime overhead
 
-See [Why Autometrics?](./docs/why.md) for more details on the ideas behind autometrics.
+See [Why Autometrics?](https://github.com/autometrics-dev#why-autometrics) for more details on the ideas behind autometrics.
 
 ## Usage
 
