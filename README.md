@@ -60,6 +60,7 @@ cargo run -p example-full-api serve
 See the other [examples](./examples/) for details on how to use the various features and integrations.
 
 Or run the example in Gitpod:
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/[autometrics-dev]/[autometrics-rs])
 
 ## Optional Features
