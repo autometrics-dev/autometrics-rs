@@ -25,4 +25,3 @@ vscode:
   extensions:
     # "The" Rust extension for VSCode
     - rust-lang.rust-analyzer
-    
