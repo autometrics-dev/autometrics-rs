@@ -6,9 +6,7 @@
 
 **A macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.** Jump straight from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
-<video controls autoplay loop muted>
-  <source src="/assets/autometrics.mp4" type="video/mp4">
-</video>
+https://user-images.githubusercontent.com/3262610/220144800-b7f3edc3-621c-4ec4-8abd-1508830c1e52.mp4
 
 ## Features
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
