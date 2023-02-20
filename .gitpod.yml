@@ -1,12 +1,12 @@
 # Configure a custom docker image. Here we install 'cargo watch'
 image:
-  file: Dockerfile
+  file: .gitpod.Dockerfile
 
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
 # Run Prometheus
 - init: prometheus
-  command: sudo prometheus --config.file=./examples/util/prometheus.yml
+  command:  $(which prometheus) --config.file=./examples/util/prometheus.yml
 # Build and run on startup
 - init: cargo build
   command: cargo run -p example-full-api serve
