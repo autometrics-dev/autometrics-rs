@@ -6,7 +6,7 @@
 
 **A macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.** Jump straight from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
-<video controls autoplay loop>
+<video controls autoplay loop muted>
   <source src="./assets/autometrics.mp4" type="video/mp4">
 </video>
 
