@@ -1,0 +1,22 @@
+# Configure a custom docker image. Here we install 'cargo watch'
+image:
+  file: Dockerfile
+
+# List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
+tasks:
+# Build and run on startup
+- init: cargo build
+  command: cargo run
+# In parallel, open a terminal with automatic type-checking for development
+- command: cargo watch -x check
+
+# List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
+ports:
+- port: 3000
+  onOpen: open-preview
+
+
+vscode:
+  extensions:
+    # "The" Rust extension for VSCode
+    - rust-lang.rust-analyzer
