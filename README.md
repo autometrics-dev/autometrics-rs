@@ -4,9 +4,6 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/[autometrics-dev]/[autometrics-rs])
-
-
 **A macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.** Jump straight from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
 ## Features
@@ -61,6 +58,9 @@ cargo run -p example-full-api serve
 (like in the image above) and try clicking on them to go straight to that Prometheus chart.
 
 See the other [examples](./examples/) for details on how to use the various features and integrations.
+
+Or run the example in Gitpod:
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/[autometrics-dev]/[autometrics-rs])
 
 ## Optional Features
 

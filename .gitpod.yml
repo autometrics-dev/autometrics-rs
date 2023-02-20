@@ -1,6 +1,6 @@
 # Configure a custom docker image. Here we install 'cargo watch'
 image:
-  file: .gitpod/Dockerfile
+  file: examples/util/.gitpod/Dockerfile
 
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
