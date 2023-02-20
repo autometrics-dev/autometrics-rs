@@ -6,6 +6,8 @@
 
 **A macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.** Jump straight from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
+![Autometrics Example in VS Code](./assets/autometrics.mp4)
+
 ## Features
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
@@ -16,34 +18,6 @@
 - ⚡ Minimal runtime overhead
 
 See [Why Autometrics?](https://github.com/autometrics-dev#why-autometrics) for more details on the ideas behind autometrics.
-
-## Usage
-
-### 1️⃣ Add `#[autometrics]` to any function or `impl` block
-
-```rust
-#[autometrics]
-async fn create_user(Json(payload): Json<CreateUser>) -> Result<Json<User>, ApiError> {
-  // ...
-}
-
-#[autometrics]
-impl Database {
-  async fn save_user(&self, user: User) -> Result<User, DbError> {
-    // ...
-  }
-}
-```
-
-### 2️⃣ Hover over the function name to see the generated queries
-
-<img src="./assets/vs-code-example.png" alt="VS Code Hover Example" width="500">
-
-### 3️⃣ Click a query link to go directly to the Prometheus chart for that function
-
-<img src="./assets/prometheus-chart.png" alt="Prometheus Chart" width="500">
-
-### 4️⃣ Go back to shipping features 🚀
 
 ## Examples
 
