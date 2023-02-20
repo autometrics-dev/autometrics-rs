@@ -4,6 +4,9 @@ image:
 
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
+# Run Prometheus
+- init: prometheus
+  command: sudo prometheus --config.file=./examples/util/prometheus.yml
 # Build and run on startup
 - init: cargo build
   command: cargo run -p example-full-api serve
@@ -12,6 +15,8 @@ tasks:
 
 # List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
 ports:
+- port: 9090
+  onOpen: open-preview
 - port: 3000
   onOpen: open-preview
 

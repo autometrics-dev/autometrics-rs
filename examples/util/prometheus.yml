@@ -7,13 +7,3 @@ scrape_configs:
     # much longer but this is just for demo purposes and we want the
     # data to show up quickly
     scrape_interval: 200ms
-    honor_labels: false
-    honor_timestamps: true
-    scheme: http
-    follow_redirects: true
-    body_size_limit: 0
-    sample_limit: 0
-    label_limit: 0
-    label_name_length_limit: 0
-    label_value_length_limit: 0
-    target_limit: 0
