@@ -61,7 +61,7 @@ See the other [examples](./examples/) for details on how to use the various feat
 
 Or run the example in Gitpod:
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/[autometrics-dev]/[autometrics-rs])
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/autometrics-dev/autometrics-rs)
 
 ## Optional Features
 
