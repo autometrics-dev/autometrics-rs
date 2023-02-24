@@ -1,10 +1,13 @@
-# Autometrics 📈✨
+
+![GitHub_headerImage](https://user-images.githubusercontent.com/3262610/221191767-73b8a8d9-9f8b-440e-8ab6-75cb3c82f2bc.png)
 
 [![Documentation](https://docs.rs/autometrics/badge.svg)](https://docs.rs/autometrics)
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-**A macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.** Jump straight from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
+**A Rust macro that makes it easy to understand the error rate, response time, and production usage of any function in your code.**
+
+Jump from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
 <video src="https://user-images.githubusercontent.com/3262610/220152261-2ad6ab2b-f951-4b51-8d6e-855fb71440a3.mp4" autoplay loop muted></video>
 
