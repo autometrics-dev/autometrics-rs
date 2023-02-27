@@ -79,3 +79,11 @@ pub fn some_function() -> Option<String> {
 pub fn none_function() -> Option<String> {
     Some("Hello world!".to_string())
 }
+
+// Custom autometrics path
+mod my_autometrics {
+    pub use autometrics::*;
+}
+
+#[autometrics(crate = my_autometrics)]
+pub fn custom_autometrics_path() -> () {}

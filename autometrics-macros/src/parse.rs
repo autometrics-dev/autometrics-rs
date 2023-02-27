@@ -1,5 +1,5 @@
 use syn::parse::{Parse, ParseStream};
-use syn::{Expr, ItemFn, ItemImpl, Result, Token};
+use syn::{Expr, ItemFn, ItemImpl, Path, Result, Token};
 
 /// Autometrics can be applied to individual functions or to
 /// (all of the methods within) impl blocks.
@@ -24,6 +24,7 @@ pub(crate) struct Args {
     pub track_concurrency: bool,
     pub ok_if: Option<Expr>,
     pub error_if: Option<Expr>,
+    pub crate_path: Option<Path>,
 
     #[cfg(feature = "alerts")]
     pub alerts: Option<alerts::Alerts>,
@@ -75,6 +76,10 @@ impl Parse for Args {
                     input.span(),
                     "feature \"alerts\" is required to use alerts",
                 ));
+            } else if lookahead.peek(Token![crate]) {
+                let _ = input.parse::<Token![crate]>()?;
+                let _ = input.parse::<Token![=]>()?;
+                args.crate_path = Some(Path::parse_mod_style(input)?);
             } else if lookahead.peek(Token![,]) {
                 let _ = input.parse::<Token![,]>()?;
             } else {

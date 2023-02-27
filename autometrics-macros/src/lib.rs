@@ -3,7 +3,7 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
+use syn::{parse_macro_input, parse_quote, ImplItem, ItemFn, ItemImpl, Result};
 
 mod parse;
 
@@ -87,6 +87,18 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// are handled within 200ms, you must have a histogram bucket for 0.2 seconds. If there is no
 /// such bucket, the alert will never fire.
 ///
+/// ### `crate`
+///
+/// Example
+/// ```rust
+/// #[autometrics(crate = my_crate::autometrics))]
+/// ```
+///
+/// Use this feature if you are using `autometrics` in a library and do not want to require users of the library to
+/// add `autometrics` to their `Cargo.toml`. You can re-export the contents of the `autometrics` crate
+/// and then use this attribute to specify the path to the re-exported module.
+///
+///
 /// ## Instrumenting `impl` blocks
 ///
 /// In addition to instrumenting functions, you can also instrument `impl` blocks.
@@ -133,6 +145,10 @@ pub fn autometrics(
 /// Add autometrics instrumentation to a single function
 fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
     let track_concurrency = args.track_concurrency;
+    let autometrics_path = args
+        .crate_path
+        .clone()
+        .unwrap_or(parse_quote!(::autometrics));
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -149,13 +165,13 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
         quote! {
-            autometrics::__private::CALLER.scope(#function_name, async move {
+            #autometrics_path::__private::CALLER.scope(#function_name, async move {
                 #block
             }).await
         }
     } else {
         quote! {
-            autometrics::__private::CALLER.sync_scope(#function_name, move || {
+            #autometrics_path::__private::CALLER.sync_scope(#function_name, move || {
                 #block
             })
         }
@@ -181,7 +197,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 
         quote! {
             {
-                use autometrics::__private::alerts::{self, *};
+                use #autometrics_path::__private::alerts::{self, *};
 
                 // For every function that has alert definition defined, we create a static record in a
                 // distributed slice that is "gathered into a contiguous section
@@ -215,7 +231,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         };
         quote! {
             {
-                use autometrics::__private::{create_label_array, CALLER, GetStaticStrFromIntoStaticStr, GetStaticStr, TrackMetrics};
+                use #autometrics_path::__private::{create_label_array, CALLER, GetStaticStrFromIntoStaticStr, GetStaticStr, TrackMetrics};
                 let result_label = #result_label;
                 // If the return type implements Into<&'static str>, attach that as a label
                 let value_type = (&result).__autometrics_static_str();
@@ -227,7 +243,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         // the return value was a `Result` and, if so, assign the appropriate labels
         quote! {
             {
-                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
+                use #autometrics_path::__private::{CALLER, GetLabels, GetLabelsFromResult};
                 (&result).__autometrics_get_labels(__autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get())
             }
         }
@@ -241,7 +257,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 
         #vis #sig {
             let __autometrics_tracker = {
-                use autometrics::__private::{AutometricsTracker, TrackMetrics, str_replace};
+                use #autometrics_path::__private::{AutometricsTracker, TrackMetrics, str_replace};
 
                 // Note that we cannot determine the module path at macro expansion time
                 // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
@@ -255,7 +271,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
             let result = #call_function;
 
             {
-                use autometrics::__private::TrackMetrics;
+                use #autometrics_path::__private::TrackMetrics;
                 let counter_labels = #counter_labels;
                 __autometrics_tracker.finish(&counter_labels);
             }
