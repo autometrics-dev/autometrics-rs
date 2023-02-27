@@ -181,28 +181,21 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 
         quote! {
             {
-                use autometrics::__private::{Alert, METRICS};
+                use autometrics::__private::alerts::{self, *};
 
-                // This is a bit nuts for 2 reasons:
-                // 1. For every function that has alert definition defined, we create a static record in a
-                //    distributed slice that is "gathered into a contiguous section
-                //    of the binary by the linker". We then iterate over this list of
-                //    instrumented functions to generate the alerts.
-                //    See https://github.com/dtolnay/linkme for how this "shenanigans" works
-                // 2. We are intentionally bypassing the normal API and typechecking of the `linkme` crate 😬.
-                //    Instead of calling the `linkme::distributed_slice!` macro, we are calling
-                //    the METRICS macro directly. This is because the distributed_slice macro
-                //    expands to code that calls an import from the linkme crate.
-                //    We're using this workaround because we don't want to require users of this
-                //    crate to also add `linkme` as a dependency.
-                METRICS! {
-                    static #function_name_uppercase: Alert = Alert {
-                        function: #function_name,
-                        module: module_label,
-                        success_rate: #success_rate,
-                        latency: #latency,
-                    };
-                }
+                // For every function that has alert definition defined, we create a static record in a
+                // distributed slice that is "gathered into a contiguous section
+                // of the binary by the linker". We then iterate over this list of
+                // instrumented functions to generate the alerts.
+                // See https://github.com/dtolnay/linkme for how this "shenanigans" works
+                #[distributed_slice(METRICS)]
+                #[linkme(crate=alerts)]
+                static #function_name_uppercase: Alert = Alert {
+                    function: #function_name,
+                    module: module_label,
+                    success_rate: #success_rate,
+                    latency: #latency,
+                };
             }
         }
     } else {

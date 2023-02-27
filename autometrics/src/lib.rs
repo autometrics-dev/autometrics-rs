@@ -36,7 +36,9 @@ pub mod __private {
     use std::{cell::RefCell, thread_local};
 
     #[cfg(feature = "alerts")]
-    pub use crate::alerts::{Alert, METRICS};
+    pub mod alerts {
+        pub use crate::alerts::*;
+    }
     pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use const_format::str_replace;
