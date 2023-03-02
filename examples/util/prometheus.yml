@@ -7,3 +7,5 @@ scrape_configs:
     # much longer but this is just for demo purposes and we want the
     # data to show up quickly
     scrape_interval: 200ms
+rule_files:
+  - "./autometrics.rules.yml"

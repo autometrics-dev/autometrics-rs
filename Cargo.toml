@@ -12,9 +12,10 @@ keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::profiling"]
 
 [workspace]
-default-members = ["autometrics", "autometrics-macros"]
+default-members = ["autometrics", "autometrics-cli", "autometrics-macros"]
 members = [
   "autometrics",
+  "autometrics-cli",
   "autometrics-macros",
   "examples/*"
 ]
