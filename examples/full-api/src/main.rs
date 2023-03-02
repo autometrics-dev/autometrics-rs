@@ -70,7 +70,7 @@ fn is_success(response: &Response) -> bool {
 async fn handle_serve(args: ServeArgs) {
     // Run Prometheus and generate random traffic for the app
     // (You would not actually do this in production, but it makes it easier to see the example in action)
-    run_prometheus();
+    let _promehtheus = run_prometheus();
     tokio::spawn(generate_random_traffic());
 
     // Set up the exporter to collect metrics
