@@ -1,4 +1,4 @@
-use crate::labels::Label;
+use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
 
 #[cfg(feature = "metrics")]
 mod metrics;
@@ -21,8 +21,6 @@ pub use self::metrics::MetricsTracker as AutometricsTracker;
 pub use self::prometheus::PrometheusTracker as AutometricsTracker;
 
 pub trait TrackMetrics {
-    fn function(&self) -> &'static str;
-    fn module(&self) -> &'static str;
-    fn start(function: &'static str, module: &'static str, track_concurrency: bool) -> Self;
-    fn finish<'a>(self, counter_labels: &[Label]);
+    fn start(gauge_labels: Option<&GaugeLabels>) -> Self;
+    fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels);
 }

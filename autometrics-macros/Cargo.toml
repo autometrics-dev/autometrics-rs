@@ -13,14 +13,9 @@ categories = { workspace = true }
 [lib]
 proc-macro = true
 
-[features]
-alerts = ["rust_decimal"]
-
 [dependencies]
+rust_decimal = "1.28"
 percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"
 syn =  { version = "1", features = ["full"] }
-
-# Used for the alerts feature
-rust_decimal = { version = "1.28", optional = true }
