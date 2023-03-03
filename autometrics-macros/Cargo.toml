@@ -14,7 +14,6 @@ categories = { workspace = true }
 proc-macro = true
 
 [dependencies]
-rust_decimal = "1.28"
 percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"

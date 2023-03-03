@@ -5,5 +5,5 @@ publish = false
 edition = "2021"
 
 [dependencies]
-autometrics = { path = "../../autometrics", features = ["alerts"] }
+autometrics = { path = "../../autometrics" }
 clap = { version = "4.1", features = ["derive"]}

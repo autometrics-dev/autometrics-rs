@@ -1,17 +1,45 @@
-use crate::constants::*;
+use crate::{constants::*, objectives::Objective};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
 type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
+/// These are the labels used for the `function.calls.count` metric.
 pub struct CounterLabels {
-    pub function: &'static str,
-    pub module: &'static str,
-    pub caller: &'static str,
-    pub result: Option<ResultAndReturnTypeLabels>,
+    pub(crate) function: &'static str,
+    pub(crate) module: &'static str,
+    pub(crate) caller: &'static str,
+    pub(crate) result: Option<ResultAndReturnTypeLabels>,
+    #[allow(dead_code)]
+    pub(crate) objective: Option<(&'static str, &'static str)>,
 }
 
 impl CounterLabels {
+    pub fn new(
+        function: &'static str,
+        module: &'static str,
+        caller: &'static str,
+        result: Option<ResultAndReturnTypeLabels>,
+        objective: Option<Objective>,
+    ) -> Self {
+        let objective = if let Some(objective) = objective {
+            if let Some(success_rate) = objective.success_rate {
+                Some((objective.name, success_rate))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        Self {
+            function,
+            module,
+            caller,
+            result,
+            objective,
+        }
+    }
+
     pub fn to_vec(&self) -> Vec<Label> {
         let mut labels = vec![
             (FUNCTION_KEY, self.function),
@@ -29,17 +57,47 @@ impl CounterLabels {
     }
 }
 
+/// These are the labels used for the `function.calls.duration` metric.
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
+    /// The SLO name, objective percentile, and target latency
+    pub objective: Option<(&'static str, &'static str, &'static str)>,
 }
 
 impl HistogramLabels {
-    pub fn to_array(&self) -> [Label; 2] {
-        [(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)]
+    pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
+        let objective = if let Some(objective) = objective {
+            if let Some((target_latency, percentile)) = objective.latency {
+                Some((objective.name, percentile, target_latency))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        Self {
+            function,
+            module,
+            objective,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<Label> {
+        let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
+
+        if let Some((slo_name, objective, target_latency)) = self.objective {
+            labels.push((SLO_NAME, slo_name));
+            labels.push((OBJECTIVE, objective));
+            labels.push((TARGET_LATENCY, target_latency));
+        }
+
+        labels
     }
 }
 
+/// These are the labels used for the `function.calls.concurrent` metric.
 pub struct GaugeLabels {
     pub function: &'static str,
     pub module: &'static str,

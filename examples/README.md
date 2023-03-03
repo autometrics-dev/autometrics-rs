@@ -15,4 +15,4 @@ cargo run --package example-{name of example}
 
 ## Full Example
 
-Look at the [full-api](./full-api) example to see autometrics in use in an example API server built with `axum`, `clap`, `thiserror`, and `tokio`.
+Look at the [full-api](./full-api) example to see autometrics in use in an example API server built with `axum`, `thiserror`, and `tokio`.

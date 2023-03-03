@@ -1,6 +1,5 @@
-use rust_decimal::Decimal;
 use syn::parse::{Parse, ParseStream};
-use syn::{Expr, ItemFn, ItemImpl, LitFloat, LitInt, LitStr, Result, Token};
+use syn::{Expr, ItemFn, ItemImpl, Result, Token};
 
 mod kw {
     syn::custom_keyword!(track_concurrency);
@@ -66,6 +65,7 @@ impl Parse for AutometricsArgs {
                 args.error_if = Some(error_if.value);
             } else if lookahead.peek(kw::objective) {
                 let _ = input.parse::<kw::objective>()?;
+                let _ = input.parse::<Token![=]>()?;
                 if args.objective.is_some() {
                     return Err(input.error("expected only a single `objective` argument"));
                 }
@@ -78,17 +78,6 @@ impl Parse for AutometricsArgs {
         }
         Ok(args)
     }
-}
-
-pub(crate) struct CreateObjectiveArgs {
-    pub name: LitStr,
-    pub success_rate: Option<Decimal>,
-    pub latency: Option<Latency>,
-}
-
-pub(crate) struct Latency {
-    pub target_seconds: Decimal,
-    pub percentile: Decimal,
 }
 
 struct ExprArg<T> {
@@ -105,104 +94,5 @@ impl<T: Parse> Parse for ExprArg<T> {
             value,
             _p: std::marker::PhantomData,
         })
-    }
-}
-
-// Parse alerts in the form alerts(success_rate = 99.9%, latency(99.9% < 200ms))
-impl Parse for CreateObjectiveArgs {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let name: LitStr = input.parse()?;
-
-        let mut args = CreateObjectiveArgs {
-            name,
-            success_rate: None,
-            latency: None,
-        };
-        while !input.is_empty() {
-            let lookahead = input.lookahead1();
-            if lookahead.peek(kw::success_rate) {
-                let _ = input.parse::<kw::success_rate>()?;
-
-                let _ = input.parse::<Token![=]>()?;
-
-                let success_rate = input.parse::<IntOrFloat>()?.0 / Decimal::from(100);
-                let _ = input.parse::<Token![%]>()?;
-
-                args.success_rate = Some(success_rate);
-            } else if lookahead.peek(kw::latency) {
-                args.latency = Some(input.parse()?);
-            } else if lookahead.peek(Token![,]) {
-                let _ = input.parse::<Token![,]>()?;
-            } else {
-                return Err(lookahead.error());
-            }
-        }
-        Ok(args)
-    }
-}
-
-// Parse latency in the form latency(99.9% < 200ms)
-impl Parse for Latency {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let _ = input.parse::<kw::latency>()?;
-        let content;
-        let _ = syn::parenthesized!(content in input);
-
-        let percentile = content.parse::<IntOrFloat>()?.0 / Decimal::from(100);
-
-        let _ = content.parse::<Token![%]>()?;
-        // Handle if the next token is either: <, <=, or =
-        let lookahead = content.lookahead1();
-        if lookahead.peek(Token![<=]) {
-            let _ = content.parse::<Token![<=]>()?;
-        } else if lookahead.peek(Token![<]) {
-            let _ = content.parse::<Token![<]>()?;
-        } else if lookahead.peek(Token![=]) {
-            let _ = content.parse::<Token![=]>()?;
-        } else {
-            return Err(lookahead.error());
-        }
-
-        let IntOrFloat(target_seconds, unit) = content.parse()?;
-        let target_seconds = match unit {
-            Some(Unit::Seconds) => target_seconds,
-            Some(Unit::Milliseconds) => target_seconds / Decimal::from(1000),
-            _ => return Err(content.error("expected unit of time (s or ms)")),
-        };
-
-        Ok(Latency {
-            target_seconds,
-            percentile,
-        })
-    }
-}
-
-enum Unit {
-    Seconds,
-    Milliseconds,
-}
-
-struct IntOrFloat(Decimal, Option<Unit>);
-
-impl Parse for IntOrFloat {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        let (float, suffix) = if lookahead.peek(syn::LitInt) {
-            let lit_int: LitInt = input.parse()?;
-            (lit_int.base10_parse()?, lit_int.suffix().to_string())
-        } else if lookahead.peek(syn::LitFloat) {
-            let lit_float: LitFloat = input.parse()?;
-            (lit_float.base10_parse()?, lit_float.suffix().to_string())
-        } else {
-            return Err(lookahead.error());
-        };
-
-        let unit = match suffix.as_str() {
-            "" => None,
-            "ms" => Some(Unit::Milliseconds),
-            "s" => Some(Unit::Seconds),
-            _ => return Err(lookahead.error()),
-        };
-        Ok(IntOrFloat(float, unit))
     }
 }

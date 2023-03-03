@@ -7,12 +7,14 @@
 
 mod constants;
 mod labels;
+mod objectives;
 #[cfg(feature = "prometheus-exporter")]
 mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
-pub use autometrics_macros::{autometrics, create_objective};
+pub use autometrics_macros::autometrics;
+pub use objectives::{Objective, ObjectivePercentage, TargetLatency};
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]

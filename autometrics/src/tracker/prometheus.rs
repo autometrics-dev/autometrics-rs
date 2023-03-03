@@ -24,6 +24,8 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             RESULT_KEY,
             OK_KEY,
             ERROR_KEY,
+            SLO_NAME,
+            OBJECTIVE,
         ]
     )
     .expect(formatcp!(
@@ -34,7 +36,13 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
     register_histogram_vec!(
         HISTOGRAM_NAME_PROMETHEUS,
         HISTOGRAM_DESCRIPTION,
-        &[FUNCTION_KEY, MODULE_KEY]
+        &[
+            FUNCTION_KEY,
+            MODULE_KEY,
+            SLO_NAME,
+            OBJECTIVE,
+            TARGET_LATENCY
+        ]
     )
     .expect("Failed to register function_calls_duration histogram")
 });
@@ -89,12 +97,20 @@ impl TrackMetrics for PrometheusTracker {
                     } else {
                         ""
                     },
+                    counter_labels.objective.unwrap_or_default().0,
+                    counter_labels.objective.unwrap_or_default().1,
                 ],
             )
             .inc();
 
         HISTOGRAM
-            .with_label_values(&[histogram_labels.function, histogram_labels.module])
+            .with_label_values(&[
+                histogram_labels.function,
+                histogram_labels.module,
+                histogram_labels.objective.unwrap_or_default().0,
+                histogram_labels.objective.unwrap_or_default().1,
+                histogram_labels.objective.unwrap_or_default().2,
+            ])
             .observe(duration);
 
         if let Some(gauge) = self.gauge {

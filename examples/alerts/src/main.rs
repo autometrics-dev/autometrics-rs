@@ -1,4 +1,4 @@
-use autometrics::{autometrics, generate_alerts};
+use autometrics::autometrics;
 use clap::Parser;
 
 // If you use clap to parse your CLI arguments, you can

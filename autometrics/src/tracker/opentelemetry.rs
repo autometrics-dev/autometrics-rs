@@ -50,7 +50,7 @@ impl TrackMetrics for OpenTelemetryTracker {
             .f64_histogram(HISTOGRAM_NAME)
             .with_description(HISTOGRAM_DESCRIPTION)
             .init();
-        let histogram_labels = to_key_values(histogram_labels.to_array());
+        let histogram_labels = to_key_values(histogram_labels.to_vec());
         histogram.record(&self.context, duration, &histogram_labels);
 
         // Decrease the number of concurrent requests

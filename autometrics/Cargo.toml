@@ -23,6 +23,7 @@ prometheus-exporter = [
   "opentelemetry_sdk",
   "prometheus"
 ]
+custom_objectives = []
 
 [dependencies]
 autometrics-macros = { version = "0.2.0", path = "../autometrics-macros" }

@@ -56,8 +56,8 @@ fn generate_success_rate_slo(objective: &Decimal) -> String {
     description: Common SLO based on function success rates
     sli:
       events:
-        error_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective}\",result=\"error\"}}[{{{{.window}}}}]))
-        total_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective}\"}}[{{{{.window}}}}]))
+        error_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective_fraction}\",result=\"error\"}}[{{{{.window}}}}]))
+        total_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
     alerting:
       name: High Error Rate SLO - {objective}%
       labels:
@@ -83,14 +83,14 @@ fn generate_latency_slo(objective: &Decimal) -> String {
     sli:
       events:
         error_query: >
-          sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective}\"}}[{{{{.window}}}}]))
+          sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
           -
           (sum by (slo_name, objective) (
-            label_join(rate(function_calls_duration_bucket{{objective=\"{objective}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"target_latency\")
+            label_join(rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"target_latency\")
             and
-            label_join(rate(function_calls_duration_bucket{{objective=\"{objective}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
+            label_join(rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
           ))
-        total_query: sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective}\"}}[{{{{.window}}}}]))
+        total_query: sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
     alerting:
       name: High Latency SLO - {objective}%
       labels:
