@@ -10,7 +10,7 @@ tasks:
 # Build and run on startup
 - init: cargo build
   command: cargo run -p example-full-api serve
-# In parallel, open a terminal with automatic type-checking for development
+# In parallel, open a terminal with automatic type-checking for development
 - command: cargo watch -x check
 
 # List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
