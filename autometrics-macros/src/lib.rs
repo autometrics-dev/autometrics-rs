@@ -5,7 +5,6 @@ use quote::quote;
 use std::env;
 use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
-mod instrument;
 mod parse;
 
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
