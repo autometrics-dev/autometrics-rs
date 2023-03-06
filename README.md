@@ -77,7 +77,20 @@ Autometrics makes it easy to add Prometheus alerts using Service-Level Objective
 This works using pre-defined [Prometheus alerting rules](./autometrics.rules.yml) (read more about alerting rules in general [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)).
 By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
-See the API docs for creating an using an autometrics [Objective](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html). You can also see it the [full API example](./examples/full-api). (When an `objective` is provided to the `autometrics` macro, the necessary labels are automatically attached to that function's metrics.)
+To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
+
+```rust
+use autometrics::{autometrics, Objective, ObjectivePercentage, TargetLatency};
+
+const API_SLO: Objective = Objective::new("api")
+    .success_rate(ObjectivePercentage::P99_9)
+    .latency(TargetLatency::Ms200, ObjectivePercentage::P99);
+
+#[autometrics(objective = API_SLO)]
+pub fn api_handler() {
+  // ...
+}
+```
 
 ## Configuring
 
