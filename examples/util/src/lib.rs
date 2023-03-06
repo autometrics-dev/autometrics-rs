@@ -9,8 +9,10 @@ pub struct ChildGuard(Child);
 
 impl Drop for ChildGuard {
     fn drop(&mut self) {
-        self.0.kill().expect("Failed to kill prometheus");
-        eprintln!("Stopped Prometheus server");
+        match self.0.kill() {
+            Ok(_) => eprintln!("Stopped Prometheus server"),
+            Err(_) => eprintln!("Failed to stop Prometheus server"),
+        }
     }
 }
 
