@@ -3,7 +3,6 @@ use syn::{Expr, ItemFn, ItemImpl, Result, Token};
 
 mod kw {
     syn::custom_keyword!(track_concurrency);
-    syn::custom_keyword!(alerts);
     syn::custom_keyword!(objective);
     syn::custom_keyword!(success_rate);
     syn::custom_keyword!(latency);
