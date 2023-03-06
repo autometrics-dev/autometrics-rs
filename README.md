@@ -74,10 +74,10 @@ pub fn get_metrics() -> (StatusCode, String) {
 
 Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 
-This works using a pre-defined [Prometheus alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
-By default, most of the recording rules are dormaint. They are enabled when specific labels are attached to the metrics produced by autometrics.
+This works using pre-defined [Prometheus alerting rules](./autometrics.rules.yml) (read more about alerting rules in general [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)).
+By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
-See the API docs for creating an using an autometrics [Objective](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html). You can also see it the [full API example](./examples/full-api).
+See the API docs for creating an using an autometrics [Objective](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html). You can also see it the [full API example](./examples/full-api). (When an `objective` is provided to the `autometrics` macro, the necessary labels are automatically attached to that function's metrics.)
 
 ## Configuring
 
