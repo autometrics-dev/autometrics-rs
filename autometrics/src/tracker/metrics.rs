@@ -1,4 +1,6 @@
-use crate::{constants::*, labels::Label, tracker::TrackMetrics};
+use crate::constants::*;
+use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
+use crate::tracker::TrackMetrics;
 use metrics::{
     describe_counter, describe_gauge, describe_histogram, register_counter, register_gauge,
     register_histogram, Gauge,
@@ -16,26 +18,16 @@ fn describe_metrics() {
 }
 
 pub struct MetricsTracker {
-    module: &'static str,
-    function: &'static str,
     gauge: Option<Gauge>,
     start: Instant,
 }
 
 impl TrackMetrics for MetricsTracker {
-    fn function(&self) -> &'static str {
-        self.function
-    }
-
-    fn module(&self) -> &'static str {
-        self.module
-    }
-
-    fn start(function: &'static str, module: &'static str, track_concurrency: bool) -> Self {
+    fn start(gauge_labels: Option<&GaugeLabels>) -> Self {
         describe_metrics();
 
-        let gauge = if track_concurrency {
-            let gauge = register_gauge!(GAUGE_NAME, "function" => function, "module" => module);
+        let gauge = if let Some(gauge_labels) = gauge_labels {
+            let gauge = register_gauge!(GAUGE_NAME, &gauge_labels.to_array());
             gauge.increment(1.0);
             Some(gauge)
         } else {
@@ -43,18 +35,15 @@ impl TrackMetrics for MetricsTracker {
         };
 
         Self {
-            module,
-            function,
             gauge,
             start: Instant::now(),
         }
     }
 
-    fn finish<'a>(self, counter_labels: &[Label]) {
+    fn finish<'a>(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         let duration = self.start.elapsed().as_secs_f64();
-        register_counter!(COUNTER_NAME, counter_labels).increment(1);
-        register_histogram!(HISTOGRAM_NAME, "function" => self.function, "module" => self.module)
-            .record(duration);
+        register_counter!(COUNTER_NAME, &counter_labels.to_vec()).increment(1);
+        register_histogram!(HISTOGRAM_NAME, &histogram_labels.to_vec()).record(duration);
         if let Some(gauge) = self.gauge {
             gauge.decrement(1.0);
         }

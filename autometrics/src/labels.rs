@@ -1,33 +1,111 @@
-use crate::constants::*;
+use crate::{constants::*, objectives::Objective};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
+type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
-pub fn create_label_array(
-    result: &'static str,
-    function: &'static str,
-    module: &'static str,
-    caller: &'static str,
-    return_value_type: Option<&'static str>,
-) -> LabelArray {
-    let function_label = (FUNCTION_KEY, function);
-    let module_label = (MODULE_KEY, module);
-    let caller_label = (CALLER_KEY, caller);
-    let result_label = (RESULT_KEY, result);
+/// These are the labels used for the `function.calls.count` metric.
+pub struct CounterLabels {
+    pub(crate) function: &'static str,
+    pub(crate) module: &'static str,
+    pub(crate) caller: &'static str,
+    pub(crate) result: Option<ResultAndReturnTypeLabels>,
+    #[allow(dead_code)]
+    pub(crate) objective: Option<(&'static str, &'static str)>,
+}
 
-    // Add another label for the return value if the type implements Into<&'static str>.
-    // This is most likely useful for enums representing error (or potentially success) types.
-    if let Some(value) = return_value_type {
-        let value_label = (result, value);
-        LabelArray::Five([
-            function_label,
-            module_label,
-            caller_label,
-            result_label,
-            value_label,
-        ])
-    } else {
-        LabelArray::Four([function_label, module_label, caller_label, result_label])
+impl CounterLabels {
+    pub fn new(
+        function: &'static str,
+        module: &'static str,
+        caller: &'static str,
+        result: Option<ResultAndReturnTypeLabels>,
+        objective: Option<Objective>,
+    ) -> Self {
+        let objective = if let Some(objective) = objective {
+            if let Some(success_rate) = objective.success_rate {
+                Some((objective.name, success_rate))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        Self {
+            function,
+            module,
+            caller,
+            result,
+            objective,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<Label> {
+        let mut labels = vec![
+            (FUNCTION_KEY, self.function),
+            (MODULE_KEY, self.module),
+            (CALLER_KEY, self.caller),
+        ];
+        if let Some((result, return_value_type)) = self.result {
+            labels.push((RESULT_KEY, result));
+            if let Some(return_value_type) = return_value_type {
+                labels.push((result, return_value_type));
+            }
+        }
+
+        labels
+    }
+}
+
+/// These are the labels used for the `function.calls.duration` metric.
+pub struct HistogramLabels {
+    pub function: &'static str,
+    pub module: &'static str,
+    /// The SLO name, objective percentile, and target latency
+    pub objective: Option<(&'static str, &'static str, &'static str)>,
+}
+
+impl HistogramLabels {
+    pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
+        let objective = if let Some(objective) = objective {
+            if let Some((target_latency, percentile)) = objective.latency {
+                Some((objective.name, percentile, target_latency))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        Self {
+            function,
+            module,
+            objective,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<Label> {
+        let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
+
+        if let Some((slo_name, objective, target_latency)) = self.objective {
+            labels.push((SLO_NAME, slo_name));
+            labels.push((OBJECTIVE, objective));
+            labels.push((TARGET_LATENCY, target_latency));
+        }
+
+        labels
+    }
+}
+
+/// These are the labels used for the `function.calls.concurrent` metric.
+pub struct GaugeLabels {
+    pub function: &'static str,
+    pub module: &'static str,
+}
+
+impl GaugeLabels {
+    pub fn to_array(&self) -> [Label; 2] {
+        [(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)]
     }
 }
 
@@ -44,31 +122,22 @@ pub fn create_label_array(
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
 pub trait GetLabelsFromResult {
-    fn __autometrics_get_labels(
-        &self,
-        function: &'static str,
-        module: &'static str,
-        caller: &'static str,
-    ) -> LabelArray;
+    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
+        None
+    }
 }
 
 impl<T, E> GetLabelsFromResult for Result<T, E> {
-    fn __autometrics_get_labels(
-        &self,
-        function: &'static str,
-        module: &'static str,
-        caller: &'static str,
-    ) -> LabelArray {
-        let (result, value_as_static_str) = match self {
-            Ok(ok) => (OK_KEY, ok.__autometrics_static_str()),
-            Err(err) => (ERROR_KEY, err.__autometrics_static_str()),
-        };
-
-        create_label_array(result, function, module, caller, value_as_static_str)
+    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
+        match self {
+            Ok(ok) => Some((OK_KEY, ok.__autometrics_static_str())),
+            Err(err) => Some((ERROR_KEY, err.__autometrics_static_str())),
+        }
     }
 }
 
 pub enum LabelArray {
+    Three([Label; 3]),
     Four([Label; 4]),
     Five([Label; 5]),
 }
@@ -78,6 +147,7 @@ impl Deref for LabelArray {
 
     fn deref(&self) -> &Self::Target {
         match self {
+            LabelArray::Three(l) => l,
             LabelArray::Four(l) => l,
             LabelArray::Five(l) => l,
         }
@@ -85,13 +155,8 @@ impl Deref for LabelArray {
 }
 
 pub trait GetLabels {
-    fn __autometrics_get_labels(
-        &self,
-        function: &'static str,
-        module: &'static str,
-        _caller: &'static str,
-    ) -> [Label; 2] {
-        [(FUNCTION_KEY, function), (MODULE_KEY, module)]
+    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
+        None
     }
 }
 

@@ -16,7 +16,7 @@ Jump from your IDE to live Prometheus charts for each HTTP/RPC handler, database
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - 📊 (Coming Soon!) Grafana dashboard showing the performance of all instrumented functions
-- 🚨 Generates Prometheus alerting rules using SLO best practices from simple annotations in your code
+- 🚨 Enable Prometheus alerts using SLO best practices from simple annotations in your code
 - ⚙️ Configurable metric collection library (`opentelemetry`, `prometheus`, or `metrics`)
 - ⚡ Minimal runtime overhead
 
@@ -72,32 +72,25 @@ pub fn get_metrics() -> (StatusCode, String) {
 
 ### Alerts / SLOs
 
-Autometrics can generate [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) for Prometheus based on simple annotations in your code. The specific rules are based on [Sloth](https://sloth.dev/) and the Google SRE Workbook section on [Service-Level Objectives (SLOs)](https://sre.google/workbook/alerting-on-slos/).
+Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 
-In your `Cargo.toml` file, enable the optional `alerts` feature:
+This works using pre-defined [Prometheus alerting rules](./autometrics.rules.yml) (read more about alerting rules in general [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)).
+By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
-```toml
-autometrics = { version = "*", features = ["alerts"] }
-```
+To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
 
-Then, pass the `alerts` argument to the `autometrics` macro **for 1-3 top-level functions**:
 ```rust
-#[autometrics(alerts(success_rate = 99.9%, latency(99% <= 200ms)))]
-pub async fn handle_http_requests(req: Request) -> Result<Response, Error> {
+use autometrics::{autometrics, Objective, ObjectivePercentage, TargetLatency};
+
+const API_SLO: Objective = Objective::new("api")
+    .success_rate(ObjectivePercentage::P99_9)
+    .latency(TargetLatency::Ms200, ObjectivePercentage::P99);
+
+#[autometrics(objective = API_SLO)]
+pub fn api_handler() {
   // ...
 }
 ```
-
-Use the `generate_alerts` function to produce the [Prometheus rules YAML file](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/):
-```rust
-fn print_prometheus_alerts() {
-  println!("{}", autometrics::generate_alerts());
-}
-```
-
-Take a look at the [alerts example](./examples/alerts) to see how to integrate generating the alert definitions into your Clap-based binary.
-
-Refer to the Prometheus docs section on [Alerting](https://prometheus.io/docs/alerting/latest/overview/) for more details on configuring Prometheus to use the alerting rules and on how to use [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) to de-duplicate alerts.
 
 ## Configuring
 
@@ -119,7 +112,6 @@ Note that when using Rust Analyzer, you may need to reload the workspace in orde
 
 ### Feature flags
 
-- `alerts` - generate Prometheus [alerting rules](#alerts--slos) to notify you when a given function's error rate or latency is too high
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
 
 #### Metrics Libraries

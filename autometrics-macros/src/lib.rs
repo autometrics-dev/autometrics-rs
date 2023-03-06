@@ -1,4 +1,4 @@
-use crate::parse::{Args, Item};
+use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -114,7 +114,7 @@ pub fn autometrics(
     args: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let args = parse_macro_input!(args as parse::Args);
+    let args = parse_macro_input!(args as parse::AutometricsArgs);
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
@@ -131,8 +131,7 @@ pub fn autometrics(
 }
 
 /// Add autometrics instrumentation to a single function
-fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
-    let track_concurrency = args.track_concurrency;
+fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStream> {
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
@@ -144,7 +143,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
     // Build the documentation we'll add to the function's RustDocs
-    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, track_concurrency);
+    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
 
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
@@ -161,55 +160,11 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         }
     };
 
-    #[cfg(feature = "alerts")]
-    let alert_definition = if let Some(alerts) = &args.alerts {
-        let function_name_uppercase =
-            quote::format_ident!("AUTOMETRICS_{}", function_name.to_uppercase());
-        let success_rate = if let Some(success_rate) = alerts.success_rate {
-            let success_rate = success_rate.normalize().to_string();
-            quote! { Some(#success_rate) }
-        } else {
-            quote! { None }
-        };
-        let latency = if let Some(latency) = &alerts.latency {
-            let latency_target = latency.target_seconds.normalize().to_string();
-            let latency_percentile = latency.percentile.normalize().to_string();
-            quote! { Some((#latency_target, #latency_percentile)) }
-        } else {
-            quote! { None }
-        };
-
-        quote! {
-            {
-                use autometrics::__private::{Alert, METRICS};
-
-                // This is a bit nuts for 2 reasons:
-                // 1. For every function that has alert definition defined, we create a static record in a
-                //    distributed slice that is "gathered into a contiguous section
-                //    of the binary by the linker". We then iterate over this list of
-                //    instrumented functions to generate the alerts.
-                //    See https://github.com/dtolnay/linkme for how this "shenanigans" works
-                // 2. We are intentionally bypassing the normal API and typechecking of the `linkme` crate 😬.
-                //    Instead of calling the `linkme::distributed_slice!` macro, we are calling
-                //    the METRICS macro directly. This is because the distributed_slice macro
-                //    expands to code that calls an import from the linkme crate.
-                //    We're using this workaround because we don't want to require users of this
-                //    crate to also add `linkme` as a dependency.
-                METRICS! {
-                    static #function_name_uppercase: Alert = Alert {
-                        function: #function_name,
-                        module: module_label,
-                        success_rate: #success_rate,
-                        latency: #latency,
-                    };
-                }
-            }
-        }
+    let objective = if let Some(objective) = &args.objective {
+        quote! { Some(#objective) }
     } else {
-        TokenStream::new()
+        quote! { None }
     };
-    #[cfg(not(feature = "alerts"))]
-    let alert_definition = TokenStream::new();
 
     let counter_labels = if args.ok_if.is_some() || args.error_if.is_some() {
         // Apply the predicate to determine whether to consider the result as "ok" or "error"
@@ -222,11 +177,17 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         };
         quote! {
             {
-                use autometrics::__private::{create_label_array, CALLER, GetStaticStrFromIntoStaticStr, GetStaticStr, TrackMetrics};
+                use autometrics::__private::{CALLER, CounterLabels, GetStaticStrFromIntoStaticStr, GetStaticStr};
                 let result_label = #result_label;
                 // If the return type implements Into<&'static str>, attach that as a label
                 let value_type = (&result).__autometrics_static_str();
-                create_label_array(result_label, __autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get(), value_type)
+                CounterLabels::new(
+                    #function_name,
+                     module_path!(),
+                     CALLER.get(),
+                    Some((result_label, value_type)),
+                    #objective,
+                )
             }
         }
     } else {
@@ -234,10 +195,23 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
         // the return value was a `Result` and, if so, assign the appropriate labels
         quote! {
             {
-                use autometrics::__private::{CALLER, GetLabels, GetLabelsFromResult};
-                (&result).__autometrics_get_labels(__autometrics_tracker.function(), __autometrics_tracker.module(), CALLER.get())
+                use autometrics::__private::{CALLER, CounterLabels, GetLabels, GetLabelsFromResult};
+                let result_labels = (&result).__autometrics_get_labels();
+                CounterLabels::new(
+                    #function_name,
+                    module_path!(),
+                    CALLER.get(),
+                    result_labels,
+                    #objective,
+                )
             }
         }
+    };
+
+    let gauge_labels = if args.track_concurrency {
+        quote! { Some(&autometrics::__private::GaugeLabels { function: #function_name, module: module_path!() }) }
+    } else {
+        quote! { None }
     };
 
     Ok(quote! {
@@ -248,23 +222,21 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 
         #vis #sig {
             let __autometrics_tracker = {
-                use autometrics::__private::{AutometricsTracker, TrackMetrics, str_replace};
-
-                // Note that we cannot determine the module path at macro expansion time
-                // (see https://github.com/rust-lang/rust/issues/54725), only at compile/run time
-                const module_label: &'static str = str_replace!(module_path!(), "::", ".");
-
-                #alert_definition
-
-                AutometricsTracker::start(#function_name, module_label, #track_concurrency)
+                use autometrics::__private::{AutometricsTracker, TrackMetrics};
+                AutometricsTracker::start(#gauge_labels)
             };
 
             let result = #call_function;
 
             {
-                use autometrics::__private::TrackMetrics;
+                use autometrics::__private::{HistogramLabels, TrackMetrics};
                 let counter_labels = #counter_labels;
-                __autometrics_tracker.finish(&counter_labels);
+                let histogram_labels = HistogramLabels::new(
+                    #function_name,
+                     module_path!(),
+                     #objective,
+                );
+                __autometrics_tracker.finish(&counter_labels, &histogram_labels);
             }
 
             result
@@ -273,7 +245,7 @@ fn instrument_function(args: &Args, item: ItemFn) -> Result<TokenStream> {
 }
 
 /// Add autometrics instrumentation to an entire impl block
-fn instrument_impl_block(args: &Args, mut item: ItemImpl) -> Result<TokenStream> {
+fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<TokenStream> {
     // Replace all of the method items in place
     item.items = item
         .items

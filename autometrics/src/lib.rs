@@ -5,22 +5,20 @@
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 #![doc = include_str!("../../README.md")]
 
-#[cfg(feature = "alerts")]
-mod alerts;
 mod constants;
 mod labels;
+mod objectives;
 #[cfg(feature = "prometheus-exporter")]
 mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
 pub use autometrics_macros::autometrics;
+pub use objectives::{Objective, ObjectivePercentage, TargetLatency};
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus_exporter::*;
-#[cfg(feature = "alerts")]
-pub use crate::alerts::*;
 
 // Not public API
 // Note that this needs to be publicly exported (despite being called private)
@@ -35,11 +33,8 @@ pub mod __private {
     use crate::task_local::LocalKey;
     use std::{cell::RefCell, thread_local};
 
-    #[cfg(feature = "alerts")]
-    pub use crate::alerts::{Alert, METRICS};
     pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
-    pub use const_format::str_replace;
 
     /// Task-local value used for tracking which function called the current function
     pub static CALLER: LocalKey<&'static str> = {
@@ -53,4 +48,10 @@ pub mod __private {
 
         LocalKey { inner: CALLER_KEY }
     };
+
+    pub struct Objective {
+        pub name: &'static str,
+        pub success_rate: Option<&'static str>,
+        pub latency: Option<(&'static str, &'static str)>,
+    }
 }

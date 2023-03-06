@@ -1,11 +1,22 @@
 use rand::{thread_rng, Rng};
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
 use std::{io::ErrorKind, time::Duration};
 use tokio::time::sleep;
 
 const PROMETHEUS_CONFIG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/prometheus.yml");
 
-pub fn run_prometheus() {
+pub struct ChildGuard(Child);
+
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        match self.0.kill() {
+            Ok(_) => eprintln!("Stopped Prometheus server"),
+            Err(_) => eprintln!("Failed to stop Prometheus server"),
+        }
+    }
+}
+
+pub fn run_prometheus() -> ChildGuard {
     match Command::new("prometheus")
         .args(["--config.file", PROMETHEUS_CONFIG_PATH])
         .stdout(Stdio::null())
@@ -18,11 +29,12 @@ pub fn run_prometheus() {
         Err(err) => {
             panic!("Failed to start prometheus: {}", err);
         }
-        Ok(_) => {
+        Ok(child) => {
             eprintln!(
                 "Running Prometheus on port 9090 (using config file: {})\n",
                 PROMETHEUS_CONFIG_PATH
             );
+            ChildGuard(child)
         }
     }
 }
