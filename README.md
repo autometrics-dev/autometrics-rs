@@ -40,9 +40,12 @@ Or run the example in Gitpod:
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/autometrics-dev/autometrics-rs)
 
-## Optional Features
 
-### Exporting Prometheus Metrics
+## Exporting Prometheus Metrics
+
+Prometheus works by polling a specific HTTP endpoint on your server to collect the current state of all the metrics it has in memory.
+
+### For projects not currently using Prometheus metrics
 
 Autometrics includes optional functions to help collect and prepare metrics to be collected by Prometheus.
 
@@ -70,7 +73,14 @@ pub fn get_metrics() -> (StatusCode, String) {
 }
 ```
 
-### Alerts / SLOs
+### For projects already using custom Prometheus metrics
+
+Autometrics uses existing metrics libraries (see [below](#metrics-libraries)) to produce and collect metrics.
+
+If you are already using one of these to collect and export metrics, simply configure autometrics to use the same library and the metrics it produces will be exported alongside yours. You do not need to use the Prometheus exporter functions this library provides and you do not need a separate endpoint for autometrics' metrics.
+
+
+## Alerts / SLOs
 
 Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 
@@ -92,7 +102,7 @@ pub fn api_handler() {
 }
 ```
 
-## Configuring
+## Configuring Autometrics
 
 ### Custom Prometheus URL
 By default, Autometrics creates Prometheus query links that point to `http://localhost:9090`.
@@ -107,7 +117,9 @@ fn main() {
   println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
 }
 ```
-Note that when using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
+When using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
+
+Note that the Prometheus URL is only included in function documentation comments so changing it will have no impact on the final compiled binary.
 
 
 ### Feature flags
