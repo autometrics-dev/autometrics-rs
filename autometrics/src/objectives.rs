@@ -95,10 +95,10 @@ pub enum ObjectivePercentage {
 impl ObjectivePercentage {
     const fn as_str(&self) -> &'static str {
         match self {
-            ObjectivePercentage::P90 => "90",
-            ObjectivePercentage::P95 => "95",
-            ObjectivePercentage::P99 => "99",
-            ObjectivePercentage::P99_9 => "99.9",
+            ObjectivePercentage::P90 => "0.9",
+            ObjectivePercentage::P95 => "0.95",
+            ObjectivePercentage::P99 => "0.99",
+            ObjectivePercentage::P99_9 => "0.999",
             #[cfg(feature = "custom_objectives")]
             ObjectivePercentage::Custom(custom) => custom,
         }
