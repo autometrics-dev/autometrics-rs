@@ -48,10 +48,10 @@ slos:
 }
 
 fn generate_success_rate_slo(objective: &Decimal) -> String {
-    let objective_fraction = objective / Decimal::from(100);
-    let objective_fraction_no_decimal = objective_fraction.to_string().replace(".", "");
+    let objective_fraction = (objective / Decimal::from(100)).normalize();
+    let objective_no_decimal = objective.to_string().replace(".", "");
 
-    format!("  - name: success-rate-{objective_fraction_no_decimal}
+    format!("  - name: success-rate-{objective_no_decimal}
     objective: {objective}
     description: Common SLO based on function success rates
     sli:
@@ -74,10 +74,10 @@ fn generate_success_rate_slo(objective: &Decimal) -> String {
 }
 
 fn generate_latency_slo(objective: &Decimal) -> String {
-    let objective_fraction = objective / Decimal::from(100);
-    let objective_fraction_no_decimal = objective_fraction.to_string().replace(".", "");
+    let objective_fraction = (objective / Decimal::from(100)).normalize();
+    let objective_no_decimal = objective.to_string().replace(".", "");
 
-    format!("  - name: latency-{objective_fraction_no_decimal}
+    format!("  - name: latency-{objective_no_decimal}
     objective: {objective}
     description: Common SLO based on function latency
     sli:
