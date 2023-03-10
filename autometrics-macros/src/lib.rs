@@ -1,9 +1,9 @@
 use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
+use syn::{parse_macro_input, DeriveInput, ImplItem, ItemFn, ItemImpl, Result, Data, DataEnum, Attribute, Meta, NestedMeta, Lit};
 
 mod parse;
 
@@ -129,6 +129,18 @@ pub fn autometrics(
     output.into()
 }
 
+#[proc_macro_derive(LabelValues, attributes(autometrics))]
+pub fn derive_label_values(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let result = derive_label_values_impl(input);
+    let output = match result {
+        Ok(output) => output,
+        Err(err) => err.into_compile_error(),
+    };
+
+    output.into()
+}
+
 /// Add autometrics instrumentation to a single function
 fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStream> {
     let sig = item.sig;
@@ -176,10 +188,9 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         };
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetStaticStrFromIntoStaticStr, GetStaticStr};
+                use autometrics::__private::{CALLER, CounterLabels, GetLabelValue};
                 let result_label = #result_label;
-                // If the return type implements Into<&'static str>, attach that as a label
-                let value_type = (&result).__autometrics_static_str();
+                let value_type = (&result).get_label_value();
                 CounterLabels::new(
                     #function_name,
                      module_path!(),
@@ -376,4 +387,87 @@ histogram_quantile(0.95, {latency})"
 
 fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) -> String {
     format!("sum by (function, module) {gauge_name}{{{label_key}=\"{label_value}\"}}")
+}
+
+fn derive_label_values_impl(input: DeriveInput) -> Result<TokenStream> {
+    let variants = match input.data {
+        Data::Enum(DataEnum { variants, .. }) => variants,
+        _ => {
+            return Err(syn::Error::new_spanned(input, "#[derive(LabelValues}] is only supported for enums"));
+        },
+    };
+
+    let match_arms = variants
+        .into_iter()
+        .map(|variant| {
+            let attrs: Vec<_> = variant.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
+
+            let value_from_attr = match attrs.len() {
+                0 => None,
+                1 => get_label_value_attr(attrs[0])?,
+                _ => {
+                    let mut error =
+                        syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
+                    error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
+                    return Err(error);
+                }
+            };
+
+            let ident = variant.ident;
+            let value = value_from_attr.unwrap_or_else(|| ident.clone());
+            let value = value.to_string();
+            Ok(quote! {
+                Self::#ident => Some(#value),
+            })
+        })
+        .collect::<Result<TokenStream>>()?;
+
+    let ident = input.ident;
+    Ok(quote! {
+        #[automatically_derived]
+        impl GetLabelValue for #ident {
+            fn get_label_value(&self) -> Option<&'static str> {
+                match self {
+                    #match_arms
+                }
+            }
+        }
+    })
+}
+
+fn get_label_value_attr(attr: &Attribute) -> Result<Option<Ident>> {
+    let meta = attr.parse_meta()?;
+    let meta_list = match meta {
+        Meta::List(list) => list,
+        _ => return Err(syn::Error::new_spanned(meta, "expected a list-style attribute")),
+    };
+
+    let nested = match meta_list.nested.len() {
+        // `#[autometrics()]` without any arguments is a no-op
+        0 => return Ok(None),
+        1 => &meta_list.nested[0],
+        _ => {
+            return Err(syn::Error::new_spanned(
+                meta_list.nested,
+                "currently only a single autometrics attribute is supported",
+            ));
+        }
+    };
+
+    let label_value = match nested {
+        NestedMeta::Meta(Meta::NameValue(nv)) => nv,
+        _ => return Err(syn::Error::new_spanned(nested, "expected `label_value = \"<value>\"`")),
+    };
+
+    if !label_value.path.is_ident("label_value") {
+        return Err(syn::Error::new_spanned(
+            &label_value.path,
+            "unsupported autometrics attribute, expected `label_value`",
+        ));
+    }
+
+    match &label_value.lit {
+        Lit::Str(s) => syn::parse_str(&s.value()).map_err(|e| syn::Error::new_spanned(s, e)),
+        lit => Err(syn::Error::new_spanned(lit, "expected string literal")),
+    }
 }
