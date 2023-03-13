@@ -1,4 +1,8 @@
-use autometrics::autometrics;
+use autometrics::{autometrics, Objective, ObjectivePercentage, TargetLatency};
+
+const OBJECTIVE: Objective = Objective::new("test")
+    .success_rate(ObjectivePercentage::P99)
+    .latency(TargetLatency::Ms100, ObjectivePercentage::P95);
 
 #[cfg(feature = "prometheus-exporter")]
 #[test]
@@ -18,7 +22,7 @@ fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-#[autometrics]
+#[autometrics(objective = OBJECTIVE)]
 pub async fn get_index_handler() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }
