@@ -1,6 +1,4 @@
-use autometrics::{
-    autometrics, encode_global_metrics, Objective, ObjectivePercentage, TargetLatency,
-};
+use autometrics::{autometrics, encode_global_metrics, objectives::*};
 use autometrics_example_util::sleep_random_duration;
 use axum::{extract::State, http::StatusCode, Json};
 use rand::{thread_rng, Rng};
@@ -11,8 +9,8 @@ use crate::error::ApiError;
 
 /// This is a Service-Level Objective (SLO) we're defining for our API.
 const API_SLO: Objective = Objective::new("api")
-    .success_rate(ObjectivePercentage::P99_9)
-    .latency(TargetLatency::Ms200, ObjectivePercentage::P99);
+    .success_rate(ObjectivePercentile::P99_9)
+    .latency(ObjectiveLatency::Ms50, ObjectivePercentile::P99);
 
 // Starting simple, hover over the function name to see the Autometrics graph links in the Rust Docs!
 /// This is a simple endpoint that never errors

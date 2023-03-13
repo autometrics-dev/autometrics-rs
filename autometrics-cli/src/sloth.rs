@@ -1,5 +1,4 @@
 use clap::Parser;
-use rust_decimal::Decimal;
 use std::{fs::write, path::PathBuf};
 
 #[derive(Parser)]
@@ -9,7 +8,7 @@ pub struct Arguments {
     /// Note that the objective used in autometrics-instrumented code must match
     /// one of these values in order for the alert to work.
     #[clap(long, default_values = &["90", "95", "99", "99.9"])]
-    objectives: Vec<Decimal>,
+    objectives: Vec<String>,
 
     /// Output path where the SLO file should be written.
     ///
@@ -30,7 +29,7 @@ impl Arguments {
     }
 }
 
-fn generate_sloth_file(objectives: &[Decimal]) -> String {
+fn generate_sloth_file(objectives: &[impl AsRef<str>]) -> String {
     let mut sloth_file = "version: prometheus/v1
 service: autometrics
 slos:
@@ -38,32 +37,31 @@ slos:
     .to_string();
 
     for objective in objectives {
-        sloth_file.push_str(&generate_success_rate_slo(objective));
+        sloth_file.push_str(&generate_success_rate_slo(objective.as_ref()));
     }
     for objective in objectives {
-        sloth_file.push_str(&generate_latency_slo(objective));
+        sloth_file.push_str(&generate_latency_slo(objective.as_ref()));
     }
 
     sloth_file
 }
 
-fn generate_success_rate_slo(objective: &Decimal) -> String {
-    let objective_fraction = (objective / Decimal::from(100)).normalize();
-    let objective_no_decimal = objective.to_string().replace(".", "");
+fn generate_success_rate_slo(objective_percentile: &str) -> String {
+    let objective_percentile_no_decimal = objective_percentile.replace(".", "_");
 
-    format!("  - name: success-rate-{objective_no_decimal}
-    objective: {objective}
+    format!("  - name: success-rate-{objective_percentile_no_decimal}
+    objective: {objective_percentile}
     description: Common SLO based on function success rates
     sli:
       events:
-        error_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective_fraction}\",result=\"error\"}}[{{{{.window}}}}]))
-        total_query: sum by (slo_name, objective) (rate(function_calls_count{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
+        error_query: sum by (objective_name, objective_percentile) (rate(function_calls_count{{objective_percentile=\"{objective_percentile}\",result=\"error\"}}[{{{{.window}}}}]))
+        total_query: sum by (objective_name, objective_percentile) (rate(function_calls_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
     alerting:
-      name: High Error Rate SLO - {objective}%
+      name: High Error Rate SLO - {objective_percentile}%
       labels:
         category: success-rate
       annotations:
-        summary: \"High error rate on SLO: {{{{$labels.slo_name}}}}\"
+        summary: \"High error rate on SLO: {{{{$labels.objective_name}}}}\"
       page_alert:
         labels:
           severity: page
@@ -73,30 +71,29 @@ fn generate_success_rate_slo(objective: &Decimal) -> String {
 ")
 }
 
-fn generate_latency_slo(objective: &Decimal) -> String {
-    let objective_fraction = (objective / Decimal::from(100)).normalize();
-    let objective_no_decimal = objective.to_string().replace(".", "");
+fn generate_latency_slo(objective_percentile: &str) -> String {
+    let objective_percentile_no_decimal = objective_percentile.replace(".", "_");
 
-    format!("  - name: latency-{objective_no_decimal}
-    objective: {objective}
+    format!("  - name: latency-{objective_percentile_no_decimal}
+    objective: {objective_percentile}
     description: Common SLO based on function latency
     sli:
       events:
         error_query: >
-          sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
+          sum by (objective_name, objective_percentile) (rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
           -
-          (sum by (slo_name, objective) (
-            label_join(rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"target_latency\")
+          (sum by (objective_name, objective_percentile) (
+            label_join(rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"objective_latency_threshold\")
             and
-            label_join(rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
+            label_join(rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
           ))
-        total_query: sum by (slo_name, objective) (rate(function_calls_duration_bucket{{objective=\"{objective_fraction}\"}}[{{{{.window}}}}]))
+        total_query: sum by (objective_name, objective_percentile) (rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
     alerting:
-      name: High Latency SLO - {objective}%
+      name: High Latency SLO - {objective_percentile}%
       labels:
         category: latency
       annotations:
-        summary: \"High latency on SLO: {{{{$labels.slo_name}}}}\"
+        summary: \"High latency on SLO: {{{{$labels.objective_name}}}}\"
       page_alert:
         labels:
           severity: page

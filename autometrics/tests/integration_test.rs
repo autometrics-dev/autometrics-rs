@@ -1,8 +1,8 @@
-use autometrics::{autometrics, Objective, ObjectivePercentage, TargetLatency};
+use autometrics::{autometrics, objectives::*};
 
 const OBJECTIVE: Objective = Objective::new("test")
-    .success_rate(ObjectivePercentage::P99)
-    .latency(TargetLatency::Ms100, ObjectivePercentage::P95);
+    .success_rate(ObjectivePercentile::P99)
+    .latency(ObjectiveLatency::Ms100, ObjectivePercentile::P95);
 
 #[cfg(feature = "prometheus-exporter")]
 #[test]

@@ -7,14 +7,13 @@
 
 mod constants;
 mod labels;
-mod objectives;
+pub mod objectives;
 #[cfg(feature = "prometheus-exporter")]
 mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
 pub use autometrics_macros::autometrics;
-pub use objectives::{Objective, ObjectivePercentage, TargetLatency};
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
@@ -48,10 +47,4 @@ pub mod __private {
 
         LocalKey { inner: CALLER_KEY }
     };
-
-    pub struct Objective {
-        pub name: &'static str,
-        pub success_rate: Option<&'static str>,
-        pub latency: Option<(&'static str, &'static str)>,
-    }
 }
