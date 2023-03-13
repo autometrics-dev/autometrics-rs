@@ -103,7 +103,7 @@ impl ObjectivePercentile {
     }
 }
 
-/// The target latency, in milliseoncds, for a given objective.
+/// The latency threshold, in milliseoncds, for a given objective.
 #[non_exhaustive]
 pub enum ObjectiveLatency {
     /// 10ms
