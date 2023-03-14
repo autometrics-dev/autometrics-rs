@@ -29,7 +29,7 @@ To see autometrics in action:
 1. Install [prometheus](https://prometheus.io/download/) locally
 2. Run the [complete example](./examples/full-api):
 ```
-cargo run -p example-full-api serve
+cargo run -p example-full-api
 ```
 3. Hover over the [function names](./examples/full-api/src/routes.rs#L13) to see the generated query links
 (like in the image above) and try clicking on them to go straight to that Prometheus chart.
