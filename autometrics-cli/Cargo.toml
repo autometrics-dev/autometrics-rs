@@ -11,4 +11,3 @@ categories = { workspace = true }
 
 [dependencies]
 clap = { version = "4.1", features = ["derive"] }
-rust_decimal = { version = "1.28" }

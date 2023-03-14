@@ -1,11 +1,12 @@
-use autometrics::autometrics;
+use autometrics::{autometrics, objectives::*};
+
+const OBJECTIVE: Objective = Objective::new("test")
+    .success_rate(ObjectivePercentile::P99)
+    .latency(ObjectiveLatency::Ms100, ObjectivePercentile::P95);
 
 #[cfg(feature = "prometheus-exporter")]
 #[test]
 fn main() {
-    #[derive(PartialEq, Debug)]
-    struct Function(&'static str);
-
     let _ = autometrics::global_metrics_exporter();
 
     add(1, 2);
@@ -21,17 +22,7 @@ fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-/// Example HTTP handler function
-#[cfg(feature = "alerts")]
-#[autometrics(
-    alerts(success_rate = 99.9%, latency(99.9% < 250ms)),
-)]
-pub async fn get_index_handler() -> Result<String, ()> {
-    Ok("Hello world!".to_string())
-}
-
-#[cfg(not(feature = "alerts"))]
-#[autometrics]
+#[autometrics(objective = OBJECTIVE)]
 pub async fn get_index_handler() -> Result<String, ()> {
     Ok("Hello world!".to_string())
 }

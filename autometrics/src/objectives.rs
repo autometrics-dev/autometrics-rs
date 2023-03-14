@@ -7,8 +7,8 @@
 /// Example:
 /// ```rust
 /// const API_SLO: Objective = Objective::new("api")
-///     .success_rate(ObjectivePercentage::P99_9)
-///     .latency(TargetLatency::Ms200, ObjectivePercentage::P99);
+///     .success_rate(ObjectivePercentile::P99_9)
+///     .latency(TargetLatency::Ms200, ObjectivePercentile::P99);
 ///
 /// #[autometrics(objective = API_SLO))]
 /// pub fn api_handler() {
@@ -29,8 +29,8 @@
 /// However, they are enabled when the special labels are present on certain metrics.
 pub struct Objective {
     pub(crate) name: &'static str,
-    pub(crate) success_rate: Option<&'static str>,
-    pub(crate) latency: Option<(&'static str, &'static str)>,
+    pub(crate) success_rate: Option<ObjectivePercentile>,
+    pub(crate) latency: Option<(ObjectiveLatency, ObjectivePercentile)>,
 }
 
 impl Objective {
@@ -50,8 +50,8 @@ impl Objective {
     ///
     /// This means that the function or group of functions that are part of this objective
     /// should return an `Ok` result at least this percentage of the time.
-    pub const fn success_rate(mut self, success_rate: ObjectivePercentage) -> Self {
-        self.success_rate = Some(success_rate.as_str());
+    pub const fn success_rate(mut self, success_rate: ObjectivePercentile) -> Self {
+        self.success_rate = Some(success_rate);
         self
     }
 
@@ -61,17 +61,17 @@ impl Objective {
     /// should complete in less than the given latency at least this percentage of the time.
     pub const fn latency(
         mut self,
-        target_latency: TargetLatency,
-        percentile: ObjectivePercentage,
+        target_latency: ObjectiveLatency,
+        percentile: ObjectivePercentile,
     ) -> Self {
-        self.latency = Some((target_latency.as_str(), percentile.as_str()));
+        self.latency = Some((target_latency, percentile));
         self
     }
 }
 
 /// The percentage of requests that must meet the given criteria (success rate or latency).
 #[non_exhaustive]
-pub enum ObjectivePercentage {
+pub enum ObjectivePercentile {
     /// 90%
     P90,
     /// 95%
@@ -82,8 +82,6 @@ pub enum ObjectivePercentage {
     P99_9,
     /// ⚠️ Careful when using this option!
     ///
-    /// This value should be the objective expressed as a decimal with no trailing zeros. So 80% would be "0.8".
-    ///
     /// In order for this to work with the recording and alerting rules, you need to:
     /// 1. generate a custom Sloth file using the autometrics-cli that includes this objective
     /// 2. use Sloth to generate the Prometheus recording and alerting rules
@@ -92,22 +90,22 @@ pub enum ObjectivePercentage {
     Custom(&'static str),
 }
 
-impl ObjectivePercentage {
-    const fn as_str(&self) -> &'static str {
+impl ObjectivePercentile {
+    pub(crate) const fn as_str(&self) -> &'static str {
         match self {
-            ObjectivePercentage::P90 => "0.9",
-            ObjectivePercentage::P95 => "0.95",
-            ObjectivePercentage::P99 => "0.99",
-            ObjectivePercentage::P99_9 => "0.999",
+            ObjectivePercentile::P90 => "90",
+            ObjectivePercentile::P95 => "95",
+            ObjectivePercentile::P99 => "99",
+            ObjectivePercentile::P99_9 => "99.9",
             #[cfg(feature = "custom_objectives")]
-            ObjectivePercentage::Custom(custom) => custom,
+            ObjectivePercentile::Custom(custom) => custom,
         }
     }
 }
 
-/// The target latency, in milliseoncds, for a given objective.
+/// The latency threshold, in milliseoncds, for a given objective.
 #[non_exhaustive]
-pub enum TargetLatency {
+pub enum ObjectiveLatency {
     /// 10ms
     Ms10,
     /// 25ms
@@ -141,21 +139,21 @@ pub enum TargetLatency {
     Custom(&'static str),
 }
 
-impl TargetLatency {
-    const fn as_str(&self) -> &'static str {
+impl ObjectiveLatency {
+    pub(crate) const fn as_str(&self) -> &'static str {
         match self {
-            TargetLatency::Ms10 => "0.01",
-            TargetLatency::Ms25 => "0.025",
-            TargetLatency::Ms50 => "0.05",
-            TargetLatency::Ms75 => "0.075",
-            TargetLatency::Ms100 => "0.1",
-            TargetLatency::Ms150 => "0.15",
-            TargetLatency::Ms200 => "0.2",
-            TargetLatency::Ms350 => "0.35",
-            TargetLatency::Ms500 => "0.5",
-            TargetLatency::Ms1000 => "1",
+            ObjectiveLatency::Ms10 => "0.01",
+            ObjectiveLatency::Ms25 => "0.025",
+            ObjectiveLatency::Ms50 => "0.05",
+            ObjectiveLatency::Ms75 => "0.075",
+            ObjectiveLatency::Ms100 => "0.1",
+            ObjectiveLatency::Ms150 => "0.15",
+            ObjectiveLatency::Ms200 => "0.2",
+            ObjectiveLatency::Ms350 => "0.35",
+            ObjectiveLatency::Ms500 => "0.5",
+            ObjectiveLatency::Ms1000 => "1",
             #[cfg(feature = "custom_objectives")]
-            TargetLatency::Custom(custom) => custom,
+            ObjectiveLatency::Custom(custom) => custom,
         }
     }
 }

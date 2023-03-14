@@ -1,4 +1,4 @@
-use crate::{constants::*, objectives::Objective};
+use crate::{constants::*, objectives::*};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
@@ -10,8 +10,7 @@ pub struct CounterLabels {
     pub(crate) module: &'static str,
     pub(crate) caller: &'static str,
     pub(crate) result: Option<ResultAndReturnTypeLabels>,
-    #[allow(dead_code)]
-    pub(crate) objective: Option<(&'static str, &'static str)>,
+    pub(crate) objective: Option<(&'static str, ObjectivePercentile)>,
 }
 
 impl CounterLabels {
@@ -52,6 +51,10 @@ impl CounterLabels {
                 labels.push((result, return_value_type));
             }
         }
+        if let Some((name, percentile)) = &self.objective {
+            labels.push((OBJECTIVE_NAME, name));
+            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
+        }
 
         labels
     }
@@ -61,15 +64,15 @@ impl CounterLabels {
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
-    /// The SLO name, objective percentile, and target latency
-    pub objective: Option<(&'static str, &'static str, &'static str)>,
+    /// The SLO name, objective percentile, and latency threshold
+    pub objective: Option<(&'static str, ObjectivePercentile, ObjectiveLatency)>,
 }
 
 impl HistogramLabels {
     pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
         let objective = if let Some(objective) = objective {
-            if let Some((target_latency, percentile)) = objective.latency {
-                Some((objective.name, percentile, target_latency))
+            if let Some((latency, percentile)) = objective.latency {
+                Some((objective.name, percentile, latency))
             } else {
                 None
             }
@@ -87,10 +90,10 @@ impl HistogramLabels {
     pub fn to_vec(&self) -> Vec<Label> {
         let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
 
-        if let Some((slo_name, objective, target_latency)) = self.objective {
-            labels.push((SLO_NAME, slo_name));
-            labels.push((OBJECTIVE, objective));
-            labels.push((TARGET_LATENCY, target_latency));
+        if let Some((name, percentile, latency)) = &self.objective {
+            labels.push((OBJECTIVE_NAME, name));
+            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
+            labels.push((OBJECTIVE_LATENCY_THRESHOLD, latency.as_str()));
         }
 
         labels

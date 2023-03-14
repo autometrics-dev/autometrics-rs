@@ -12,6 +12,9 @@ use std::time::Instant;
 const COUNTER_NAME_PROMETHEUS: &str = str_replace!(COUNTER_NAME, ".", "_");
 const HISTOGRAM_NAME_PROMETHEUS: &str = str_replace!(HISTOGRAM_NAME, ".", "_");
 const GAUGE_NAME_PROMETHEUS: &str = str_replace!(GAUGE_NAME, ".", "_");
+const OBJECTIVE_NAME_PROMETHEUS: &str = str_replace!(OBJECTIVE_NAME, ".", "_");
+const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = str_replace!(OBJECTIVE_PERCENTILE, ".", "_");
+const OBJECTIVE_LATENCY_PROMETHEUS: &str = str_replace!(OBJECTIVE_LATENCY_THRESHOLD, ".", "_");
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
     register_int_counter_vec!(
@@ -24,8 +27,8 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             RESULT_KEY,
             OK_KEY,
             ERROR_KEY,
-            SLO_NAME,
-            OBJECTIVE,
+            OBJECTIVE_NAME_PROMETHEUS,
+            OBJECTIVE_PERCENTILE_PROMETHEUS,
         ]
     )
     .expect(formatcp!(
@@ -39,9 +42,9 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
         &[
             FUNCTION_KEY,
             MODULE_KEY,
-            SLO_NAME,
-            OBJECTIVE,
-            TARGET_LATENCY
+            OBJECTIVE_NAME_PROMETHEUS,
+            OBJECTIVE_PERCENTILE_PROMETHEUS,
+            OBJECTIVE_LATENCY_PROMETHEUS
         ]
     )
     .expect("Failed to register function_calls_duration histogram")
@@ -97,8 +100,16 @@ impl TrackMetrics for PrometheusTracker {
                     } else {
                         ""
                     },
-                    counter_labels.objective.unwrap_or_default().0,
-                    counter_labels.objective.unwrap_or_default().1,
+                    counter_labels
+                        .objective
+                        .as_ref()
+                        .map(|obj| obj.0)
+                        .unwrap_or(""),
+                    counter_labels
+                        .objective
+                        .as_ref()
+                        .map(|obj| obj.1.as_str())
+                        .unwrap_or(""),
                 ],
             )
             .inc();
@@ -107,9 +118,21 @@ impl TrackMetrics for PrometheusTracker {
             .with_label_values(&[
                 histogram_labels.function,
                 histogram_labels.module,
-                histogram_labels.objective.unwrap_or_default().0,
-                histogram_labels.objective.unwrap_or_default().1,
-                histogram_labels.objective.unwrap_or_default().2,
+                histogram_labels
+                    .objective
+                    .as_ref()
+                    .map(|obj| obj.0)
+                    .unwrap_or(""),
+                histogram_labels
+                    .objective
+                    .as_ref()
+                    .map(|obj| obj.1.as_str())
+                    .unwrap_or(""),
+                histogram_labels
+                    .objective
+                    .as_ref()
+                    .map(|obj| obj.2.as_str())
+                    .unwrap_or(""),
             ])
             .observe(duration);
 
