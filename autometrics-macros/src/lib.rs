@@ -66,26 +66,24 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 /// This may be most useful for top-level functions such as the main HTTP handler that
 /// passes requests off to other functions.
 ///
-/// ### `alerts`
-///
-/// **Only available when the `alerts` feature is enabled.**
+/// ### `objective`
 ///
 /// Example:
 /// ```rust
-/// #[autometrics(alerts(success_rate = 99.9%, latency(99.9% < 200ms)))]
+/// use autometrics::{autometrics, objectives::*};
+///
+/// const API_SLO: Objective = Objective::new("api")
+///     .success_rate(ObjectivePercentile::P99_9)
+///
+/// #[autometrics(objective = API_SLO)]
+/// pub fn handler() {
+///    // ...
+/// }
 /// ```
 ///
-/// The alerts feature can be used to have autometrics generate Prometheus AlertManager alerts.
-/// You can specify the `success_rate` and/or `latency` target and percentile for the given function.
+/// Include this function's metrics in the specified objective or SLO.
 ///
-/// Add these options **only** to 1-3 top-level functions you want to generate alerts for.
-/// These should be functions like the main HTTP or WebSocket handler.
-/// You almost definitely do not want to be alerted for every function.
-///
-/// ⚠️ **Note about `latency` alerts**: The latency target **MUST** match one of the buckets
-/// configured for your histogram. For example, if you want to enforce that a certain percentage of calls
-/// are handled within 200ms, you must have a histogram bucket for 0.2 seconds. If there is no
-/// such bucket, the alert will never fire.
+/// See the docs for [Objective](https://docs.rs/autometrics/latest/autometrics/objectives/struct.Objective.html) for details on how to create objectives.
 ///
 /// ## Instrumenting `impl` blocks
 ///
