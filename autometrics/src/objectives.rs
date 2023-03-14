@@ -86,7 +86,7 @@ pub enum ObjectivePercentile {
     /// 1. generate a custom Sloth file using the autometrics-cli that includes this objective
     /// 2. use Sloth to generate the Prometheus recording and alerting rules
     /// 3. configure your Prometheus instance to use the generated rules
-    #[cfg(feature = "custom_objectives")]
+    #[cfg(feature = "custom-objectives")]
     Custom(&'static str),
 }
 
@@ -97,7 +97,7 @@ impl ObjectivePercentile {
             ObjectivePercentile::P95 => "95",
             ObjectivePercentile::P99 => "99",
             ObjectivePercentile::P99_9 => "99.9",
-            #[cfg(feature = "custom_objectives")]
+            #[cfg(feature = "custom-objectives")]
             ObjectivePercentile::Custom(custom) => custom,
         }
     }
@@ -135,7 +135,7 @@ pub enum ObjectiveLatency {
     /// If it is not, the alerting rules will not work.
     /// This is because the recording rules compare this to the value
     /// of the `le` label on the histogram buckets.
-    #[cfg(feature = "custom_objectives")]
+    #[cfg(feature = "custom-objectives")]
     Custom(&'static str),
 }
 
@@ -152,7 +152,7 @@ impl ObjectiveLatency {
             ObjectiveLatency::Ms350 => "0.35",
             ObjectiveLatency::Ms500 => "0.5",
             ObjectiveLatency::Ms1000 => "1",
-            #[cfg(feature = "custom_objectives")]
+            #[cfg(feature = "custom-objectives")]
             ObjectiveLatency::Custom(custom) => custom,
         }
     }

@@ -87,14 +87,15 @@ Autometrics makes it easy to add Prometheus alerts using Service-Level Objective
 This works using pre-defined [Prometheus alerting rules](./autometrics.rules.yml) (read more about alerting rules in general [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)).
 By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
-To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
+To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/objectives/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
 
 ```rust
-use autometrics::{autometrics, Objective, ObjectivePercentage, TargetLatency};
+use autometrics::autometrics;
+use autometrics::objectives::{Objective, ObjectiveLatency, ObjectivePercentile};
 
 const API_SLO: Objective = Objective::new("api")
-    .success_rate(ObjectivePercentage::P99_9)
-    .latency(TargetLatency::Ms200, ObjectivePercentage::P99);
+    .success_rate(ObjectivePercentile::P99_9)
+    .latency(ObjectiveLatency::Ms200, ObjectivePercentile::P99);
 
 #[autometrics(objective = API_SLO)]
 pub fn api_handler() {
@@ -125,6 +126,7 @@ Note that the Prometheus URL is only included in function documentation comments
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
+- `custom-objectives` - by default, Autometrics only supports a fixed set of percentiles and latencies for objectives. Enable this feature flag to enable custom percentiles and/or latencies. Note, however, that custom latencies must match one of the buckets configured for your histogram and using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth.
 
 #### Metrics Libraries
 
