@@ -104,6 +104,7 @@ const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 ///        // ...
 ///    }
 /// }
+/// ```
 ///
 /// This will instrument all functions in the `impl` block, except for those that have the `skip_autometrics` attribute.
 ///

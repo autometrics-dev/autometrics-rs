@@ -2,15 +2,16 @@
 /// The objective should be given a descriptive name and can represent
 /// a success rate and/or latency objective.
 ///
-/// For details on SLOs, see https://sre.google/sre-book/service-level-objectives/
+/// For details on SLOs, see <https://sre.google/sre-book/service-level-objectives/>
 ///
 /// Example:
 /// ```rust
+/// # use autometrics::{autometrics, objectives::*};
 /// const API_SLO: Objective = Objective::new("api")
 ///     .success_rate(ObjectivePercentile::P99_9)
 ///     .latency(TargetLatency::Ms200, ObjectivePercentile::P99);
 ///
-/// #[autometrics(objective = API_SLO))]
+/// #[autometrics(objective = API_SLO)]
 /// pub fn api_handler() {
 ///    // ...
 /// }

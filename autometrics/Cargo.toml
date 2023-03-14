@@ -26,7 +26,7 @@ prometheus-exporter = [
 custom-objectives = []
 
 [dependencies]
-autometrics-macros = { version = "0.2.0", path = "../autometrics-macros" }
+autometrics-macros = { version = "0.3.0", path = "../autometrics-macros" }
 
 # Used for opentelemetry feature
 opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
