@@ -14,6 +14,7 @@ categories = { workspace = true }
 proc-macro = true
 
 [dependencies]
+Inflector = "0.11.4"
 percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"

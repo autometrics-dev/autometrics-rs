@@ -132,10 +132,7 @@ pub trait GetLabelsFromResult {
 
 impl<T, E> GetLabelsFromResult for Result<T, E> {
     fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        match self {
-            Ok(ok) => Some((OK_KEY, ok.get_label_value())),
-            Err(err) => Some((ERROR_KEY, err.get_label_value())),
-        }
+        self.get_label().map(|(k, v)| (k, Some(v)))
     }
 }
 
@@ -202,64 +199,65 @@ macro_rules! impl_trait_for_types {
 
 impl_trait_for_types!(GetLabels);
 
-pub trait GetLabelValue {
-    fn get_label_value(&self) -> Option<&'static str> {
+pub trait GetLabel {
+    fn get_label(&self) -> Option<(&'static str, &'static str)> {
         None
     }
 }
-impl_trait_for_types!(GetLabelValue);
+impl_trait_for_types!(GetLabel);
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use autometrics_macros::LabelValues;
+    use autometrics_macros::GetLabel;
 
     #[test]
     fn custom_trait_implementation() {
         struct CustomResult;
 
-        impl GetLabelValue for CustomResult {
-            fn get_label_value(&self) -> Option<&'static str> {
-                Some("my-result")
+        impl GetLabel for CustomResult {
+            fn get_label(&self) -> Option<(&'static str, &'static str)> {
+                Some(("ok", "my-result"))
             }
         }
 
-        assert_eq!(Some("my-result"), CustomResult {}.get_label_value());
+        assert_eq!(Some(("ok", "my-result")), CustomResult {}.get_label());
     }
 
     #[test]
     fn manual_enum() {
-        enum Foo {
+        enum MyFoo {
             A,
             B,
         }
 
-        impl GetLabelValue for Foo {
-            fn get_label_value(&self) -> Option<&'static str> {
-                match self {
-                    Foo::A => Some("a"),
-                    Foo::B => Some("b"),
-                }
+        impl GetLabel for MyFoo {
+            fn get_label(&self) -> Option<(&'static str, &'static str)> {
+                Some(("hello", match self {
+                    MyFoo::A => "a",
+                    MyFoo::B => "b",
+                }))
             }
         }
 
-        assert_eq!(Some("a"), Foo::A.get_label_value());
-        assert_eq!(Some("b"), Foo::B.get_label_value());
+        assert_eq!(Some(("hello", "a")), MyFoo::A.get_label());
+        assert_eq!(Some(("hello", "b")), MyFoo::B.get_label());
     }
 
     #[test]
     fn derived_enum() {
-        #[derive(LabelValues)]
-        enum Foo {
+        #[derive(GetLabel)]
+        #[autometrics(label_key = "my_foo")]
+        enum MyFoo {
             #[autometrics(label_value = "hello")]
-            A,
+            Alpha,
             #[autometrics()]
-            B,
-            C,
+            BetaValue,
+            Charlie,
         }
 
-        assert_eq!(Some("hello"), Foo::A.get_label_value());
-        assert_eq!(Some("B"), Foo::B.get_label_value());
-        assert_eq!(Some("C"), Foo::C.get_label_value());
+        assert_eq!(Some(("my_foo", "hello")), MyFoo::Alpha.get_label());
+        assert_eq!(Some(("my_foo", "beta_value")), MyFoo::BetaValue.get_label());
+        assert_eq!(Some(("my_foo", "charlie")), MyFoo::Charlie.get_label());
     }
 }

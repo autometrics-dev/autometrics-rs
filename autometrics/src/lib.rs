@@ -14,7 +14,7 @@ mod task_local;
 mod tracker;
 
 pub use autometrics_macros::autometrics;
-pub use labels::GetLabelValue;
+pub use labels::GetLabel;
 pub use objectives::{Objective, ObjectivePercentage, TargetLatency};
 
 // Optional exports

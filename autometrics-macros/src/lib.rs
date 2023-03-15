@@ -3,6 +3,7 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::env;
+use inflector::Inflector;
 use syn::{parse_macro_input, DeriveInput, ImplItem, ItemFn, ItemImpl, Result, Data, DataEnum, Attribute, Meta, NestedMeta, Lit};
 
 mod parse;
@@ -129,10 +130,10 @@ pub fn autometrics(
     output.into()
 }
 
-#[proc_macro_derive(LabelValues, attributes(autometrics))]
-pub fn derive_label_values(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(GetLabel, attributes(autometrics))]
+pub fn derive_get_label(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let result = derive_label_values_impl(input);
+    let result = derive_get_label_impl(input);
     let output = match result {
         Ok(output) => output,
         Err(err) => err.into_compile_error(),
@@ -188,9 +189,9 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         };
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetLabelValue};
+                use autometrics::__private::{CALLER, CounterLabels, GetLabel};
                 let result_label = #result_label;
-                let value_type = (&result).get_label_value();
+                let value_type = (&result).get_label().map(|(_, v)| v);
                 CounterLabels::new(
                     #function_name,
                      module_path!(),
@@ -389,7 +390,7 @@ fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) 
     format!("sum by (function, module) {gauge_name}{{{label_key}=\"{label_value}\"}}")
 }
 
-fn derive_label_values_impl(input: DeriveInput) -> Result<TokenStream> {
+fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let variants = match input.data {
         Data::Enum(DataEnum { variants, .. }) => variants,
         _ => {
@@ -397,14 +398,41 @@ fn derive_label_values_impl(input: DeriveInput) -> Result<TokenStream> {
         },
     };
 
-    let match_arms = variants
+    let label_key = {
+        let attrs: Vec<_> = input.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
+
+        let key_from_attr = match attrs.len() {
+            0 => None,
+            1 => get_label_attr(attrs[0], "label_key")?,
+            _ => {
+                let mut error =
+                    syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
+                error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
+                return Err(error);
+            }
+        };
+
+        let key_from_attr = key_from_attr.map(|value| value.to_string());
+
+        // Check casing of the user-provided value
+        if let Some(key) = &key_from_attr {
+            if key.as_str() != key.to_snake_case() {
+                return Err(syn::Error::new_spanned(attrs[0], "label_key should be snake_cased"));
+            }
+        }
+
+        let ident = input.ident.clone();
+        key_from_attr.unwrap_or_else(|| ident.clone().to_string().to_snake_case())
+    };
+
+    let value_match_arms = variants
         .into_iter()
         .map(|variant| {
             let attrs: Vec<_> = variant.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
 
             let value_from_attr = match attrs.len() {
                 0 => None,
-                1 => get_label_value_attr(attrs[0])?,
+                1 => get_label_attr(attrs[0], "label_value")?,
                 _ => {
                     let mut error =
                         syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
@@ -413,11 +441,19 @@ fn derive_label_values_impl(input: DeriveInput) -> Result<TokenStream> {
                 }
             };
 
+            let value_from_attr = value_from_attr.map(|value| value.to_string());
+
+            // Check casing of the user-provided value
+            if let Some(value) = &value_from_attr {
+                if value.as_str() != value.to_snake_case() {
+                    return Err(syn::Error::new_spanned(attrs[0], "label_value should be snake_cased"));
+                }
+            }
+
             let ident = variant.ident;
-            let value = value_from_attr.unwrap_or_else(|| ident.clone());
-            let value = value.to_string();
+            let value = value_from_attr.unwrap_or_else(|| ident.clone().to_string().to_snake_case());
             Ok(quote! {
-                Self::#ident => Some(#value),
+                Self::#ident => #value,
             })
         })
         .collect::<Result<TokenStream>>()?;
@@ -425,17 +461,17 @@ fn derive_label_values_impl(input: DeriveInput) -> Result<TokenStream> {
     let ident = input.ident;
     Ok(quote! {
         #[automatically_derived]
-        impl GetLabelValue for #ident {
-            fn get_label_value(&self) -> Option<&'static str> {
-                match self {
-                    #match_arms
-                }
+        impl GetLabel for #ident {
+            fn get_label(&self) -> Option<(&'static str, &'static str)> {
+                Some((#label_key, match self {
+                    #value_match_arms
+                }))
             }
         }
     })
 }
 
-fn get_label_value_attr(attr: &Attribute) -> Result<Option<Ident>> {
+fn get_label_attr(attr: &Attribute, attr_name: &str) -> Result<Option<Ident>> {
     let meta = attr.parse_meta()?;
     let meta_list = match meta {
         Meta::List(list) => list,
@@ -456,13 +492,13 @@ fn get_label_value_attr(attr: &Attribute) -> Result<Option<Ident>> {
 
     let label_value = match nested {
         NestedMeta::Meta(Meta::NameValue(nv)) => nv,
-        _ => return Err(syn::Error::new_spanned(nested, "expected `label_value = \"<value>\"`")),
+        _ => return Err(syn::Error::new_spanned(nested, format!("expected `{attr_name} = \"<value>\"`"))),
     };
 
-    if !label_value.path.is_ident("label_value") {
+    if !label_value.path.is_ident(attr_name) {
         return Err(syn::Error::new_spanned(
             &label_value.path,
-            "unsupported autometrics attribute, expected `label_value`",
+            format!("unsupported autometrics attribute, expected `{attr_name}`"),
         ));
     }
 
