@@ -398,6 +398,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
         },
     };
 
+    // Use the key provided or the snake case version of the enum name
     let label_key = {
         let attrs: Vec<_> = input.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
 
