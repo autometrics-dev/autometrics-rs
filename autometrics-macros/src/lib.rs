@@ -130,10 +130,10 @@ pub fn autometrics(
     output.into()
 }
 
-#[proc_macro_derive(GetLabel, attributes(autometrics))]
-pub fn derive_get_label(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(AutometricsLabel, attributes(autometrics_label))]
+pub fn derive_autometrics_label(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let result = derive_get_label_impl(input);
+    let result = derive_autometrics_label_impl(input);
     let output = match result {
         Ok(output) => output,
         Err(err) => err.into_compile_error(),
@@ -390,24 +390,24 @@ fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) 
     format!("sum by (function, module) {gauge_name}{{{label_key}=\"{label_value}\"}}")
 }
 
-fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
+fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let variants = match input.data {
         Data::Enum(DataEnum { variants, .. }) => variants,
         _ => {
-            return Err(Error::new_spanned(input, "#[derive(LabelValues}] is only supported for enums"));
+            return Err(Error::new_spanned(input, "#[derive(AutometricsLabel}] is only supported for enums"));
         },
     };
 
     // Use the key provided or the snake case version of the enum name
     let label_key = {
-        let attrs: Vec<_> = input.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
+        let attrs: Vec<_> = input.attrs.iter().filter(|attr| attr.path.is_ident("autometrics_label")).collect();
 
         let key_from_attr = match attrs.len() {
             0 => None,
-            1 => get_label_attr(attrs[0], "label_key")?,
+            1 => get_label_attr(attrs[0], "key")?,
             _ => {
                 let mut error =
-                    syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_key)` attribute");
+                    syn::Error::new_spanned(attrs[1], "redundant `autometrics_label(key)` attribute");
                 error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
                 return Err(error);
             }
@@ -418,7 +418,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
         // Check casing of the user-provided value
         if let Some(key) = &key_from_attr {
             if key.as_str() != key.to_snake_case() {
-                return Err(Error::new_spanned(attrs[0], "label_key should be snake_cased"));
+                return Err(Error::new_spanned(attrs[0], "key should be snake_cased"));
             }
         }
 
@@ -429,14 +429,14 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let value_match_arms = variants
         .into_iter()
         .map(|variant| {
-            let attrs: Vec<_> = variant.attrs.iter().filter(|attr| attr.path.is_ident("autometrics")).collect();
+            let attrs: Vec<_> = variant.attrs.iter().filter(|attr| attr.path.is_ident("autometrics_label")).collect();
 
             let value_from_attr = match attrs.len() {
                 0 => None,
-                1 => get_label_attr(attrs[0], "label_value")?,
+                1 => get_label_attr(attrs[0], "value")?,
                 _ => {
                     let mut error =
-                        Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
+                        Error::new_spanned(attrs[1], "redundant `autometrics_label(value)` attribute");
                     error.combine(Error::new_spanned(attrs[0], "note: first one here"));
                     return Err(error);
                 }
@@ -447,7 +447,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
             // Check casing of the user-provided value
             if let Some(value) = &value_from_attr {
                 if value.as_str() != value.to_snake_case() {
-                    return Err(Error::new_spanned(attrs[0], "label_value should be snake_cased"));
+                    return Err(Error::new_spanned(attrs[0], "value should be snake_cased"));
                 }
             }
 

@@ -209,7 +209,7 @@ impl_trait_for_types!(GetLabel);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use autometrics_macros::GetLabel;
+    use autometrics_macros::AutometricsLabel;
 
     #[test]
     fn custom_trait_implementation() {
@@ -246,12 +246,12 @@ mod tests {
 
     #[test]
     fn derived_enum() {
-        #[derive(GetLabel)]
-        #[autometrics(label_key = "my_foo")]
+        #[derive(AutometricsLabel)]
+        #[autometrics_label(key = "my_foo")]
         enum MyFoo {
-            #[autometrics(label_value = "hello")]
+            #[autometrics_label(value = "hello")]
             Alpha,
-            #[autometrics()]
+            #[autometrics_label()]
             BetaValue,
             Charlie,
         }
