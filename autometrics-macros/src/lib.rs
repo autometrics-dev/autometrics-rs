@@ -4,7 +4,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::env;
 use inflector::Inflector;
-use syn::{parse_macro_input, DeriveInput, ImplItem, ItemFn, ItemImpl, Result, Data, DataEnum, Attribute, Meta, NestedMeta, Lit};
+use syn::{parse_macro_input, DeriveInput, ImplItem, ItemFn, ItemImpl, Result, Data, DataEnum, Attribute, Meta, NestedMeta, Lit, Error};
 
 mod parse;
 
@@ -394,7 +394,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let variants = match input.data {
         Data::Enum(DataEnum { variants, .. }) => variants,
         _ => {
-            return Err(syn::Error::new_spanned(input, "#[derive(LabelValues}] is only supported for enums"));
+            return Err(Error::new_spanned(input, "#[derive(LabelValues}] is only supported for enums"));
         },
     };
 
@@ -418,7 +418,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
         // Check casing of the user-provided value
         if let Some(key) = &key_from_attr {
             if key.as_str() != key.to_snake_case() {
-                return Err(syn::Error::new_spanned(attrs[0], "label_key should be snake_cased"));
+                return Err(Error::new_spanned(attrs[0], "label_key should be snake_cased"));
             }
         }
 
@@ -436,8 +436,8 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
                 1 => get_label_attr(attrs[0], "label_value")?,
                 _ => {
                     let mut error =
-                        syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
-                    error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
+                        Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
+                    error.combine(Error::new_spanned(attrs[0], "note: first one here"));
                     return Err(error);
                 }
             };
@@ -447,7 +447,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
             // Check casing of the user-provided value
             if let Some(value) = &value_from_attr {
                 if value.as_str() != value.to_snake_case() {
-                    return Err(syn::Error::new_spanned(attrs[0], "label_value should be snake_cased"));
+                    return Err(Error::new_spanned(attrs[0], "label_value should be snake_cased"));
                 }
             }
 
@@ -476,7 +476,7 @@ fn get_label_attr(attr: &Attribute, attr_name: &str) -> Result<Option<Ident>> {
     let meta = attr.parse_meta()?;
     let meta_list = match meta {
         Meta::List(list) => list,
-        _ => return Err(syn::Error::new_spanned(meta, "expected a list-style attribute")),
+        _ => return Err(Error::new_spanned(meta, "expected a list-style attribute")),
     };
 
     let nested = match meta_list.nested.len() {
@@ -484,7 +484,7 @@ fn get_label_attr(attr: &Attribute, attr_name: &str) -> Result<Option<Ident>> {
         0 => return Ok(None),
         1 => &meta_list.nested[0],
         _ => {
-            return Err(syn::Error::new_spanned(
+            return Err(Error::new_spanned(
                 meta_list.nested,
                 "currently only a single autometrics attribute is supported",
             ));
@@ -493,18 +493,18 @@ fn get_label_attr(attr: &Attribute, attr_name: &str) -> Result<Option<Ident>> {
 
     let label_value = match nested {
         NestedMeta::Meta(Meta::NameValue(nv)) => nv,
-        _ => return Err(syn::Error::new_spanned(nested, format!("expected `{attr_name} = \"<value>\"`"))),
+        _ => return Err(Error::new_spanned(nested, format!("expected `{attr_name} = \"<value>\"`"))),
     };
 
     if !label_value.path.is_ident(attr_name) {
-        return Err(syn::Error::new_spanned(
+        return Err(Error::new_spanned(
             &label_value.path,
             format!("unsupported autometrics attribute, expected `{attr_name}`"),
         ));
     }
 
     match &label_value.lit {
-        Lit::Str(s) => syn::parse_str(&s.value()).map_err(|e| syn::Error::new_spanned(s, e)),
-        lit => Err(syn::Error::new_spanned(lit, "expected string literal")),
+        Lit::Str(s) => syn::parse_str(&s.value()).map_err(|e| Error::new_spanned(s, e)),
+        lit => Err(Error::new_spanned(lit, "expected string literal")),
     }
 }
