@@ -407,7 +407,7 @@ fn derive_get_label_impl(input: DeriveInput) -> Result<TokenStream> {
             1 => get_label_attr(attrs[0], "label_key")?,
             _ => {
                 let mut error =
-                    syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_value)` attribute");
+                    syn::Error::new_spanned(attrs[1], "redundant `autometrics(label_key)` attribute");
                 error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
                 return Err(error);
             }
