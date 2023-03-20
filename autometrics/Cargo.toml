@@ -23,8 +23,8 @@ prometheus-exporter = [
   "opentelemetry_sdk",
   "prometheus"
 ]
-custom-objective-percentiles = []
-custom-objective-latencies = []
+custom-objective-percentile = []
+custom-objective-latency = []
 
 [dependencies]
 autometrics-macros = { version = "0.3.0", path = "../autometrics-macros" }
