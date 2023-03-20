@@ -87,7 +87,7 @@ pub enum ObjectivePercentile {
     /// 1. generate a custom Sloth file using the autometrics-cli that includes this objective
     /// 2. use Sloth to generate the Prometheus recording and alerting rules
     /// 3. configure your Prometheus instance to use the generated rules
-    #[cfg(feature = "custom-objectives")]
+    #[cfg(feature = "custom-objective-percentiles")]
     Custom(&'static str),
 }
 
@@ -98,7 +98,7 @@ impl ObjectivePercentile {
             ObjectivePercentile::P95 => "95",
             ObjectivePercentile::P99 => "99",
             ObjectivePercentile::P99_9 => "99.9",
-            #[cfg(feature = "custom-objectives")]
+            #[cfg(feature = "custom-objective-percentiles")]
             ObjectivePercentile::Custom(custom) => custom,
         }
     }
@@ -107,26 +107,34 @@ impl ObjectivePercentile {
 /// The latency threshold, in milliseoncds, for a given objective.
 #[non_exhaustive]
 pub enum ObjectiveLatency {
-    /// 10ms
+    /// 5 milliseconds
+    Ms5,
+    /// 10 milliseconds
     Ms10,
-    /// 25ms
+    /// 25 milliseconds
     Ms25,
-    /// 50ms
+    /// 50 milliseconds
     Ms50,
-    /// 75ms
+    /// 75 milliseconds
     Ms75,
-    /// 100ms
+    /// 100 milliseconds
     Ms100,
-    /// 150ms
-    Ms150,
-    /// 200ms
-    Ms200,
-    /// 350ms
-    Ms350,
-    /// 500ms
+    /// 150 milliseconds
+    Ms250,
+    /// 500 milliseconds
     Ms500,
-    /// 1000ms
+    /// 750 milliseconds
+    Ms750,
+    /// 1 second
     Ms1000,
+    /// 2.5 seconds
+    Ms2500,
+    /// 5 seconds
+    Ms5000,
+    /// 7.5 seconds
+    Ms7500,
+    /// 10 seconds
+    Ms10000,
     /// ⚠️ Careful when using this option!
     ///
     /// First, the latency should be specified in seconds, not milliseconds.
@@ -136,24 +144,33 @@ pub enum ObjectiveLatency {
     /// If it is not, the alerting rules will not work.
     /// This is because the recording rules compare this to the value
     /// of the `le` label on the histogram buckets.
-    #[cfg(feature = "custom-objectives")]
+    #[cfg(feature = "custom-objective-latencies")]
     Custom(&'static str),
 }
+
+#[cfg(all(feature = "custom-objective-latencies", feature = "prometheus"))]
+compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus` feature because \
+the autometrics API does not provide a way to configure the histogram buckets passed to the prometheus crate's metrics functions. \
+Please open an issue on GitHub if you would like to see this feature added.");
 
 impl ObjectiveLatency {
     pub(crate) const fn as_str(&self) -> &'static str {
         match self {
+            ObjectiveLatency::Ms5 => "0.005",
             ObjectiveLatency::Ms10 => "0.01",
             ObjectiveLatency::Ms25 => "0.025",
             ObjectiveLatency::Ms50 => "0.05",
             ObjectiveLatency::Ms75 => "0.075",
             ObjectiveLatency::Ms100 => "0.1",
-            ObjectiveLatency::Ms150 => "0.15",
-            ObjectiveLatency::Ms200 => "0.2",
-            ObjectiveLatency::Ms350 => "0.35",
+            ObjectiveLatency::Ms250 => "0.25",
             ObjectiveLatency::Ms500 => "0.5",
+            ObjectiveLatency::Ms750 => "0.75",
             ObjectiveLatency::Ms1000 => "1",
-            #[cfg(feature = "custom-objectives")]
+            ObjectiveLatency::Ms2500 => "2.5",
+            ObjectiveLatency::Ms5000 => "5",
+            ObjectiveLatency::Ms7500 => "7.5",
+            ObjectiveLatency::Ms10000 => "10",
+            #[cfg(feature = "custom-objective-latencies")]
             ObjectiveLatency::Custom(custom) => custom,
         }
     }

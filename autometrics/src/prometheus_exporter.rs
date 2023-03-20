@@ -1,3 +1,4 @@
+use crate::HISTOGRAM_BUCKETS;
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
@@ -6,7 +7,6 @@ use opentelemetry_sdk::export::metrics::aggregation;
 use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::{default_registry, Error, TextEncoder};
 
-const HISTOGRAM_BUCKETS: [f64; 10] = [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.35, 0.5, 1.0];
 static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
 
 #[derive(Clone)]

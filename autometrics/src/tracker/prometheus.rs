@@ -1,7 +1,9 @@
 use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
+use crate::HISTOGRAM_BUCKETS;
 use crate::{constants::*, tracker::TrackMetrics};
 use const_format::{formatcp, str_replace};
 use once_cell::sync::Lazy;
+use prometheus::histogram_opts;
 use prometheus::{
     core::{AtomicI64, GenericGauge},
     register_histogram_vec, register_int_counter_vec, register_int_gauge_vec, HistogramVec,
@@ -36,9 +38,17 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
     ))
 });
 static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
-    register_histogram_vec!(
+    let opts = histogram_opts!(
         HISTOGRAM_NAME_PROMETHEUS,
         HISTOGRAM_DESCRIPTION,
+        // The Prometheus crate uses different histogram buckets by default
+        // (and these are configured when creating a histogram rather than
+        // when configuring the registry or exporter, like in the other crates)
+        // so we need to pass these in here
+        HISTOGRAM_BUCKETS.to_vec()
+    );
+    register_histogram_vec!(
+        opts,
         &[
             FUNCTION_KEY,
             MODULE_KEY,
