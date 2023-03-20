@@ -126,7 +126,8 @@ Note that the Prometheus URL is only included in function documentation comments
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
-- `custom-objectives` - by default, Autometrics only supports a fixed set of percentiles and latencies for objectives. Enable this feature flag to enable custom percentiles and/or latencies. Note, however, that custom latencies must match one of the buckets configured for your histogram and using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth. (Note that this is not currently compatible with the `prometheus` feature.)
+- `custom-objective-latencies` - by default, Autometrics only supports a fixed set of latency thresholds for objectives. Enable this to use custom latency thresholds. Note, however, that the custom latency must match one of the buckets configured for your histogram, meaning you will not be able to use the default Prometheus exporter. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
+- by default, Autometrics only supports a fixed set of objective percentiles. Enable this to use a custom percentile. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth.
 
 #### Metrics Libraries
 

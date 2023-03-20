@@ -23,7 +23,6 @@ prometheus-exporter = [
   "opentelemetry_sdk",
   "prometheus"
 ]
-custom-objectives = ["custom-objective-percentiles", "custom-objective-latencies"]
 custom-objective-percentiles = []
 custom-objective-latencies = []
 
