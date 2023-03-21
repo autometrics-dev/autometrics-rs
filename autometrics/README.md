@@ -95,7 +95,7 @@ use autometrics::objectives::{Objective, ObjectiveLatency, ObjectivePercentile};
 
 const API_SLO: Objective = Objective::new("api")
     .success_rate(ObjectivePercentile::P99_9)
-    .latency(ObjectiveLatency::Ms200, ObjectivePercentile::P99);
+    .latency(ObjectiveLatency::Ms250, ObjectivePercentile::P99);
 
 #[autometrics(objective = API_SLO)]
 pub fn api_handler() {
