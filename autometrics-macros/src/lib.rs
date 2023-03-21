@@ -189,7 +189,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         };
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetLabel};
+                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel};
                 let result_label = #result_label;
                 let value_type = (&result).get_label().map(|(_, v)| v);
                 CounterLabels::new(
@@ -206,8 +206,8 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         // the return value was a `Result` and, if so, assign the appropriate labels
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetLabels, GetLabelsFromResult};
-                let result_labels = (&result).__autometrics_get_labels();
+                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel, GetLabelsFromResult};
+                let result_labels = (&result).get_label().map(|(k, v)| (k, Some(v)));
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
@@ -233,14 +233,14 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
         #vis #sig {
             let __autometrics_tracker = {
-                use autometrics::__private::{AutometricsTracker, TrackMetrics};
+                use ::autometrics::__private::{AutometricsTracker, TrackMetrics};
                 AutometricsTracker::start(#gauge_labels)
             };
 
             let result = #call_function;
 
             {
-                use autometrics::__private::{HistogramLabels, TrackMetrics};
+                use ::autometrics::__private::{HistogramLabels, TrackMetrics};
                 let counter_labels = #counter_labels;
                 let histogram_labels = HistogramLabels::new(
                     #function_name,
@@ -461,6 +461,11 @@ fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
 
     let ident = input.ident;
     Ok(quote! {
+        use ::autometrics::__private::{GetLabel, COUNTER_LABEL_KEYS, distributed_slice};
+
+        #[distributed_slice(COUNTER_LABEL_KEYS)]
+        pub static COUNTER_LABEL_KEY: &'static str = #label_key;
+
         #[automatically_derived]
         impl GetLabel for #ident {
             fn get_label(&self) -> Option<(&'static str, &'static str)> {

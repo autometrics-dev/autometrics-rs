@@ -8,6 +8,7 @@ use prometheus::{
     IntCounterVec, IntGaugeVec,
 };
 use std::time::Instant;
+use crate::__private::COUNTER_LABEL_KEYS;
 
 const COUNTER_NAME_PROMETHEUS: &str = str_replace!(COUNTER_NAME, ".", "_");
 const HISTOGRAM_NAME_PROMETHEUS: &str = str_replace!(HISTOGRAM_NAME, ".", "_");
@@ -17,19 +18,22 @@ const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = str_replace!(OBJECTIVE_PERCENTILE,
 const OBJECTIVE_LATENCY_PROMETHEUS: &str = str_replace!(OBJECTIVE_LATENCY_THRESHOLD, ".", "_");
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
+    let mut keys = vec![
+        FUNCTION_KEY,
+        MODULE_KEY,
+        CALLER_KEY,
+        RESULT_KEY,
+        OK_KEY,
+        ERROR_KEY,
+        OBJECTIVE_NAME_PROMETHEUS,
+        OBJECTIVE_PERCENTILE_PROMETHEUS,
+    ];
+    keys.extend_from_slice(&COUNTER_LABEL_KEYS);
+
     register_int_counter_vec!(
         COUNTER_NAME_PROMETHEUS,
         COUNTER_DESCRIPTION,
-        &[
-            FUNCTION_KEY,
-            MODULE_KEY,
-            CALLER_KEY,
-            RESULT_KEY,
-            OK_KEY,
-            ERROR_KEY,
-            OBJECTIVE_NAME_PROMETHEUS,
-            OBJECTIVE_PERCENTILE_PROMETHEUS,
-        ]
+        &keys
     )
     .expect(formatcp!(
         "Failed to register {COUNTER_NAME_PROMETHEUS} counter"
@@ -82,36 +86,48 @@ impl TrackMetrics for PrometheusTracker {
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         let duration = self.start.elapsed().as_secs_f64();
 
+        // Put the label values in the same order as the keys in the counter definition
+        let mut label_values = vec![
+            counter_labels.function,
+            counter_labels.module,
+            counter_labels.caller,
+            counter_labels.result.unwrap_or_default().0,
+            if let Some((OK_KEY, Some(return_value_type))) = counter_labels.result {
+                return_value_type
+            } else {
+                ""
+            },
+            if let Some((ERROR_KEY, Some(return_value_type))) = counter_labels.result {
+                return_value_type
+            } else {
+                ""
+            },
+            counter_labels
+                .objective
+                .as_ref()
+                .map(|obj| obj.0)
+                .unwrap_or(""),
+            counter_labels
+                .objective
+                .as_ref()
+                .map(|obj| obj.1.as_str())
+                .unwrap_or(""),
+        ];
+
+        // Extend label_values with whatever user-defined label keys were defined
+        label_values.extend(COUNTER_LABEL_KEYS.iter()
+            .map(|label_key| {
+                // See if we can find a value for this user-defined label_key
+                let result = counter_labels.result.unwrap_or_default();
+                if result.0 == *label_key {
+                    result.1.unwrap_or("")
+                } else {
+                    ""
+                }
+            }));
+
         COUNTER
-            .with_label_values(
-                // Put the label values in the same order as the keys in the counter definition
-                &[
-                    counter_labels.function,
-                    counter_labels.module,
-                    counter_labels.caller,
-                    counter_labels.result.unwrap_or_default().0,
-                    if let Some((OK_KEY, Some(return_value_type))) = counter_labels.result {
-                        return_value_type
-                    } else {
-                        ""
-                    },
-                    if let Some((ERROR_KEY, Some(return_value_type))) = counter_labels.result {
-                        return_value_type
-                    } else {
-                        ""
-                    },
-                    counter_labels
-                        .objective
-                        .as_ref()
-                        .map(|obj| obj.0)
-                        .unwrap_or(""),
-                    counter_labels
-                        .objective
-                        .as_ref()
-                        .map(|obj| obj.1.as_str())
-                        .unwrap_or(""),
-                ],
-            )
+            .with_label_values(&label_values)
             .inc();
 
         HISTOGRAM

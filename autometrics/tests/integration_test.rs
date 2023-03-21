@@ -1,4 +1,5 @@
 use autometrics::{autometrics, objectives::*};
+use autometrics_macros::AutometricsLabel;
 
 const OBJECTIVE: Objective = Objective::new("test")
     .success_rate(ObjectivePercentile::P99)
@@ -11,8 +12,10 @@ fn main() {
 
     add(1, 2);
     other_function().unwrap();
+    derived_label_function();
 
     let result = autometrics::encode_global_metrics().unwrap();
+    println!("{}", result);
 
     assert_ne!(result, "");
 }
@@ -69,4 +72,16 @@ pub fn some_function() -> Option<String> {
 #[autometrics(error_if = Option::is_none)]
 pub fn none_function() -> Option<String> {
     Some("Hello world!".to_string())
+}
+
+#[autometrics]
+pub fn derived_label_function() -> DerivedLabel {
+    DerivedLabel::Foo
+}
+
+#[derive(AutometricsLabel)]
+#[autometrics_label(key = "derived_label")]
+pub enum DerivedLabel {
+    #[autometrics_label()]
+    Foo,
 }

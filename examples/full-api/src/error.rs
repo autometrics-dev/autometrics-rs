@@ -1,24 +1,22 @@
+use autometrics::AutometricsLabel;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use strum::IntoStaticStr;
-use thiserror::Error;
 
-// We're using `thiserror` to define our error type, and we're using `strum` to
-// enable the error variants to be turned into &'static str's, which
-// will actually become another label on the call counter metric.
+// We're using the `AutometricsLabel` derive to enable the error variants to be turned into labels
+// on the call counter metric.
 //
-// In this case, the label will be `error` = `not_found`, `bad_request`, or `internal`.
+// In this case, the label will be `error` = `not_found`, `bad_request`, or `internal_server_error`.
 //
 // Instead of looking at high-level HTTP status codes in our metrics,
 // we'll instead see the actual variant name of the error.
-#[derive(Debug, Error, IntoStaticStr)]
-#[strum(serialize_all = "snake_case")]
+#[derive(Debug, AutometricsLabel)]
+#[autometrics_label(key = "error")]
 pub enum ApiError {
-    #[error("User not found")]
+    #[autometrics_label()]
     NotFound,
-    #[error("Bad request")]
+    #[autometrics_label()]
     BadRequest,
-    #[error("Internal server error")]
+    #[autometrics_label(value = "internal_server_error")]
     Internal,
 }
 

@@ -13,8 +13,12 @@ mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
-pub use autometrics_macros::autometrics;
+pub extern crate linkme;
+
 pub use labels::GetLabel;
+
+pub extern crate autometrics_macros;
+pub use autometrics_macros::{autometrics, AutometricsLabel};
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
@@ -33,6 +37,7 @@ pub mod __private {
     use crate::task_local::LocalKey;
     use std::{cell::RefCell, thread_local};
 
+    pub use linkme::distributed_slice;
     pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
 
