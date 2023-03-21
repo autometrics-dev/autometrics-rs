@@ -116,33 +116,6 @@ impl GaugeLabels {
     }
 }
 
-// The following is a convoluted way to figure out if the return type resolves to a Result
-// or not. We cannot simply parse the code using syn to figure out if it's a Result
-// because syn doesn't do type resolution and thus would count any renamed version
-// of Result as a different type. Instead, we define two traits with intentionally
-// conflicting method names and use a trick based on the order in which Rust resolves
-// method names to return a different value based on whether the return value is
-// a Result or anything else.
-// This approach is based on dtolnay's answer to this question:
-// https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/5
-// and this answer explains why it works:
-// https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
-
-pub trait GetLabelFromResult {
-    fn get_label(&self) -> Option<(&'static str, &'static str)> {
-        None
-    }
-}
-
-impl<T: GetLabel, E: GetLabel> GetLabelFromResult for Result<T, E> {
-    fn get_label(&self) -> Option<(&'static str, &'static str)> {
-        match self {
-            Ok(v) => (*v).get_label(),
-            Err(v) => (*v).get_label(),
-        }
-    }
-}
-
 pub enum LabelArray {
     Three([Label; 3]),
     Four([Label; 4]),
@@ -201,6 +174,15 @@ macro_rules! impl_trait_for_types {
 pub trait GetLabel {
     fn get_label(&self) -> Option<(&'static str, &'static str)> {
         None
+    }
+}
+
+impl<T: GetLabel, E: GetLabel> GetLabel for Result<T, E> {
+    fn get_label(&self) -> Option<(&'static str, &'static str)> {
+        match self {
+            Ok(v) => (*v).get_label(),
+            Err(v) => (*v).get_label(),
+        }
     }
 }
 

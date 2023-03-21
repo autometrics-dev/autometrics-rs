@@ -1,4 +1,3 @@
-use autometrics::__private::GetLabelFromResult;
 use autometrics::GetLabel;
 use autometrics_macros::AutometricsLabel;
 
@@ -51,6 +50,21 @@ fn derived_enum() {
     assert_eq!(Some(("my_foo", "beta_value")), MyFoo::BetaValue.get_label());
     assert_eq!(Some(("my_foo", "charlie")), MyFoo::Charlie.get_label());
 
-    let result: Result<(), MyFoo> = Err(MyFoo::Alpha);
+    // A custom type that doesn't implement GetLabel
+    struct CustomType(u32);
+
+    let result: Result<CustomType, CustomType> = Ok(CustomType(123));
+    assert_eq!(None, result.get_label());
+
+    let result: Result<CustomType, MyFoo> = Err(MyFoo::Alpha);
     assert_eq!(Some(("my_foo", "hello")), result.get_label());
+
+    let result: Result<MyFoo, CustomType> = Ok(MyFoo::Alpha);
+    assert_eq!(Some(("my_foo", "hello")), result.get_label());
+
+    let result: Result<MyFoo, CustomType> = Err(CustomType(123));
+    assert_eq!(None, result.get_label());
+
+    let result: Result<CustomType, MyFoo> = Ok(CustomType(123));
+    assert_eq!(None, result.get_label());
 }
