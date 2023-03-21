@@ -192,7 +192,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         };
         quote! {
             {
-                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel};
+                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel, GetLabelFromResult};
                 let result_label = #result_label;
                 let value_type = (&result).get_label().map(|(_, v)| v);
                 CounterLabels::new(
@@ -209,7 +209,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         // the return value was a `Result` and, if so, assign the appropriate labels
         quote! {
             {
-                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel, GetLabelsFromResult};
+                use ::autometrics::__private::{CALLER, CounterLabels, GetLabel, GetLabelFromResult};
                 let result_labels = (&result).get_label().map(|(k, v)| (k, Some(v)));
                 CounterLabels::new(
                     #function_name,

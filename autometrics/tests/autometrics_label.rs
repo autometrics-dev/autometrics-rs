@@ -1,3 +1,4 @@
+use autometrics::__private::GetLabelFromResult;
 use autometrics::GetLabel;
 use autometrics_macros::AutometricsLabel;
 
@@ -49,4 +50,7 @@ fn derived_enum() {
     assert_eq!(Some(("my_foo", "hello")), MyFoo::Alpha.get_label());
     assert_eq!(Some(("my_foo", "beta_value")), MyFoo::BetaValue.get_label());
     assert_eq!(Some(("my_foo", "charlie")), MyFoo::Charlie.get_label());
+
+    let result: Result<(), MyFoo> = Err(MyFoo::Alpha);
+    assert_eq!(Some(("my_foo", "hello")), result.get_label());
 }

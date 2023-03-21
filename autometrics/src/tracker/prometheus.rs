@@ -23,8 +23,6 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
         MODULE_KEY,
         CALLER_KEY,
         RESULT_KEY,
-        OK_KEY,
-        ERROR_KEY,
         OBJECTIVE_NAME_PROMETHEUS,
         OBJECTIVE_PERCENTILE_PROMETHEUS,
     ];
@@ -92,16 +90,6 @@ impl TrackMetrics for PrometheusTracker {
             counter_labels.module,
             counter_labels.caller,
             counter_labels.result.unwrap_or_default().0,
-            if let Some((OK_KEY, Some(return_value_type))) = counter_labels.result {
-                return_value_type
-            } else {
-                ""
-            },
-            if let Some((ERROR_KEY, Some(return_value_type))) = counter_labels.result {
-                return_value_type
-            } else {
-                ""
-            },
             counter_labels
                 .objective
                 .as_ref()
