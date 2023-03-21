@@ -1,6 +1,5 @@
 use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
-use crate::HISTOGRAM_BUCKETS;
-use crate::{constants::*, tracker::TrackMetrics};
+use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
 use const_format::{formatcp, str_replace};
 use once_cell::sync::Lazy;
 use prometheus::histogram_opts;
