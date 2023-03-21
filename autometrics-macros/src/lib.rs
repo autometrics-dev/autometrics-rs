@@ -1,10 +1,13 @@
 use crate::parse::{AutometricsArgs, Item};
+use inflector::Inflector;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::env;
-use inflector::Inflector;
-use syn::{parse_macro_input, DeriveInput, ImplItem, ItemFn, ItemImpl, Result, Data, DataEnum, Attribute, Meta, NestedMeta, Lit, Error};
+use syn::{
+    parse_macro_input, Attribute, Data, DataEnum, DeriveInput, Error, ImplItem, ItemFn, ItemImpl,
+    Lit, Meta, NestedMeta, Result,
+};
 
 mod parse;
 
@@ -394,20 +397,29 @@ fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let variants = match input.data {
         Data::Enum(DataEnum { variants, .. }) => variants,
         _ => {
-            return Err(Error::new_spanned(input, "#[derive(AutometricsLabel}] is only supported for enums"));
-        },
+            return Err(Error::new_spanned(
+                input,
+                "#[derive(AutometricsLabel}] is only supported for enums",
+            ));
+        }
     };
 
     // Use the key provided or the snake case version of the enum name
     let label_key = {
-        let attrs: Vec<_> = input.attrs.iter().filter(|attr| attr.path.is_ident("autometrics_label")).collect();
+        let attrs: Vec<_> = input
+            .attrs
+            .iter()
+            .filter(|attr| attr.path.is_ident("autometrics_label"))
+            .collect();
 
         let key_from_attr = match attrs.len() {
             0 => None,
             1 => get_label_attr(attrs[0], "key")?,
             _ => {
-                let mut error =
-                    syn::Error::new_spanned(attrs[1], "redundant `autometrics_label(key)` attribute");
+                let mut error = syn::Error::new_spanned(
+                    attrs[1],
+                    "redundant `autometrics_label(key)` attribute",
+                );
                 error.combine(syn::Error::new_spanned(attrs[0], "note: first one here"));
                 return Err(error);
             }
@@ -429,14 +441,20 @@ fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
     let value_match_arms = variants
         .into_iter()
         .map(|variant| {
-            let attrs: Vec<_> = variant.attrs.iter().filter(|attr| attr.path.is_ident("autometrics_label")).collect();
+            let attrs: Vec<_> = variant
+                .attrs
+                .iter()
+                .filter(|attr| attr.path.is_ident("autometrics_label"))
+                .collect();
 
             let value_from_attr = match attrs.len() {
                 0 => None,
                 1 => get_label_attr(attrs[0], "value")?,
                 _ => {
-                    let mut error =
-                        Error::new_spanned(attrs[1], "redundant `autometrics_label(value)` attribute");
+                    let mut error = Error::new_spanned(
+                        attrs[1],
+                        "redundant `autometrics_label(value)` attribute",
+                    );
                     error.combine(Error::new_spanned(attrs[0], "note: first one here"));
                     return Err(error);
                 }
@@ -452,7 +470,8 @@ fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
             }
 
             let ident = variant.ident;
-            let value = value_from_attr.unwrap_or_else(|| ident.clone().to_string().to_snake_case());
+            let value =
+                value_from_attr.unwrap_or_else(|| ident.clone().to_string().to_snake_case());
             Ok(quote! {
                 Self::#ident => #value,
             })
@@ -461,9 +480,10 @@ fn derive_autometrics_label_impl(input: DeriveInput) -> Result<TokenStream> {
 
     let ident = input.ident;
     Ok(quote! {
-        use ::autometrics::__private::{GetLabel, COUNTER_LABEL_KEYS, distributed_slice};
+        use ::autometrics::__private::{GetLabel, COUNTER_LABEL_KEYS, linkme};
 
-        #[distributed_slice(COUNTER_LABEL_KEYS)]
+        #[linkme::distributed_slice(COUNTER_LABEL_KEYS)]
+        #[linkme(crate = ::autometrics::__private::linkme)]
         pub static COUNTER_LABEL_KEY: &'static str = #label_key;
 
         #[automatically_derived]
@@ -498,7 +518,12 @@ fn get_label_attr(attr: &Attribute, attr_name: &str) -> Result<Option<Ident>> {
 
     let label_value = match nested {
         NestedMeta::Meta(Meta::NameValue(nv)) => nv,
-        _ => return Err(Error::new_spanned(nested, format!("expected `{attr_name} = \"<value>\"`"))),
+        _ => {
+            return Err(Error::new_spanned(
+                nested,
+                format!("expected `{attr_name} = \"<value>\"`"),
+            ))
+        }
     };
 
     if !label_value.path.is_ident(attr_name) {

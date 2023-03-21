@@ -1,4 +1,5 @@
-use crate::{constants::*, objectives::*, __private::distributed_slice};
+use crate::{constants::*, objectives::*};
+use linkme::distributed_slice;
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
