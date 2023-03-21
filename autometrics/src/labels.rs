@@ -128,6 +128,21 @@ impl GaugeLabels {
 // and this answer explains why it works:
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
+pub trait GetLabelFromResult {
+    fn get_label(&self) -> Option<(&'static str, &'static str)> {
+        None
+    }
+}
+
+impl<T: GetLabel, E: GetLabel> GetLabelFromResult for Result<T, E> {
+    fn get_label(&self) -> Option<(&'static str, &'static str)> {
+        match self {
+            Ok(v) => (*v).get_label(),
+            Err(v) => (*v).get_label(),
+        }
+    }
+}
+
 pub enum LabelArray {
     Three([Label; 3]),
     Four([Label; 4]),
@@ -181,21 +196,6 @@ macro_rules! impl_trait_for_types {
         impl<A, B, C, D, E, F, G, H, I, J, K> $trait for (A, B, C, D, E, F, G, H, I, J, K) {}
         impl<A, B, C, D, E, F, G, H, I, J, K, L> $trait for (A, B, C, D, E, F, G, H, I, J, K, L) {}
     };
-}
-
-pub trait GetLabelFromResult {
-    fn get_label(&self) -> Option<(&'static str, &'static str)> {
-        None
-    }
-}
-
-impl<T: GetLabel, E: GetLabel> GetLabelFromResult for Result<T, E> {
-    fn get_label(&self) -> Option<(&'static str, &'static str)> {
-        match self {
-            Ok(v) => (*v).get_label(),
-            Err(v) => (*v).get_label(),
-        }
-    }
 }
 
 pub trait GetLabel {
