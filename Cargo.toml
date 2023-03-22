@@ -1,5 +1,4 @@
 [workspace.package]
-name = "autometrics"
 version = "0.3.2"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
