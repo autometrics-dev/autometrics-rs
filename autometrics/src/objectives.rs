@@ -148,12 +148,16 @@ pub enum ObjectiveLatency {
     Custom(&'static str),
 }
 
-#[cfg(all(feature = "custom-objective-latency", feature = "prometheus"))]
+#[cfg(all(not(doc), feature = "custom-objective-latency", feature = "prometheus"))]
 compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus` feature because \
 the autometrics API does not provide a way to configure the histogram buckets passed to the prometheus crate's metrics functions. \
 Please open an issue on GitHub if you would like to see this feature added.");
 
-#[cfg(all(feature = "custom-objective-latency", feature = "prometheus-exporter"))]
+#[cfg(all(
+    not(doc),
+    feature = "custom-objective-latency",
+    feature = "prometheus-exporter"
+))]
 compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus-exporter` feature because \
 the autometrics API does not provide a way to configure the histogram buckets used in default exporter. Please create a custom \
 exporter using the metrics library you are using and ensure that the histogram buckets include the custom latency value.");
