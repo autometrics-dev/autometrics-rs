@@ -87,7 +87,7 @@ fn generate_latency_slo(objective_percentile: &str) -> String {
             and
             label_join(rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
           ))
-        total_query: sum by (objective_name, objective_percentile) (rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
+        total_query: sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
     alerting:
       name: High Latency SLO - {objective_percentile}%
       labels:
