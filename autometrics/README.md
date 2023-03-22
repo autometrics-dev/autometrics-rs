@@ -9,7 +9,7 @@
 
 Jump from your IDE to live Prometheus charts for each HTTP/RPC handler, database method, or other piece of application logic.
 
-<video src="https://user-images.githubusercontent.com/3262610/220152261-2ad6ab2b-f951-4b51-8d6e-855fb71440a3.mp4" autoplay loop muted></video>
+<video src="https://user-images.githubusercontent.com/3262610/220152261-2ad6ab2b-f951-4b51-8d6e-855fb71440a3.mp4" autoplay loop muted width="100%"></video>
 
 ## Features
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
