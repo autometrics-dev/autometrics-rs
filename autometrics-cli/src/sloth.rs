@@ -47,7 +47,7 @@ slos:
 }
 
 fn generate_success_rate_slo(objective_percentile: &str) -> String {
-    let objective_percentile_no_decimal = objective_percentile.replace(".", "_");
+    let objective_percentile_no_decimal = objective_percentile.replace('.', "_");
 
     format!("  - name: success-rate-{objective_percentile_no_decimal}
     objective: {objective_percentile}
@@ -72,7 +72,7 @@ fn generate_success_rate_slo(objective_percentile: &str) -> String {
 }
 
 fn generate_latency_slo(objective_percentile: &str) -> String {
-    let objective_percentile_no_decimal = objective_percentile.replace(".", "_");
+    let objective_percentile_no_decimal = objective_percentile.replace('.', "_");
 
     format!("  - name: latency-{objective_percentile_no_decimal}
     objective: {objective_percentile}
@@ -80,7 +80,7 @@ fn generate_latency_slo(objective_percentile: &str) -> String {
     sli:
       events:
         error_query: >
-          sum by (objective_name, objective_percentile) (rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
+          sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
           -
           (sum by (objective_name, objective_percentile) (
             label_join(rate(function_calls_duration_bucket{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"objective_latency_threshold\")
