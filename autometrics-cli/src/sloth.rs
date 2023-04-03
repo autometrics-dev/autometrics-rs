@@ -10,7 +10,7 @@ pub struct Arguments {
     #[clap(long, default_values = &["90", "95", "99", "99.9"])]
     objectives: Vec<String>,
 
-    /// Minimum traffic to trigger alerts in events/second.
+    /// Minimum traffic to trigger alerts, specified as events/second.
     ///
     /// If a service (all function sharing the same service name and objective
     /// percentage) has less than this many calls per second, then it won't
