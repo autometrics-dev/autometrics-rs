@@ -32,6 +32,20 @@ impl GlobalPrometheus {
 
         Ok(output)
     }
+
+    /// Add tokio runtime metrics from the given [Runtime handle](tokio::runtime::Handle)
+    ///
+    /// On top of the feature, you also need to add the RUSTFLAGS to [enable
+    /// `tokio_unstable`](https://docs.rs/tokio/latest/tokio/#unstable-features)
+    /// in order to use this method.
+    #[cfg(feature = "prometheus-tokio")]
+    pub fn with_tokio(&self, handle: &tokio::runtime::Handle) -> &Self {
+        use prometheus_tokio::TokioCollector;
+        self.exporter
+            .registry()
+            .register(Box::new(TokioCollector::new(handle, "autometrics")));
+        &self
+    }
 }
 
 /// Initialize the global Prometheus metrics collector and exporter.
@@ -47,6 +61,21 @@ impl GlobalPrometheus {
 /// # main() {
 /// let _exporter = global_metrics_exporter();
 /// # }
+/// ```
+///
+/// # Tokio runtime metrics support
+///
+/// If you both:
+/// - enabled the `prometheus-tokio` feature of autometrics, and
+/// - added the RUSTFLAGS to [enable `tokio_unstable`](https://docs.rs/tokio/latest/tokio/#unstable-features), then
+///
+/// you can also add the Tokio related runtime metrics to the exporter:
+/// ```rust,ignore
+/// #[tokio::main]
+/// async fn main() {
+/// let _exporter = global_metrics_exporter().with_tokio(&tokio::runtime::Handle::current());
+/// // ...
+/// }
 /// ```
 pub fn global_metrics_exporter() -> GlobalPrometheus {
     GLOBAL_EXPORTER.clone()

@@ -15,6 +15,7 @@ readme = "README.md"
 default = ["opentelemetry"]
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api"]
+prometheus-tokio = [ "dep:prometheus_tokio", "tokio" ]
 prometheus = ["const_format", "dep:prometheus", "once_cell"]
 prometheus-exporter = [
   "metrics-exporter-prometheus",
@@ -44,6 +45,10 @@ prometheus = { version = "0.13", default-features = false, optional = true }
 
 # Used for prometheus feature
 const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
+
+# Used for prometheus-tokio feature
+prometheus_tokio = { version = "0.2", optional = true }
+tokio = { version = "1.26", features = ["rt"], optional = true }
 
 [package.metadata.docs.rs]
 all-features = true
