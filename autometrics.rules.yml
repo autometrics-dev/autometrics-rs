@@ -10,7 +10,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[5m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -20,7 +20,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[30m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -30,7 +30,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[1h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -40,7 +40,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[2h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -50,7 +50,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[6h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -60,7 +60,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[1d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -70,7 +70,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90",result="error"}[3d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="90"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-90
       sloth_service: autometrics
@@ -191,7 +191,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[5m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -201,7 +201,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[30m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -211,7 +211,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[1h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -221,7 +221,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[2h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -231,7 +231,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[6h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -241,7 +241,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[1d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -251,7 +251,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95",result="error"}[3d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="95"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-95
       sloth_service: autometrics
@@ -372,7 +372,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[5m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -382,7 +382,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[30m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -392,7 +392,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[1h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -402,7 +402,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[2h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -412,7 +412,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[6h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -422,7 +422,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[1d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -432,7 +432,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99",result="error"}[3d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99
       sloth_service: autometrics
@@ -553,7 +553,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[5m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -563,7 +563,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[30m])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -573,7 +573,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[1h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -583,7 +583,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[2h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -593,7 +593,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[6h])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -603,7 +603,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[1d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -613,7 +613,7 @@ groups:
     expr: |
       (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9",result="error"}[3d])))
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_count{objective_percentile="99.9"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-success-rate-99_9
       sloth_service: autometrics
@@ -739,7 +739,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -754,7 +754,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -769,7 +769,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -784,7 +784,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -799,7 +799,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -814,7 +814,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -829,7 +829,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="90"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-90
       sloth_service: autometrics
@@ -955,7 +955,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -970,7 +970,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -985,7 +985,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -1000,7 +1000,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -1015,7 +1015,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -1030,7 +1030,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -1045,7 +1045,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="95"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-95
       sloth_service: autometrics
@@ -1171,7 +1171,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1186,7 +1186,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1201,7 +1201,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1216,7 +1216,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1231,7 +1231,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1246,7 +1246,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1261,7 +1261,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99
       sloth_service: autometrics
@@ -1387,7 +1387,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[5m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[5m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1402,7 +1402,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[30m])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[30m])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1417,7 +1417,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[1h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[1h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1432,7 +1432,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[2h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[2h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1447,7 +1447,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[6h])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[6h])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1462,7 +1462,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[1d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[1d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
@@ -1477,7 +1477,7 @@ groups:
       ))
       )
       /
-      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[3d])) > 0)
+      (sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{objective_percentile="99.9"}[3d])) >= 0.016666666666666666)
     labels:
       sloth_id: autometrics-latency-99_9
       sloth_service: autometrics
