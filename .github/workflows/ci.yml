@@ -1,10 +1,16 @@
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 
 name: CI
 
 jobs:
   build_and_test:
-    name: Rust project
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
