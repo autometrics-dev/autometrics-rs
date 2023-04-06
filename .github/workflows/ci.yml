@@ -1,0 +1,17 @@
+on: [push, pull_request]
+
+name: CI
+
+jobs:
+  build_and_test:
+    name: Rust project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build
+      - run: cargo build --features=metrics
+      - run: cargo build --features=prometheus
+      - run: cargo build --features=custom-objective-percentile,custom-objective-latency
+      - run: cargo test --features=prometheus-exporter
