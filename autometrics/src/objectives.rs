@@ -9,7 +9,7 @@
 /// # use autometrics::{autometrics, objectives::*};
 /// const API_SLO: Objective = Objective::new("api")
 ///     .success_rate(ObjectivePercentile::P99_9)
-///     .latency(TargetLatency::Ms250, ObjectivePercentile::P99);
+///     .latency(ObjectiveLatency::Ms250, ObjectivePercentile::P99);
 ///
 /// #[autometrics(objective = API_SLO)]
 /// pub fn api_handler() {
@@ -21,6 +21,9 @@
 ///
 /// When an objective is added to a function, the metrics for that function will
 /// have additional labels attached to specify the SLO details.
+///
+/// Specifically, success rate objectives will add objective-related labels to the `function.calls.count` metric
+/// and latency objectives will add labels to the `function.calls.duration` metric.
 ///
 /// Autometrics comes with a set of Prometheus [recording rules](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/)
 /// and [alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)
@@ -51,8 +54,15 @@ impl Objective {
     ///
     /// This means that the function or group of functions that are part of this objective
     /// should return an `Ok` result at least this percentage of the time.
-    pub const fn success_rate(mut self, success_rate: ObjectivePercentile) -> Self {
-        self.success_rate = Some(success_rate);
+    ///
+    /// ## Metric Labels
+    ///
+    /// When a success rate objective is added to a function, the `function.calls.count` metric
+    /// will have these labels added:
+    /// - `objective.name` - the value of the name passed to the `Objective::new` function
+    /// - `objective.percentile` - the percentile provided here
+    pub const fn success_rate(mut self, percentile: ObjectivePercentile) -> Self {
+        self.success_rate = Some(percentile);
         self
     }
 
@@ -60,12 +70,21 @@ impl Objective {
     ///
     /// This means that the function or group of functions that are part of this objective
     /// should complete in less than the given latency at least this percentage of the time.
+    ///
+    /// ## Metric Labels
+    ///
+    /// When a latency objective is added to a function, the `function.calls.duration` metric,
+    /// which will appear in Prometheus as `function_calls_duration_bucket`, `function_calls_duration_count`,
+    /// and `function_calls_duration_sum`, will have these labels added:
+    /// - `objective.name` - the value of the name passed to the `Objective::new` function
+    /// - `objective.latency_threshold` - the latency threshold provided here
+    /// - `objective.percentile` - the percentile provided here
     pub const fn latency(
         mut self,
-        target_latency: ObjectiveLatency,
+        latency_threshold: ObjectiveLatency,
         percentile: ObjectivePercentile,
     ) -> Self {
-        self.latency = Some((target_latency, percentile));
+        self.latency = Some((latency_threshold, percentile));
         self
     }
 }

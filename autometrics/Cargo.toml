@@ -45,6 +45,10 @@ prometheus = { version = "0.13", default-features = false, optional = true }
 # Used for prometheus feature
 const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
 
+[dev-dependencies]
+regex = "1.7"
+http = "0.2"
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

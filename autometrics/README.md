@@ -28,7 +28,7 @@ To see autometrics in action:
 
 1. Install [prometheus](https://prometheus.io/download/) locally
 2. Run the [complete example](./examples/full-api):
-```
+```shell
 cargo run -p example-full-api
 ```
 3. Hover over the [function names](./examples/full-api/src/routes.rs#L13) to see the generated query links
@@ -65,10 +65,10 @@ pub fn main() {
 
 And create a route on your API (probably mounted under `/metrics`) that returns the following:
 ```rust
-pub fn get_metrics() -> (StatusCode, String) {
+pub fn get_metrics() -> (http::StatusCode, String) {
   match autometrics::encode_global_metrics() {
-    Ok(metrics) => (StatusCode::OK, metrics),
-    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+    Ok(metrics) => (http::StatusCode::OK, metrics),
+    Err(err) => (http::StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
   }
 }
 ```
