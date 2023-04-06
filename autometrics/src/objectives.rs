@@ -60,9 +60,9 @@ impl Objective {
     /// When a success rate objective is added to a function, the `function.calls.count` metric
     /// will have these labels added:
     /// - `objective.name` - the value of the name passed to the `Objective::new` function
-    /// - `objective.percentile` - the success rate provided here
-    pub const fn success_rate(mut self, success_rate: ObjectivePercentile) -> Self {
-        self.success_rate = Some(success_rate);
+    /// - `objective.percentile` - the percentile provided here
+    pub const fn success_rate(mut self, percentile: ObjectivePercentile) -> Self {
+        self.success_rate = Some(percentile);
         self
     }
 
@@ -77,8 +77,8 @@ impl Objective {
     /// which will appear in Prometheus as `function_calls_duration_bucket`, `function_calls_duration_count`,
     /// and `function_calls_duration_sum`, will have these labels added:
     /// - `objective.name` - the value of the name passed to the `Objective::new` function
-    /// - `objective.percentile` - the percentile provided here
     /// - `objective.latency_threshold` - the latency threshold provided here
+    /// - `objective.percentile` - the percentile provided here
     pub const fn latency(
         mut self,
         latency_threshold: ObjectiveLatency,
