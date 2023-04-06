@@ -9,7 +9,7 @@
 /// # use autometrics::{autometrics, objectives::*};
 /// const API_SLO: Objective = Objective::new("api")
 ///     .success_rate(ObjectivePercentile::P99_9)
-///     .latency(TargetLatency::Ms250, ObjectivePercentile::P99);
+///     .latency(ObjectiveLatency::Ms250, ObjectivePercentile::P99);
 ///
 /// #[autometrics(objective = API_SLO)]
 /// pub fn api_handler() {

@@ -47,6 +47,7 @@ const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
 
 [dev-dependencies]
 regex = "1.7"
+http = "0.2"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -43,9 +43,10 @@ impl GlobalPrometheus {
 /// crate documentation.
 ///
 /// This should be included in your `main.rs`:
-/// ```rust
-/// # main() {
-/// let _exporter = global_metrics_exporter();
+/// ```
+/// # fn main() {
+/// # #[cfg(feature="prometheus-exporter")]
+///     let _exporter = autometrics::global_metrics_exporter();
 /// # }
 /// ```
 pub fn global_metrics_exporter() -> GlobalPrometheus {
@@ -59,6 +60,7 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
 ///
 /// For example, using Axum, you might have a handler:
 /// ```rust
+/// # use http::StatusCode;
 /// // Mounted at the route `/metrics`
 /// pub fn metrics_get() -> (StatusCode, String) {
 ///   match autometrics::encode_global_metrics() {
