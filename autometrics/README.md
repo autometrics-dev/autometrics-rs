@@ -24,7 +24,7 @@ pub async fn create_user() {
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- 📊 (Coming Soon!) Grafana dashboard showing the performance of all instrumented functions
+- 📊 Grafana dashboards to visualize the performance of all instrumented functions
 - 🚨 Enable Prometheus alerts using SLO best practices from simple annotations in your code
 - ⚙️ Configurable metric collection library (`opentelemetry`, `prometheus`, or `metrics`)
 - ⚡ Minimal runtime overhead
@@ -88,6 +88,9 @@ Autometrics uses existing metrics libraries (see [below](#metrics-libraries)) to
 
 If you are already using one of these to collect and export metrics, simply configure autometrics to use the same library and the metrics it produces will be exported alongside yours. You do not need to use the Prometheus exporter functions this library provides and you do not need a separate endpoint for autometrics' metrics.
 
+## Dashboards
+
+Autometrics provides [Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) that will work for any project instrumented with the library.
 
 ## Alerts / SLOs
 
@@ -110,6 +113,8 @@ pub fn api_handler() {
   // ...
 }
 ```
+
+Once you've added objectives to your code, you can use the [Autometrics Service-Level Objectives(SLO) Dashboard](https://github.com/autometrics-dev/autometrics-shared#dashboards) to visualize the current status of your objective(s).
 
 ## Configuring Autometrics
 
