@@ -84,8 +84,7 @@ If you are already using one of these to collect and export metrics, simply conf
 
 Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 
-This works using pre-defined [Prometheus alerting rules](./autometrics.rules.yml) (read more about alerting rules in general [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)).
-By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
+This works using pre-defined [Prometheus alerting rules](https://github.com/autometrics-dev/autometrics-shared#prometheus-recording--alerting-rules). By default, most of the recording rules are dormaint. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
 To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/objectives/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
 
