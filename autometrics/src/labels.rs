@@ -237,5 +237,3 @@ pub trait GetErrorLabelFromEnum {
         ERROR_KEY
     }
 }
-
-// TODO: add an attribute macro that will derive GetErrorLabelFromEnum for the decorated enum.

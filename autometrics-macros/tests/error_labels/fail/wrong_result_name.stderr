@@ -1,0 +1,5 @@
+error: Only `result = "RES"` (RES can be "ok" or "error") is supported
+ --> tests/error_labels/fail/wrong_result_name.rs:8:13
+  |
+8 |     #[label(unknown = "ok")]
+  |             ^^^^^^^^^^^^^^

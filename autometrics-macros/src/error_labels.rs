@@ -27,8 +27,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, Attribute, Data, DataEnum, DeriveInput,
-    Error, Lit, LitStr, Result, Variant,
+    punctuated::Punctuated, token::Comma, Attribute, Data, DataEnum, DeriveInput, Error, Ident,
+    Lit, LitStr, Result, Variant,
 };
 
 // These labels must match autometrics::ERROR_KEY and autometrics::OK_KEY,
@@ -52,39 +52,42 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
         };
     let enum_name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let match_clauses_for_labels = match_label_clauses(variants)?;
+    let conditional_clauses_for_labels = conditional_label_clauses(variants, enum_name)?;
 
     Ok(quote! {
         #[automatically_derived]
         impl #impl_generics ::autometrics::__private::GetErrorLabelFromEnum for #enum_name #ty_generics #where_clause {
             fn __autometrics_get_error_label(&self) -> &'static str {
-                match self {
-                    #(#match_clauses_for_labels)*
-                }
+                #(#conditional_clauses_for_labels)*
+                #ERROR_KEY
             }
         }
     })
 }
 
 /// Build the list of match clauses for the generated code.
-fn match_label_clauses(variants: &Punctuated<Variant, Comma>) -> Result<Vec<TokenStream>> {
+fn conditional_label_clauses(
+    variants: &Punctuated<Variant, Comma>,
+    enum_name: &Ident,
+) -> Result<Vec<TokenStream>> {
     variants
         .iter()
         .map(|variant| {
             let variant_name = &variant.ident;
-            let variant_matcher: Option<TokenStream> = match variant.fields {
-                syn::Fields::Named(_) => Some(quote! { (_) }),
-                syn::Fields::Unnamed(_) => Some(quote! { (_) }),
-                syn::Fields::Unit => None,
+            let variant_matcher: TokenStream = match variant.fields {
+                syn::Fields::Named(_) => quote! { #variant_name {..} },
+                syn::Fields::Unnamed(_) => quote! { #variant_name (_) },
+                syn::Fields::Unit => quote! { #variant_name },
             };
             if let Some(key) = extract_label_attribute(&variant.attrs)? {
-                Ok(quote! {
-                    #variant_name #variant_matcher => #key,
-                })
+                Ok(quote! [
+                    if ::std::matches!(self, & #enum_name :: #variant_matcher) {
+                        return #key
+                    }
+                ])
             } else {
-                Ok(quote! {
-                    #variant_name #variant_matcher => #ERROR_KEY,
-                })
+                // Let the code flow through the last value
+                Ok(quote! {})
             }
         })
         .collect()
