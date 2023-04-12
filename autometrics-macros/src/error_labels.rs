@@ -72,13 +72,18 @@ fn match_label_clauses(variants: &Punctuated<Variant, Comma>) -> Result<Vec<Toke
         .iter()
         .map(|variant| {
             let variant_name = &variant.ident;
+            let variant_matcher: Option<TokenStream> = match variant.fields {
+                syn::Fields::Named(_) => Some(quote! { (_) }),
+                syn::Fields::Unnamed(_) => Some(quote! { (_) }),
+                syn::Fields::Unit => None,
+            };
             if let Some(key) = extract_label_attribute(&variant.attrs)? {
                 Ok(quote! {
-                    #variant_name => #key,
+                    #variant_name #variant_matcher => #key,
                 })
             } else {
                 Ok(quote! {
-                    #variant_name => #ERROR_KEY,
+                    #variant_name #variant_matcher => #ERROR_KEY,
                 })
             }
         })
