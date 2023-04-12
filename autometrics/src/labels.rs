@@ -134,11 +134,14 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
     fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
         match self {
             Ok(ok) => Some((OK_KEY, ok.__autometrics_static_str())),
-            Err(err) => Some((ERROR_KEY, err.__autometrics_static_str())),
+            // TODO: get from err whether it should be an error or not.
+            Err(err) => Some((
+                err.__autometrics_get_error_label(),
+                err.__autometrics_static_str(),
+            )),
         }
     }
 }
-
 pub enum LabelArray {
     Three([Label; 3]),
     Four([Label; 4]),
@@ -221,3 +224,18 @@ pub trait GetStaticStr {
     }
 }
 impl_trait_for_types!(GetStaticStr);
+
+pub trait GetErrorLabel {
+    fn __autometrics_get_error_label(&self) -> &'static str {
+        ERROR_KEY
+    }
+}
+impl_trait_for_types!(GetErrorLabel);
+
+pub trait GetErrorLabelFromEnum {
+    fn __autometrics_get_error_label(&self) -> &'static str {
+        ERROR_KEY
+    }
+}
+
+// TODO: add an attribute macro that will derive GetErrorLabelFromEnum for the decorated enum.

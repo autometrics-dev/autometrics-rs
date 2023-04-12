@@ -134,6 +134,9 @@ mod tracker;
 ///
 pub use autometrics_macros::autometrics;
 
+// TODO: write documentation
+pub use autometrics_macros::ErrorLabels;
+
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus_exporter::*;

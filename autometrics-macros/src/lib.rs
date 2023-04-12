@@ -5,6 +5,7 @@ use quote::quote;
 use std::env;
 use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
+mod error_labels;
 mod parse;
 
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
@@ -32,6 +33,18 @@ pub fn autometrics(
     };
 
     output.into()
+}
+
+// TODO: macro needs tests:
+// - about generating code that actually compiles, and
+// - about correct overriding of the result labels in the enums, and
+// - about attribute validation
+#[proc_macro_derive(ErrorLabels, attributes(label))]
+pub fn error_labels(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    error_labels::expand(input)
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
 }
 
 /// Add autometrics instrumentation to a single function
