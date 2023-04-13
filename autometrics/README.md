@@ -1,4 +1,3 @@
-
 ![GitHub_headerImage](https://user-images.githubusercontent.com/3262610/221191767-73b8a8d9-9f8b-440e-8ab6-75cb3c82f2bc.png)
 
 [![Documentation](https://docs.rs/autometrics/badge.svg)](https://docs.rs/autometrics)
@@ -21,6 +20,7 @@ pub async fn create_user() {
 ```
 
 ## Features
+
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
@@ -37,18 +37,19 @@ To see autometrics in action:
 
 1. Install [prometheus](https://prometheus.io/download/) locally
 2. Run the [complete example](./examples/full-api):
+
 ```shell
 cargo run -p example-full-api
 ```
+
 3. Hover over the [function names](./examples/full-api/src/routes.rs#L13) to see the generated query links
-(like in the image above) and try clicking on them to go straight to that Prometheus chart.
+   (like in the image above) and try clicking on them to go straight to that Prometheus chart.
 
 See the other [examples](./examples/) for details on how to use the various features and integrations.
 
 Or run the example in Gitpod:
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/autometrics-dev/autometrics-rs)
-
 
 ## Exporting Prometheus Metrics
 
@@ -65,6 +66,7 @@ autometrics = { version = "*", features = ["prometheus-exporter"] }
 ```
 
 Then, call the `global_metrics_exporter` function in your `main` function:
+
 ```rust
 pub fn main() {
   let _exporter = autometrics::global_metrics_exporter();
@@ -73,6 +75,7 @@ pub fn main() {
 ```
 
 And create a route on your API (probably mounted under `/metrics`) that returns the following:
+
 ```rust
 pub fn get_metrics() -> (http::StatusCode, String) {
   match autometrics::encode_global_metrics() {
@@ -96,7 +99,7 @@ Autometrics provides [Grafana dashboards](https://github.com/autometrics-dev/aut
 
 Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 
-This works using pre-defined [Prometheus alerting rules](https://github.com/autometrics-dev/autometrics-shared#prometheus-recording--alerting-rules). By default, most of the recording rules are dormant. They are enabled by specific metric labels that can be automatically attached by autometrics.
+This works using pre-defined [Prometheus alerting rules](https://github.com/autometrics-dev/autometrics-shared#prometheus-recording--alerting-rules), which can be loaded via the `rule_files` field in your Prometheus configuration. By default, most of the recording rules are dormant. They are enabled by specific metric labels that can be automatically attached by autometrics.
 
 To use autometrics SLOs and alerts, create one or multiple [`Objective`s](https://docs.rs/autometrics/latest/autometrics/objectives/struct.Objective.html) based on the function(s) success rate and/or latency, as shown below. The `Objective` can be passed as an argument to the `autometrics` macro to include the given function in that objective.
 
@@ -119,6 +122,7 @@ Once you've added objectives to your code, you can use the [Autometrics Service-
 ## Configuring Autometrics
 
 ### Custom Prometheus URL
+
 By default, Autometrics creates Prometheus query links that point to `http://localhost:9090`.
 
 You can configure a custom Prometheus URL using a build-time environment in your `build.rs` file:
@@ -131,10 +135,10 @@ fn main() {
   println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
 }
 ```
+
 When using Rust Analyzer, you may need to reload the workspace in order for URL changes to take effect.
 
 Note that the Prometheus URL is only included in function documentation comments so changing it will have no impact on the final compiled binary.
-
 
 ### Feature flags
 
