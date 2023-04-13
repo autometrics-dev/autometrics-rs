@@ -127,7 +127,7 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         // Inside list, only 'result = ...' are allowed
                         if pair.path.segments.len() != 1 || pair.path.segments[0].ident != RESULT_KEY {
                             return Some(Err(Error::new_spanned(
-                                pair,
+                                pair.path.clone(),
                             format!("Only `{RESULT_KEY} = \"RES\"` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
                             )));
                         }

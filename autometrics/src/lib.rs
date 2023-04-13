@@ -134,7 +134,44 @@ mod tracker;
 ///
 pub use autometrics_macros::autometrics;
 
-// TODO: write documentation
+/// # Autometrics custom error labelling
+///
+/// The ErrorLabels derive macro allows to specify
+/// inside an enumeration whether variants should be considered as errors or
+/// successes as far as the [automatic metrics](autometrics) are concerned.
+///
+/// For example, this would allow you to put all the client-side errors in a
+/// HTTP webserver (4**) as successes, since it means the handler function
+/// _successfully_ rejected a bad request, and that should not affect the SLO or
+/// the success rate of the function in the metrics.
+///
+/// Putting such a policy in place would look like this in code:
+///
+/// ```rust,ignore
+/// use autometrics::ErrorLabels
+///
+/// #[derive(ErrorLabels)]
+/// pub enum ServiceError {
+///     // By default, the variant will be labeled as an error,
+///     // so you do not need to decorate every variant
+///     Database,
+///     // It is possible to mention it as well of course.
+///     // Only "error" and "ok" are accepted values
+///     #[label(result = "error")]
+///     Network,
+///     #[label(result = "ok")]
+///     Authentication,
+///     #[label(result = "ok")]
+///     Authorization,
+/// }
+///
+/// pub type ServiceResult<T> = Result<T, ServiceError>;
+/// ```
+///
+/// With these types, whenever a function returns a `ServiceResult`, having a
+/// `ServiceError::Authentication` or `Authorization` would _not_ count as a
+/// failure from your handler that should trigger alerts and consume the "error
+/// budget" of the service.
 pub use autometrics_macros::ErrorLabels;
 
 // Optional exports

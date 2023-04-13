@@ -35,10 +35,6 @@ pub fn autometrics(
     output.into()
 }
 
-// TODO: macro needs tests:
-// - about generating code that actually compiles, and
-// - about correct overriding of the result labels in the enums, and
-// - about attribute validation
 #[proc_macro_derive(ErrorLabels, attributes(label))]
 pub fn error_labels(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
