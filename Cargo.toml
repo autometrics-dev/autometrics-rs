@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = "Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries"
