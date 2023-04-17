@@ -75,8 +75,8 @@ fn generate_success_rate_slo(objective_percentile: &str, min_calls_per_second: f
     description: Common SLO based on function success rates
     sli:
       events:
-        error_query: sum by (objective_name, objective_percentile) (rate(function_calls_count{{objective_percentile=\"{objective_percentile}\",result=\"error\"}}[{{{{.window}}}}]))
-        total_query: sum by (objective_name, objective_percentile) (rate(function_calls_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
+        error_query: sum by (objective_name, objective_percentile) (rate({{__name__=~\"function_calls_count(:?_total)?\",objective_percentile=\"{objective_percentile}\",result=\"error\"}}[{{{{.window}}}}]))
+        total_query: sum by (objective_name, objective_percentile) (rate({{__name__=~\"function_calls_count(:?_total)?\",objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
     alerting:
       name: High Error Rate SLO - {objective_percentile}%
       labels:
