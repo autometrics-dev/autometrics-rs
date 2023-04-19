@@ -33,7 +33,7 @@ autometrics-macros = { version = "0.3.0", path = "../autometrics-macros" }
 opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 
 # Use for metrics feature
-metrics = { version = "0.20", default-features = false, optional = true }
+metrics = { version = "0.21", default-features = false, optional = true }
 
 # Used for prometheus-exporter feature
 metrics-exporter-prometheus = { version = "0.12", default-features = false, optional = true }
