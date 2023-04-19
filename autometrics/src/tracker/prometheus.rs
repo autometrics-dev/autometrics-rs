@@ -1,14 +1,13 @@
-use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
+use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
 use const_format::{formatcp, str_replace};
 use once_cell::sync::Lazy;
-use prometheus::histogram_opts;
+use prometheus::core::{AtomicI64, GenericGauge};
 use prometheus::{
-    core::{AtomicI64, GenericGauge},
-    register_histogram_vec, register_int_counter_vec, register_int_gauge_vec, HistogramVec,
-    IntCounterVec, IntGaugeVec,
+    histogram_opts, register_histogram_vec, register_int_counter_vec, register_int_gauge_vec,
+    HistogramVec, IntCounterVec, IntGaugeVec,
 };
-use std::time::Instant;
+use std::{sync::Once, time::Instant};
 
 const COUNTER_NAME_PROMETHEUS: &str = str_replace!(COUNTER_NAME, ".", "_");
 const HISTOGRAM_NAME_PROMETHEUS: &str = str_replace!(HISTOGRAM_NAME, ".", "_");
@@ -16,6 +15,8 @@ const GAUGE_NAME_PROMETHEUS: &str = str_replace!(GAUGE_NAME, ".", "_");
 const OBJECTIVE_NAME_PROMETHEUS: &str = str_replace!(OBJECTIVE_NAME, ".", "_");
 const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = str_replace!(OBJECTIVE_PERCENTILE, ".", "_");
 const OBJECTIVE_LATENCY_PROMETHEUS: &str = str_replace!(OBJECTIVE_LATENCY_THRESHOLD, ".", "_");
+
+const SET_BUILD_INFO: Once = Once::new();
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
     register_int_counter_vec!(
@@ -65,6 +66,14 @@ static GAUGE: Lazy<IntGaugeVec> = Lazy::new(|| {
         &[FUNCTION_KEY, MODULE_KEY]
     )
     .expect("Failed to register function_calls_concurrent gauge")
+});
+static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
+    register_int_gauge_vec!(
+        BUILD_INFO_NAME,
+        BUILD_INFO_DESCRIPTION,
+        &[COMMIT_KEY, VERSION_KEY]
+    )
+    .expect("Failed to register build_info counter")
 });
 
 pub struct PrometheusTracker {
@@ -148,5 +157,13 @@ impl TrackMetrics for PrometheusTracker {
         if let Some(gauge) = self.gauge {
             gauge.dec();
         }
+    }
+
+    fn set_build_info(build_info_labels: &BuildInfoLabels) {
+        SET_BUILD_INFO.call_once(|| {
+            BUILD_INFO
+                .with_label_values(&[build_info_labels.commit, build_info_labels.version])
+                .set(1);
+        });
     }
 }

@@ -29,6 +29,7 @@ Here is a demo of jumping from function docs to live Prometheus charts:
 - ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
+- [🔍 Identify commits](#identifying-commits-that-introduced-problems) that introduced errors or increased latency
 - [🚨 Define alerts](#alerts--slos) using SLO best practices directly in your source code
 - [📊 Grafana dashboards](#dashboards) work out of the box to visualize the performance of instrumented functions & SLOs
 - [⚙️ Configurable](#metrics-libraries) metric collection library (`opentelemetry`, `prometheus`, or `metrics`)
@@ -95,6 +96,33 @@ pub fn get_metrics() -> (http::StatusCode, String) {
 Autometrics uses existing metrics libraries (see [below](#metrics-libraries)) to produce and collect metrics.
 
 If you are already using one of these to collect metrics, simply configure autometrics to use the same library and the metrics it produces will be exported alongside yours. You do not need to use the Prometheus exporter functions this library provides and you do not need a separate endpoint for autometrics' metrics.
+
+## Identifying commits that introduced problems
+
+Autometrics makes it easy to identify if a specific version or commit introduced errors or increased latencies.
+
+It uses a separate metric (`build_info`) to track the version and, optionally, git commit of your service. It then writes queries that group metrics by the `version` and `commit` labels so you can spot correlations between those and potential issues.
+
+The `version` is collected from the `CARGO_PKG_VERSION` environment variable, which `cargo` sets by default. You can override this by setting the compile-time environment variable `AUTOMETRICS_VERSION`. This follows the method outlined in [Exposing the software version to Prometheus](https://www.robustperception.io/exposing-the-software-version-to-prometheus/).
+
+To set the `commit`, you can either set the compile-time environment variable `AUTOMETRICS_COMMIT`, or have it set automatically using the [vergen](https://crates.io/crates/vergen) crate:
+
+```toml
+# Cargo.toml
+
+[build-dependencies]
+vergen = { version = "8.1", features = ["git", "gitoxide"] }
+```
+
+```rust
+// build.rs
+fn main() {
+  vergen::EmitBuilder::builder()
+      .git_sha(true)
+      .emit()
+      .expect("Unable to generate build info");
+}
+```
 
 ## Dashboards
 

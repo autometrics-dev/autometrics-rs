@@ -1,7 +1,9 @@
-use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels, Label};
+use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
-use std::time::Instant;
+use std::{sync::Once, time::Instant};
+
+const SET_BUILD_INFO: Once = Once::new();
 
 /// Tracks the number of function calls, concurrent calls, and latency
 pub struct OpenTelemetryTracker {
@@ -57,6 +59,17 @@ impl TrackMetrics for OpenTelemetryTracker {
         if let Some((concurrency_tracker, gauge_labels)) = self.concurrency_tracker {
             concurrency_tracker.add(&self.context, -1, &gauge_labels);
         }
+    }
+
+    fn set_build_info(build_info_labels: &BuildInfoLabels) {
+        SET_BUILD_INFO.call_once(|| {
+            let build_info_labels = to_key_values(build_info_labels.to_vec());
+            let build_info = global::meter("")
+                .f64_up_down_counter(BUILD_INFO_NAME)
+                .with_description(BUILD_INFO_DESCRIPTION)
+                .init();
+            build_info.add(&Context::current(), 1.0, &build_info_labels);
+        });
     }
 }
 
