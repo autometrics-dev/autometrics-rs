@@ -1,5 +1,5 @@
 use crate::constants::*;
-use crate::labels::{CounterLabels, GaugeLabels, HistogramLabels};
+use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::tracker::TrackMetrics;
 use metrics::{
     describe_counter, describe_gauge, describe_histogram, register_counter, register_gauge,
@@ -7,13 +7,15 @@ use metrics::{
 };
 use std::{sync::Once, time::Instant};
 
-static ONCE: Once = Once::new();
+const DESCRIBE_METRICS: Once = Once::new();
+const SET_BUILD_INFO: Once = Once::new();
 
 fn describe_metrics() {
-    ONCE.call_once(|| {
+    DESCRIBE_METRICS.call_once(|| {
         describe_counter!(COUNTER_NAME, COUNTER_DESCRIPTION);
         describe_histogram!(HISTOGRAM_NAME, HISTOGRAM_DESCRIPTION);
         describe_gauge!(GAUGE_NAME, GAUGE_DESCRIPTION);
+        describe_gauge!(BUILD_INFO_NAME, BUILD_INFO_DESCRIPTION);
     });
 }
 
@@ -47,5 +49,11 @@ impl TrackMetrics for MetricsTracker {
         if let Some(gauge) = self.gauge {
             gauge.decrement(1.0);
         }
+    }
+
+    fn set_build_info(build_info_labels: &BuildInfoLabels) {
+        SET_BUILD_INFO.call_once(|| {
+            register_gauge!(BUILD_INFO_NAME, &build_info_labels.to_vec()).set(1.0);
+        });
     }
 }

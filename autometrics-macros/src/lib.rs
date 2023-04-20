@@ -10,6 +10,7 @@ mod parse;
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
 const HISTOGRAM_BUCKET_NAME_PROMETHEUS: &str = "function_calls_duration_bucket";
 const GAUGE_NAME_PROMETHEUS: &str = "function_calls_concurrent";
+const ADD_BUILD_INFO_LABELS: &str = "* on (instance, job) group_left(version, commit) build_info";
 
 const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 
@@ -126,7 +127,11 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
         #vis #sig {
             let __autometrics_tracker = {
-                use autometrics::__private::{AutometricsTracker, TrackMetrics};
+                use autometrics::__private::{AutometricsTracker, BuildInfoLabels, TrackMetrics};
+                AutometricsTracker::set_build_info(&BuildInfoLabels::new(
+                    option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
+                    option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default()
+                ));
                 AutometricsTracker::start(#gauge_labels)
             };
 
@@ -260,18 +265,19 @@ fn make_prometheus_url(url: &str, query: &str, comment: &str) -> String {
 }
 
 fn request_rate_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module) (rate({counter_name}{{{label_key}=\"{label_value}\"}}[5m]))")
+    format!("sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
 }
 
 fn error_ratio_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
     let request_rate = request_rate_query(counter_name, label_key, label_value);
-    format!("sum by (function, module) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"error\"}}[5m])) /
+    format!("sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS})
+/
 {request_rate}", )
 }
 
 fn latency_query(bucket_name: &str, label_key: &str, label_value: &str) -> String {
     let latency = format!(
-        "sum by (le, function, module) (rate({bucket_name}{{{label_key}=\"{label_value}\"}}[5m]))"
+        "sum by (le, function, module, commit, version) (rate({bucket_name}{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
     );
     format!(
         "histogram_quantile(0.99, {latency}) or
@@ -280,5 +286,5 @@ histogram_quantile(0.95, {latency})"
 }
 
 fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module) {gauge_name}{{{label_key}=\"{label_value}\"}}")
+    format!("sum by (function, module, commit, version) ({gauge_name}{{{label_key}=\"{label_value}\"}} {ADD_BUILD_INFO_LABELS})")
 }
