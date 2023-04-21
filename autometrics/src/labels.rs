@@ -1,10 +1,19 @@
 use crate::{constants::*, objectives::*};
+use prometheus_client::encoding::EncodeLabelKey;
+#[cfg(feature = "prometheus-client")]
+use prometheus_client::encoding::{
+    EncodeLabelSet, EncodeLabelValue, LabelSetEncoder, LabelValueEncoder,
+};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
 type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
 /// These are the labels used for the `build_info` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct BuildInfoLabels {
     pub(crate) version: &'static str,
     pub(crate) commit: &'static str,
@@ -21,12 +30,38 @@ impl BuildInfoLabels {
 }
 
 /// These are the labels used for the `function.calls.count` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct CounterLabels {
     pub(crate) function: &'static str,
     pub(crate) module: &'static str,
     pub(crate) caller: &'static str,
-    pub(crate) result: Option<ResultAndReturnTypeLabels>,
-    pub(crate) objective: Option<(&'static str, ObjectivePercentile)>,
+    pub(crate) result: Option<ResultLabel>,
+    pub(crate) ok: Option<&'static str>,
+    pub(crate) error: Option<&'static str>,
+    pub(crate) objective_name: Option<&'static str>,
+    pub(crate) objective_percentile: Option<ObjectivePercentile>,
+}
+
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(Debug, Clone, PartialEq, Eq, Hash)
+)]
+pub(crate) enum ResultLabel {
+    Ok,
+    Error,
+}
+
+#[cfg(feature = "prometheus-client")]
+impl EncodeLabelValue for ResultLabel {
+    fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
+        match self {
+            ResultLabel::Ok => OK_KEY.encode(encoder),
+            ResultLabel::Error => ERROR_KEY.encode(encoder),
+        }
+    }
 }
 
 impl CounterLabels {
@@ -37,21 +72,22 @@ impl CounterLabels {
         result: Option<ResultAndReturnTypeLabels>,
         objective: Option<Objective>,
     ) -> Self {
-        let objective = if let Some(objective) = objective {
+        let (objective_name, objective_percentile) = if let Some(objective) = objective {
             if let Some(success_rate) = objective.success_rate {
-                Some((objective.name, success_rate))
+                (objective.name, success_rate)
             } else {
-                None
+                ("", "")
             }
         } else {
-            None
+            ("", "")
         };
         Self {
             function,
             module,
             caller,
+            objective_name,
+            objective_percentile,
             result,
-            objective,
         }
     }
 
@@ -77,11 +113,17 @@ impl CounterLabels {
 }
 
 /// These are the labels used for the `function.calls.duration` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
     /// The SLO name, objective percentile, and latency threshold
-    pub objective: Option<(&'static str, ObjectivePercentile, ObjectiveLatency)>,
+    pub objective_name: &'static str,
+    pub objective_percentile: ObjectivePercentile,
+    pub objective_latency_threshold: ObjectiveLatency,
 }
 
 impl HistogramLabels {
@@ -117,6 +159,10 @@ impl HistogramLabels {
 }
 
 /// These are the labels used for the `function.calls.concurrent` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct GaugeLabels {
     pub function: &'static str,
     pub module: &'static str,

@@ -16,6 +16,7 @@ default = ["opentelemetry"]
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api"]
 prometheus = ["const_format", "dep:prometheus", "once_cell"]
+prometheus-client = ["dep:prometheus-client", "once_cell"]
 prometheus-exporter = [
   "metrics-exporter-prometheus",
   "once_cell",
@@ -44,6 +45,9 @@ prometheus = { version = "0.13", default-features = false, optional = true }
 
 # Used for prometheus feature
 const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
+
+# Used for prometheus-client feature
+prometheus-client = { version = "0.20", optional = true }
 
 [dev-dependencies]
 regex = "1.7"
