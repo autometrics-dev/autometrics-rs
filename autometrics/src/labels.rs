@@ -8,15 +8,24 @@ type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 pub struct BuildInfoLabels {
     pub(crate) version: &'static str,
     pub(crate) commit: &'static str,
+    pub(crate) branch: &'static str,
 }
 
 impl BuildInfoLabels {
-    pub fn new(version: &'static str, commit: &'static str) -> Self {
-        Self { version, commit }
+    pub fn new(version: &'static str, commit: &'static str, branch: &'static str) -> Self {
+        Self {
+            version,
+            commit,
+            branch,
+        }
     }
 
     pub fn to_vec(&self) -> Vec<Label> {
-        vec![(COMMIT_KEY, self.commit), (VERSION_KEY, self.version)]
+        vec![
+            (COMMIT_KEY, self.commit),
+            (VERSION_KEY, self.version),
+            (BRANCH_KEY, self.branch),
+        ]
     }
 }
 

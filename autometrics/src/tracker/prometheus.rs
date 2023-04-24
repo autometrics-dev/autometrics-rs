@@ -71,7 +71,7 @@ static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
     register_int_gauge_vec!(
         BUILD_INFO_NAME,
         BUILD_INFO_DESCRIPTION,
-        &[COMMIT_KEY, VERSION_KEY]
+        &[COMMIT_KEY, VERSION_KEY, BRANCH_KEY]
     )
     .expect("Failed to register build_info counter")
 });
@@ -162,7 +162,11 @@ impl TrackMetrics for PrometheusTracker {
     fn set_build_info(build_info_labels: &BuildInfoLabels) {
         SET_BUILD_INFO.call_once(|| {
             BUILD_INFO
-                .with_label_values(&[build_info_labels.commit, build_info_labels.version])
+                .with_label_values(&[
+                    build_info_labels.commit,
+                    build_info_labels.version,
+                    build_info_labels.branch,
+                ])
                 .set(1);
         });
     }
