@@ -23,3 +23,4 @@ pub const OBJECTIVE_PERCENTILE: &'static str = "objective.percentile";
 pub const OBJECTIVE_LATENCY_THRESHOLD: &'static str = "objective.latency_threshold";
 pub const VERSION_KEY: &'static str = "version";
 pub const COMMIT_KEY: &'static str = "commit";
+pub const BRANCH_KEY: &'static str = "branch";

@@ -130,7 +130,8 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 use autometrics::__private::{AutometricsTracker, BuildInfoLabels, TrackMetrics};
                 AutometricsTracker::set_build_info(&BuildInfoLabels::new(
                     option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
-                    option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default()
+                    option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default(),
+                    option_env!("AUTOMETRICS_BRANCH").or(option_env!("VERGEN_GIT_BRANCH")).unwrap_or_default(),
                 ));
                 AutometricsTracker::start(#gauge_labels)
             };

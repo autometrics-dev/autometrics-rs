@@ -101,11 +101,17 @@ If you are already using one of these to collect metrics, simply configure autom
 
 Autometrics makes it easy to identify if a specific version or commit introduced errors or increased latencies.
 
-It uses a separate metric (`build_info`) to track the version and, optionally, git commit of your service. It then writes queries that group metrics by the `version` and `commit` labels so you can spot correlations between those and potential issues.
+It uses a separate metric (`build_info`) to track the version and, optionally, git commit of your service. It then writes queries that group metrics by the `version` and `commit` labels so you can spot correlations between those and potential issues. This follows the method outlined in [Exposing the software version to Prometheus](https://www.robustperception.io/exposing-the-software-version-to-prometheus/) to use the build info without attaching them as additional labels to each metric.
 
-The `version` is collected from the `CARGO_PKG_VERSION` environment variable, which `cargo` sets by default. You can override this by setting the compile-time environment variable `AUTOMETRICS_VERSION`. This follows the method outlined in [Exposing the software version to Prometheus](https://www.robustperception.io/exposing-the-software-version-to-prometheus/).
+The labels are set using the following compile-time environment variables:
 
-To set the `commit`, you can either set the compile-time environment variable `AUTOMETRICS_COMMIT`, or have it set automatically using the [vergen](https://crates.io/crates/vergen) crate:
+| Label | Compile-Time Environment Variables | Default |
+|---|---|---|
+| `version` | `AUTOMETRICS_VERSION` or `CARGO_PKG_VERSION` | `CARGO_PKG_VERSION` (set by cargo by default) |
+| `commit` | `AUTOMETRICS_COMMIT` or `VERGEN_GIT_COMMIT` | `""` |
+| `branch` | `AUTOMETRICS_BRANCH` or `VERGEN_GIT_BRANCH` | `""` |
+
+You can use the [vergen](https://crates.io/crates/vergen) crate to automatically set the git details using a `build.rs` script:
 
 ```toml
 # Cargo.toml
@@ -119,6 +125,7 @@ vergen = { version = "8.1", features = ["git", "gitoxide"] }
 fn main() {
   vergen::EmitBuilder::builder()
       .git_sha(true)
+      .git_branch()
       .emit()
       .expect("Unable to generate build info");
 }
