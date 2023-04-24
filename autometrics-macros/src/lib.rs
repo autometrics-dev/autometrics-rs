@@ -271,9 +271,9 @@ fn request_rate_query(counter_name: &str, label_key: &str, label_value: &str) ->
 
 fn error_ratio_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
     let request_rate = request_rate_query(counter_name, label_key, label_value);
-    format!("sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS})
+    format!("(sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
 /
-{request_rate}", )
+({request_rate})",)
 }
 
 fn latency_query(bucket_name: &str, label_key: &str, label_value: &str) -> String {
