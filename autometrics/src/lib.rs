@@ -124,7 +124,8 @@ mod tracker;
 ///        Self
 ///     }
 ///
-///     fn my_function(&self) {
+///     fn my_function(&self) -> Vec<usize> {
+///        # (0..10).collect()
 ///        // ...
 ///    }
 /// }
