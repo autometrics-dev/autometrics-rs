@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.3.3"
+version = "0.4.0"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = "Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries"
@@ -19,3 +19,6 @@ members = [
   "examples/*"
 ]
 exclude = ["examples/data", "examples/target"]
+
+[workspace.dependencies]
+autometrics-macros = { version = "0.4.0", path = "autometrics-macros" }
