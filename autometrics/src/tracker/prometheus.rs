@@ -16,7 +16,7 @@ const OBJECTIVE_NAME_PROMETHEUS: &str = str_replace!(OBJECTIVE_NAME, ".", "_");
 const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = str_replace!(OBJECTIVE_PERCENTILE, ".", "_");
 const OBJECTIVE_LATENCY_PROMETHEUS: &str = str_replace!(OBJECTIVE_LATENCY_THRESHOLD, ".", "_");
 
-const SET_BUILD_INFO: Once = Once::new();
+static SET_BUILD_INFO: Once = Once::new();
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
     register_int_counter_vec!(
