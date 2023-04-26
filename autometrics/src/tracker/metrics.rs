@@ -7,8 +7,8 @@ use metrics::{
 };
 use std::{sync::Once, time::Instant};
 
-const DESCRIBE_METRICS: Once = Once::new();
-const SET_BUILD_INFO: Once = Once::new();
+static DESCRIBE_METRICS: Once = Once::new();
+static SET_BUILD_INFO: Once = Once::new();
 
 fn describe_metrics() {
     DESCRIBE_METRICS.call_once(|| {
