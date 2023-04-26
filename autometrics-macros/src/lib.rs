@@ -10,7 +10,8 @@ mod parse;
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
 const HISTOGRAM_BUCKET_NAME_PROMETHEUS: &str = "function_calls_duration_bucket";
 const GAUGE_NAME_PROMETHEUS: &str = "function_calls_concurrent";
-const ADD_BUILD_INFO_LABELS: &str = "* on (instance, job) group_left(version, commit) build_info";
+const ADD_BUILD_INFO_LABELS: &str =
+    "* on (instance, job) group_left(version, commit) last_over_time(build_info[1s])";
 
 const DEFAULT_PROMETHEUS_URL: &str = "http://localhost:9090";
 
