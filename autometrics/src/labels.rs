@@ -2,7 +2,7 @@ use crate::{constants::*, objectives::*};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
-type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
+pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
 /// These are the labels used for the `build_info` metric.
 pub struct BuildInfoLabels {
@@ -158,9 +158,12 @@ pub trait GetLabelsFromResult {
 impl<T, E> GetLabelsFromResult for Result<T, E> {
     fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
         match self {
-            Ok(ok) => Some((OK_KEY, ok.__autometrics_static_str())),
+            Ok(ok) => Some((
+                ok.__autometrics_get_result_label().unwrap_or(OK_KEY),
+                ok.__autometrics_static_str(),
+            )),
             Err(err) => Some((
-                err.__autometrics_get_result_label(),
+                err.__autometrics_get_result_label().unwrap_or(ERROR_KEY),
                 err.__autometrics_static_str(),
             )),
         }
@@ -253,8 +256,8 @@ impl_trait_for_types!(GetStaticStr);
 /// "result" label
 pub trait GetResultLabel {
     /// Return the value to use for the [result](RESULT_KEY) value in the reported metrics
-    fn __autometrics_get_result_label(&self) -> &'static str {
-        ERROR_KEY
+    fn __autometrics_get_result_label(&self) -> Option<&'static str> {
+        None
     }
 }
 impl_trait_for_types!(GetResultLabel);

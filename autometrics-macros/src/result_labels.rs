@@ -54,12 +54,28 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let conditional_clauses_for_labels = conditional_label_clauses(variants, enum_name)?;
 
+    // NOTE: we cannot reuse the GetResultLabel implementation in the GetLabels implementation,
+    // because the GetResultLabel implementation is for a type T, while the GetLabels argument
+    // is a reference &T, and the blanket impl of GetResultLabel for &T will be used instead of
+    // the implementation we just wrote.
     Ok(quote! {
         #[automatically_derived]
         impl #impl_generics ::autometrics::__private::GetResultLabel for #enum_name #ty_generics #where_clause {
-            fn __autometrics_get_result_label(&self) -> &'static str {
+            fn __autometrics_get_result_label(&self) -> Option<&'static str> {
                 #(#conditional_clauses_for_labels)*
-                #ERROR_KEY
+            }
+        }
+
+        #[automatically_derived]
+        impl #impl_generics ::autometrics::__private::GetLabels for #enum_name #ty_generics #where_clause {
+            fn __autometrics_get_labels(&self) -> Option<::autometrics::__private::ResultAndReturnTypeLabels> {
+                use ::autometrics::__private::GetStaticStr;
+
+                let result_label = {
+                    #(#conditional_clauses_for_labels)*
+                };
+
+                result_label.map(|label| (label, label.__autometrics_static_str()))
             }
         }
     })
@@ -70,27 +86,35 @@ fn conditional_label_clauses(
     variants: &Punctuated<Variant, Comma>,
     enum_name: &Ident,
 ) -> Result<Vec<TokenStream>> {
-    variants
-        .iter()
-        .map(|variant| {
-            let variant_name = &variant.ident;
-            let variant_matcher: TokenStream = match variant.fields {
-                syn::Fields::Named(_) => quote! { #variant_name {..} },
-                syn::Fields::Unnamed(_) => quote! { #variant_name (_) },
-                syn::Fields::Unit => quote! { #variant_name },
-            };
-            if let Some(key) = extract_label_attribute(&variant.attrs)? {
-                Ok(quote! [
-                    if ::std::matches!(self, & #enum_name :: #variant_matcher) {
-                        return #key
-                    }
-                ])
-            } else {
-                // Let the code flow through the last value
-                Ok(quote! {})
-            }
-        })
-        .collect()
+    // Dummy first clause to write all the useful payload with 'else if's
+    std::iter::once(Ok(quote![if false {
+        None
+    }]))
+    .chain(variants.iter().map(|variant| {
+        let variant_name = &variant.ident;
+        let variant_matcher: TokenStream = match variant.fields {
+            syn::Fields::Named(_) => quote! { #variant_name {..} },
+            syn::Fields::Unnamed(_) => quote! { #variant_name (_) },
+            syn::Fields::Unit => quote! { #variant_name },
+        };
+        if let Some(key) = extract_label_attribute(&variant.attrs)? {
+            Ok(quote! [
+                else if ::std::matches!(self, & #enum_name :: #variant_matcher) {
+                   Some(#key)
+                }
+            ])
+        } else {
+            // Let the code flow through the last value
+            Ok(quote! {})
+        }
+    }))
+    // Fallback case: we return None
+    .chain(std::iter::once(Ok(quote! [
+        else {
+            None
+        }
+    ])))
+    .collect()
 }
 
 /// Extract the wanted label from the annotation in the variant, if present.
@@ -119,7 +143,7 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         // Only lists are allowed
                         let Some(syn::NestedMeta::Meta(syn::Meta::NameValue(pair))) = list.nested.first() else {
                             return Some(Err(Error::new_spanned(
-                        meta,
+                            meta,
                             format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
                             )))
                         };
@@ -150,10 +174,19 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
 
                         Some(Ok(lit_str.clone()))
                     },
-                    _ => Some(Err(Error::new_spanned(
-                        meta,
+                    syn::Meta::NameValue(nv) if nv.path.segments.len() == 1 && nv.path.segments[0].ident == ATTR_LABEL => {
+                        Some(Err(Error::new_spanned(
+                            nv,
                             format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
-                    ))),
+                        )))
+                    },
+                    syn::Meta::Path(p) if p.segments.len() == 1 && p.segments[0].ident == ATTR_LABEL => {
+                        Some(Err(Error::new_spanned(
+                            p,
+                            format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
+                        )))
+                    },
+                    _ => None,
                 },
                 Err(e) => Some(Err(Error::new_spanned(
                     att,
