@@ -233,12 +233,3 @@ pub trait GetResultLabel {
     }
 }
 impl_trait_for_types!(GetResultLabel);
-
-/// Implementation detail to get enum variants to specify their own
-/// "result" label
-pub trait GetResultLabelFromEnum {
-    /// Return the value to use for the [result](RESULT_KEY) value in the reported metrics
-    fn __autometrics_get_result_label(&self) -> &'static str {
-        ERROR_KEY
-    }
-}

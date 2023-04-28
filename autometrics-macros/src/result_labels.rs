@@ -56,7 +56,7 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         #[automatically_derived]
-        impl #impl_generics ::autometrics::__private::GetResultLabelFromEnum for #enum_name #ty_generics #where_clause {
+        impl #impl_generics ::autometrics::__private::GetResultLabel for #enum_name #ty_generics #where_clause {
             fn __autometrics_get_result_label(&self) -> &'static str {
                 #(#conditional_clauses_for_labels)*
                 #ERROR_KEY

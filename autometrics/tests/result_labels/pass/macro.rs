@@ -4,7 +4,7 @@
 //! autometrics (the library) is then responsible for orchestrating the
 //! calls to `__autometrics_get_error_label` correctly when observing
 //! function call results for the metrics.
-use autometrics::__private::GetResultLabelFromEnum;
+use autometrics::__private::GetResultLabel;
 use autometrics_macros::ResultLabels;
 
 struct Inner {}
