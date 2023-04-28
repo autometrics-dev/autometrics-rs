@@ -23,10 +23,13 @@ enum MyError {
 fn main() {
     let err = MyError::ClientError { inner: Inner {} };
     assert_eq!(err.__autometrics_get_result_label(), "ok");
+    assert_eq!((&err).__autometrics_get_result_label(), "ok");
 
     let err = MyError::Empty;
     assert_eq!(err.__autometrics_get_result_label(), "error");
+    assert_eq!((&err).__autometrics_get_result_label(), "error");
 
     let err = MyError::ServerError(502);
     assert_eq!(err.__autometrics_get_result_label(), "error");
+    assert_eq!((&err).__autometrics_get_result_label(), "error");
 }
