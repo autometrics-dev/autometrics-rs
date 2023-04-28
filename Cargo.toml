@@ -1,11 +1,11 @@
 [workspace.package]
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = "Easily add metrics to your system -- and actually understand them using automatically customized Prometheus queries"
 documentation = "https://docs.rs/autometrics"
 repository = "https://github.com/autometrics-dev/autometrics-rs"
-homepage = "https://github.com/autometrics-dev"
+homepage = "https://autometrics.dev"
 license = "MIT OR Apache-2.0"
 keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::profiling"]
@@ -19,3 +19,6 @@ members = [
   "examples/*"
 ]
 exclude = ["examples/data", "examples/target"]
+
+[workspace.dependencies]
+autometrics-macros = { version = "0.4.0", path = "autometrics-macros" }

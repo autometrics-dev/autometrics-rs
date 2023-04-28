@@ -4,6 +4,31 @@ use std::ops::Deref;
 pub(crate) type Label = (&'static str, &'static str);
 type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
+/// These are the labels used for the `build_info` metric.
+pub struct BuildInfoLabels {
+    pub(crate) version: &'static str,
+    pub(crate) commit: &'static str,
+    pub(crate) branch: &'static str,
+}
+
+impl BuildInfoLabels {
+    pub fn new(version: &'static str, commit: &'static str, branch: &'static str) -> Self {
+        Self {
+            version,
+            commit,
+            branch,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<Label> {
+        vec![
+            (COMMIT_KEY, self.commit),
+            (VERSION_KEY, self.version),
+            (BRANCH_KEY, self.branch),
+        ]
+    }
+}
+
 /// These are the labels used for the `function.calls.count` metric.
 pub struct CounterLabels {
     pub(crate) function: &'static str,
