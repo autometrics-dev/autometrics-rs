@@ -2,11 +2,11 @@
 // attribute given to one variant inside the enumeration does not use one of the
 // predetermined values (that would make the automatic queries fail, so the
 // macros need to forbid wrong usage at compile time)
-use autometrics_macros::ErrorLabels;
+use autometrics_macros::ResultLabels;
 
 struct Inner {}
 
-#[derive(ErrorLabels)]
+#[derive(ResultLabels)]
 enum MyError {
     Empty,
     #[label(result = "not ok")]

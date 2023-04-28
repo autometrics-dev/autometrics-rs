@@ -135,7 +135,7 @@ impl<T, E> GetLabelsFromResult for Result<T, E> {
         match self {
             Ok(ok) => Some((OK_KEY, ok.__autometrics_static_str())),
             Err(err) => Some((
-                err.__autometrics_get_error_label(),
+                err.__autometrics_get_result_label(),
                 err.__autometrics_static_str(),
             )),
         }
@@ -226,19 +226,19 @@ impl_trait_for_types!(GetStaticStr);
 
 /// Implementation detail to get enum variants to specify their own
 /// "result" label
-pub trait GetErrorLabel {
+pub trait GetResultLabel {
     /// Return the value to use for the [result](RESULT_KEY) value in the reported metrics
-    fn __autometrics_get_error_label(&self) -> &'static str {
+    fn __autometrics_get_result_label(&self) -> &'static str {
         ERROR_KEY
     }
 }
-impl_trait_for_types!(GetErrorLabel);
+impl_trait_for_types!(GetResultLabel);
 
 /// Implementation detail to get enum variants to specify their own
 /// "result" label
-pub trait GetErrorLabelFromEnum {
+pub trait GetResultLabelFromEnum {
     /// Return the value to use for the [result](RESULT_KEY) value in the reported metrics
-    fn __autometrics_get_error_label(&self) -> &'static str {
+    fn __autometrics_get_result_label(&self) -> &'static str {
         ERROR_KEY
     }
 }

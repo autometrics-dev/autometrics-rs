@@ -1,4 +1,4 @@
-//! The definition of the ErrorLabels derive macro, that allows to specify
+//! The definition of the ResultLabels derive macro, that allows to specify
 //! inside an enumeration whether variants should be considered as errors or
 //! successes as far as the automatic metrics are concerned.
 //!
@@ -8,7 +8,7 @@
 //! the success rate of the function in the metrics.
 //!
 //! ```rust,ignore
-//! #[derive(ErrorLabels)]
+//! #[derive(ResultLabels)]
 //! enum ServiceError {
 //! // By default, the variant will be labeled as an error,
 //! // so you do not need to decorate every variant
@@ -39,7 +39,7 @@ const RESULT_KEY: &str = "result";
 const ATTR_LABEL: &str = "label";
 const ACCEPTED_LABELS: [&str; 2] = [ERROR_KEY, OK_KEY];
 
-/// Entry point of the ErrorLabels macro
+/// Entry point of the ResultLabels macro
 pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
     let Data::Enum(DataEnum {
         variants,
@@ -47,7 +47,7 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
         {
                 return Err(Error::new_spanned(
                     input,
-                    "ErrorLabels only works with 'Enum's.",
+                    "ResultLabels only works with 'Enum's.",
                 ))
         };
     let enum_name = &input.ident;
@@ -56,8 +56,8 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         #[automatically_derived]
-        impl #impl_generics ::autometrics::__private::GetErrorLabelFromEnum for #enum_name #ty_generics #where_clause {
-            fn __autometrics_get_error_label(&self) -> &'static str {
+        impl #impl_generics ::autometrics::__private::GetResultLabelFromEnum for #enum_name #ty_generics #where_clause {
+            fn __autometrics_get_result_label(&self) -> &'static str {
                 #(#conditional_clauses_for_labels)*
                 #ERROR_KEY
             }

@@ -136,7 +136,7 @@ pub use autometrics_macros::autometrics;
 
 /// # Autometrics custom error labelling
 ///
-/// The ErrorLabels derive macro allows to specify
+/// The ResultLabels derive macro allows to specify
 /// inside an enumeration whether variants should be considered as errors or
 /// successes as far as the [automatic metrics](autometrics) are concerned.
 ///
@@ -148,9 +148,9 @@ pub use autometrics_macros::autometrics;
 /// Putting such a policy in place would look like this in code:
 ///
 /// ```rust,ignore
-/// use autometrics::ErrorLabels
+/// use autometrics::ResultLabels
 ///
-/// #[derive(ErrorLabels)]
+/// #[derive(ResultLabels)]
 /// pub enum ServiceError {
 ///     // By default, the variant will be labeled as an error,
 ///     // so you do not need to decorate every variant
@@ -172,7 +172,7 @@ pub use autometrics_macros::autometrics;
 /// `ServiceError::Authentication` or `Authorization` would _not_ count as a
 /// failure from your handler that should trigger alerts and consume the "error
 /// budget" of the service.
-pub use autometrics_macros::ErrorLabels;
+pub use autometrics_macros::ResultLabels;
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
