@@ -282,8 +282,9 @@ fn latency_query(bucket_name: &str, label_key: &str, label_value: &str) -> Strin
         "sum by (le, function, module, commit, version) (rate({bucket_name}{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
     );
     format!(
-        "histogram_quantile(0.99, {latency}) or
-histogram_quantile(0.95, {latency})"
+        "label_replace(histogram_quantile(0.99, {latency}), \"percentile_latency\", \"99\", \"function\", \".*\")
+or
+label_replace(histogram_quantile(0.95, {latency}), \"percentile_latency\", \"95\", \"function\", \".*\")"
     )
 }
 
