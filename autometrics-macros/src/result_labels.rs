@@ -60,22 +60,9 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
     // the implementation we just wrote.
     Ok(quote! {
         #[automatically_derived]
-        impl #impl_generics ::autometrics::__private::GetResultLabel for #enum_name #ty_generics #where_clause {
-            fn __autometrics_get_result_label(&self) -> Option<&'static str> {
-                #(#conditional_clauses_for_labels)*
-            }
-        }
-
-        #[automatically_derived]
         impl #impl_generics ::autometrics::__private::GetLabels for #enum_name #ty_generics #where_clause {
-            fn __autometrics_get_labels(&self) -> Option<::autometrics::__private::ResultAndReturnTypeLabels> {
-                use ::autometrics::__private::GetStaticStr;
-
-                let result_label = {
-                    #(#conditional_clauses_for_labels)*
-                };
-
-                result_label.map(|label| (label, label.__autometrics_static_str()))
+            fn __autometrics_get_labels(&self) -> Option<&'static str> {
+                #(#conditional_clauses_for_labels)*
             }
         }
     })

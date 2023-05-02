@@ -2,9 +2,9 @@
 //!
 //! The goal here is to make sure that the macro has the effect we want.
 //! autometrics (the library) is then responsible for orchestrating the
-//! calls to `__autometrics_get_result_label` correctly when observing
+//! calls to `result_labels!` correctly when observing
 //! function call results for the metrics.
-use autometrics::__private::{GetLabels, GetLabelsFromResult, GetResultLabel};
+use autometrics::result_labels;
 use autometrics_macros::ResultLabels;
 
 #[derive(Clone)]
@@ -34,93 +34,63 @@ enum MyEnum {
 
 fn main() {
     let is_ok = MyEnum::ClientError { inner: Inner {} };
-    assert_eq!(is_ok.__autometrics_get_result_label().unwrap(), "ok");
-    assert_eq!((&is_ok).__autometrics_get_result_label().unwrap(), "ok");
-    assert_eq!(is_ok.__autometrics_get_labels().unwrap().0, "ok");
-    assert_eq!((&is_ok).__autometrics_get_labels().unwrap().0, "ok");
+    let labels = result_labels!(&is_ok);
+    assert_eq!(labels.unwrap().0, "ok");
 
     let err = MyEnum::Empty;
-    assert_eq!(err.__autometrics_get_result_label().unwrap(), "error");
-    assert_eq!((&err).__autometrics_get_result_label().unwrap(), "error");
-    assert_eq!(err.__autometrics_get_labels().unwrap().0, "error");
-    assert_eq!((&err).__autometrics_get_labels().unwrap().0, "error");
+    let labels = result_labels!(&err);
+    assert_eq!(labels.unwrap().0, "error");
 
     let no_idea = MyEnum::AmbiguousValue(42);
-    assert_eq!(no_idea.__autometrics_get_result_label(), None);
-    assert_eq!((&no_idea).__autometrics_get_result_label(), None);
-    assert_eq!(no_idea.__autometrics_get_labels(), None);
-    assert_eq!((&no_idea).__autometrics_get_labels(), None);
+    let labels = result_labels!(&no_idea);
+    assert_eq!(labels, None);
 
     // Testing behaviour within an Ok() error variant
     let ok: Result<MyEnum, ()> = Ok(is_ok.clone());
+    let labels = result_labels!(&ok);
     assert_eq!(
-        ok.__autometrics_get_labels().unwrap().0,
-        "ok",
-        "When wrapped as the Ok variant of a result, a manually marked 'ok' variant translates to 'ok'."
-    );
-    assert_eq!(
-        (&ok).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "ok",
         "When wrapped as the Ok variant of a result, a manually marked 'ok' variant translates to 'ok'."
     );
 
     let ok: Result<MyEnum, ()> = Ok(no_idea.clone());
+    let labels = result_labels!(&ok);
     assert_eq!(
-        ok.__autometrics_get_labels().unwrap().0,
-        "ok",
-        "When wrapped as the Ok variant of a result, an ambiguous variant translates to 'ok'."
-    );
-    assert_eq!(
-        (&ok).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "ok",
         "When wrapped as the Ok variant of a result, an ambiguous variant translates to 'ok'."
     );
 
     let err_in_ok: Result<MyEnum, ()> = Ok(err.clone());
+    let labels = result_labels!(&err_in_ok);
     assert_eq!(
-        err_in_ok.__autometrics_get_labels().unwrap().0,
-        "error",
-        "When wrapped as the Ok variant of a result, a manually marked 'error' variant translates to 'error'."
-    );
-    assert_eq!(
-        (&err_in_ok).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "error",
         "When wrapped as the Ok variant of a result, a manually marked 'error' variant translates to 'error'."
     );
 
     // Testing behaviour within an Err() error variant
     let ok_in_err: Result<(), MyEnum> = Err(is_ok);
+    let labels = result_labels!(&ok_in_err);
     assert_eq!(
-        ok_in_err.__autometrics_get_labels().unwrap().0,
-        "ok",
-        "When wrapped as the Err variant of a result, a manually marked 'ok' variant translates to 'ok'."
-    );
-    assert_eq!(
-        (&ok_in_err).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "ok",
         "When wrapped as the Err variant of a result, a manually marked 'ok' variant translates to 'ok'."
     );
 
     let not_ok: Result<(), MyEnum> = Err(err);
+    let labels = result_labels!(&not_ok);
     assert_eq!(
-        not_ok.__autometrics_get_labels().unwrap().0,
-        "error",
-        "When wrapped as the Err variant of a result, a manually marked 'error' variant translates to 'error'."
-    );
-    assert_eq!(
-        (&not_ok).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "error",
         "When wrapped as the Err variant of a result, a manually marked 'error' variant translates to 'error'."
     );
 
     let ambiguous: Result<(), MyEnum> = Err(no_idea);
+    let labels = result_labels!(&ambiguous);
     assert_eq!(
-        ambiguous.__autometrics_get_labels().unwrap().0,
-        "error",
-        "When wrapped as the Err variant of a result, an ambiguous variant translates to 'error'."
-    );
-    assert_eq!(
-        (&ambiguous).__autometrics_get_labels().unwrap().0,
+        labels.unwrap().0,
         "error",
         "When wrapped as the Err variant of a result, an ambiguous variant translates to 'error'."
     );

@@ -198,6 +198,7 @@ pub mod __private {
     use crate::task_local::LocalKey;
     use std::{cell::RefCell, thread_local};
 
+    pub use crate::constants::*;
     pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
 
@@ -213,4 +214,6 @@ pub mod __private {
 
         LocalKey { inner: CALLER_KEY }
     };
+
+    pub use spez::spez;
 }

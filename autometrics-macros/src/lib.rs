@@ -5,8 +5,8 @@ use quote::quote;
 use std::env;
 use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
 
-mod result_labels;
 mod parse;
+mod result_labels;
 
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
 const HISTOGRAM_BUCKET_NAME_PROMETHEUS: &str = "function_calls_duration_bucket";
@@ -106,12 +106,14 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
             }
         }
     } else {
-        // This will use the traits defined in the `labels` module to determine if
-        // the return value was a `Result` and, if so, assign the appropriate labels
+        let labels = quote! {
+            autometrics::result_labels!(&result)
+        };
+
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetLabels, GetLabelsFromResult};
-                let result_labels = (&result).__autometrics_get_labels();
+                use autometrics::__private::{CALLER, CounterLabels, GetLabels};
+                let result_labels = #labels;
                 CounterLabels::new(
                     #function_name,
                     module_path!(),

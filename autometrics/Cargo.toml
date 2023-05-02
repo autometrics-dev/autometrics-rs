@@ -29,6 +29,7 @@ custom-objective-latency = []
 
 [dependencies]
 autometrics-macros = { workspace = true }
+spez = { version = "0.1.2" }
 
 # Used for opentelemetry feature
 opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }

@@ -149,26 +149,6 @@ impl GaugeLabels {
 // and this answer explains why it works:
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
-pub trait GetLabelsFromResult {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        None
-    }
-}
-
-impl<T, E> GetLabelsFromResult for Result<T, E> {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        match self {
-            Ok(ok) => Some((
-                ok.__autometrics_get_result_label().unwrap_or(OK_KEY),
-                ok.__autometrics_static_str(),
-            )),
-            Err(err) => Some((
-                err.__autometrics_get_result_label().unwrap_or(ERROR_KEY),
-                err.__autometrics_static_str(),
-            )),
-        }
-    }
-}
 pub enum LabelArray {
     Three([Label; 3]),
     Four([Label; 4]),
@@ -188,9 +168,7 @@ impl Deref for LabelArray {
 }
 
 pub trait GetLabels {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        None
-    }
+    fn __autometrics_get_labels(&self) -> Option<&'static str>;
 }
 
 /// Implement the given trait for &T and all primitive types.
@@ -230,8 +208,6 @@ macro_rules! impl_trait_for_types {
     };
 }
 
-impl_trait_for_types!(GetLabels);
-
 pub trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
 }
@@ -252,12 +228,75 @@ pub trait GetStaticStr {
 }
 impl_trait_for_types!(GetStaticStr);
 
-/// Implementation detail to get enum variants to specify their own
-/// "result" label
-pub trait GetResultLabel {
-    /// Return the value to use for the [result](RESULT_KEY) value in the reported metrics
-    fn __autometrics_get_result_label(&self) -> Option<&'static str> {
-        None
-    }
+#[macro_export]
+macro_rules! result_labels {
+    ($e:expr) => {{
+        use $crate::__private::{
+            GetLabels, GetStaticStr, ResultAndReturnTypeLabels, ERROR_KEY, OK_KEY,
+        };
+        $crate::__private::spez! {
+            for val = $e;
+
+            match<T: GetLabels, E: GetLabels> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        err.__autometrics_get_labels().unwrap_or(ERROR_KEY),
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T: GetLabels, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        ERROR_KEY,
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T, E: GetLabels> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        OK_KEY,
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        err.__autometrics_get_labels().unwrap_or(ERROR_KEY),
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        OK_KEY,
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        ERROR_KEY,
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T: GetLabels> &T -> Option<ResultAndReturnTypeLabels> {
+                val.__autometrics_get_labels().map(|label|
+                    (label, val.__autometrics_static_str()))
+            }
+
+            match<T> &T -> Option<ResultAndReturnTypeLabels> {
+                None
+            }
+        }
+    }};
 }
-impl_trait_for_types!(GetResultLabel);
