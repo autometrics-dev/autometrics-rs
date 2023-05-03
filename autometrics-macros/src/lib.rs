@@ -3,7 +3,7 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
+use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result, ReturnType, Type};
 
 mod parse;
 mod result_labels;
@@ -59,6 +59,13 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
     // Build the documentation we'll add to the function's RustDocs
     let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
+
+    // Type annotation to allow type inference to work on return expressions (such as `.collect()`).
+    let return_type = match sig.output {
+        ReturnType::Default => quote! { : () },
+        ReturnType::Type(_, ref t) if matches!(t.as_ref(), &Type::ImplTrait(_)) => quote! {},
+        ReturnType::Type(_, ref t) => quote! { : #t },
+    };
 
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
@@ -144,7 +151,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 AutometricsTracker::start(#gauge_labels)
             };
 
-            let result = #call_function;
+            let result #return_type = #call_function;
 
             {
                 use autometrics::__private::{HistogramLabels, TrackMetrics};

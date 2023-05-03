@@ -237,7 +237,7 @@ macro_rules! result_labels {
         $crate::__private::spez! {
             for val = $e;
 
-            match<T: GetLabels, E: GetLabels> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+            match<T, E> &::std::result::Result<T, E> where T: GetLabels, E: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 match val {
                     Ok(ok) => Some((
                         ok.__autometrics_get_labels().unwrap_or(OK_KEY),
@@ -250,7 +250,7 @@ macro_rules! result_labels {
                 }
             }
 
-            match<T, E: GetLabels> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+            match<T, E> &::std::result::Result<T, E> where E: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 match val {
                     Ok(ok) => Some((
                         OK_KEY,
@@ -263,7 +263,7 @@ macro_rules! result_labels {
                 }
             }
 
-            match<T: GetLabels, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+            match<T, E> &::std::result::Result<T, E> where T: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 match val {
                     Ok(ok) => Some((
                         ok.__autometrics_get_labels().unwrap_or(OK_KEY),
@@ -276,7 +276,7 @@ macro_rules! result_labels {
                 }
             }
 
-            match<T, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+            match<T, E> &::std::result::Result<T, E> -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 match val {
                     Ok(ok) => Some((
                         OK_KEY,
@@ -289,11 +289,11 @@ macro_rules! result_labels {
                 }
             }
 
-            match<T: GetLabels> &T -> Option<ResultAndReturnTypeLabels> {
+            match<T> &T where T: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 val.__autometrics_get_labels().map(|label| (label, val.__autometrics_static_str()))
             }
 
-            match<T> T -> Option<ResultAndReturnTypeLabels> {
+            match<T> T -> ::std::option::Option<ResultAndReturnTypeLabels> {
                 None
             }
         }
