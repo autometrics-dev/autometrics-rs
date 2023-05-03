@@ -60,7 +60,30 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     // Build the documentation we'll add to the function's RustDocs
     let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
 
-    // Type annotation to allow type inference to work on return expressions (such as `.collect()`).
+    // Type annotation to allow type inference to work on return expressions (such as `.collect()`), as
+    // well as prevent compiler type-inference from selecting the wrong branch in the `spez` macro later.
+    //
+    // Type inference can make the compiler select one of the early cases of `autometrics::result_labels!`
+    // even if the types `T` or `E` do not implement the `GetLabels` trait. That leads to a compilation error
+    // looking like this:
+    // ```
+    // error[E0277]: the trait bound `ApiError: GetLabels` is not satisfied
+    //  --> examples/full-api/src/routes.rs:48:1
+    //   |
+    //48 | #[autometrics(objective = API_SLO)]
+    //   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `GetLabels` is not implemented for `ApiError`
+    //   |
+    //   = help: the trait `create_user::{closure#0}::Match2` is implemented for `&&&&create_user::{closure#0}::Match<&Result<T, E>>`
+    //note: required for `&&&&create_user::{closure#0}::Match<&Result<Json<User>, ApiError>>` to implement `create_user::{closure#0}::Match2`
+    //  --> examples/full-api/src/routes.rs:48:1
+    //   |
+    //48 | #[autometrics(objective = API_SLO)]
+    //   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //   = note: this error originates in the macro `$crate::__private::spez` which comes from the expansion of the attribute macro `autometrics` (in Nightly builds, run with -Z macro-backtrace for more info)
+    // ```
+    //
+    // specifying the return type makes the compiler select the (correct) fallback case of `ApiError` not being a
+    // `GetLabels` implementor.
     let return_type = match sig.output {
         ReturnType::Default => quote! { : () },
         ReturnType::Type(_, ref t) if matches!(t.as_ref(), &Type::ImplTrait(_)) => quote! {},

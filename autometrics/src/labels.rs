@@ -167,6 +167,7 @@ impl Deref for LabelArray {
     }
 }
 
+/// A trait to override the inferred label for the "result" of a function call.
 pub trait GetLabels {
     fn __autometrics_get_labels(&self) -> Option<&'static str>;
 }

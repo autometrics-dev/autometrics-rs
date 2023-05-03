@@ -54,10 +54,6 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let conditional_clauses_for_labels = conditional_label_clauses(variants, enum_name)?;
 
-    // NOTE: we cannot reuse the GetResultLabel implementation in the GetLabels implementation,
-    // because the GetResultLabel implementation is for a type T, while the GetLabels argument
-    // is a reference &T, and the blanket impl of GetResultLabel for &T will be used instead of
-    // the implementation we just wrote.
     Ok(quote! {
         #[automatically_derived]
         impl #impl_generics ::autometrics::__private::GetLabels for #enum_name #ty_generics #where_clause {
