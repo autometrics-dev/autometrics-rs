@@ -106,14 +106,10 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
             }
         }
     } else {
-        let labels = quote! {
-            autometrics::result_labels!(&result)
-        };
-
         quote! {
             {
                 use autometrics::__private::{CALLER, CounterLabels, GetLabels};
-                let result_labels = #labels;
+                let result_labels = autometrics::result_labels!(&result);
                 CounterLabels::new(
                     #function_name,
                     module_path!(),

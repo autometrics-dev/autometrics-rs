@@ -250,19 +250,6 @@ macro_rules! result_labels {
                 }
             }
 
-            match<T: GetLabels, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
-                match val {
-                    Ok(ok) => Some((
-                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
-                        ok.__autometrics_static_str(),
-                    )),
-                    Err(err) => Some((
-                        ERROR_KEY,
-                        err.__autometrics_static_str(),
-                    )),
-                }
-            }
-
             match<T, E: GetLabels> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
                 match val {
                     Ok(ok) => Some((
@@ -271,6 +258,19 @@ macro_rules! result_labels {
                     )),
                     Err(err) => Some((
                         err.__autometrics_get_labels().unwrap_or(ERROR_KEY),
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T: GetLabels, E> &Result<T, E> -> Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        ERROR_KEY,
                         err.__autometrics_static_str(),
                     )),
                 }
@@ -290,11 +290,10 @@ macro_rules! result_labels {
             }
 
             match<T: GetLabels> &T -> Option<ResultAndReturnTypeLabels> {
-                val.__autometrics_get_labels().map(|label|
-                    (label, val.__autometrics_static_str()))
+                val.__autometrics_get_labels().map(|label| (label, val.__autometrics_static_str()))
             }
 
-            match<T> &T -> Option<ResultAndReturnTypeLabels> {
+            match<T> T -> Option<ResultAndReturnTypeLabels> {
                 None
             }
         }
