@@ -1,28 +1,5 @@
-//! The definition of the ResultLabels derive macro, that allows to specify
-//! inside an enumeration whether variants should be considered as errors or
-//! successes as far as the automatic metrics are concerned.
-//!
-//! For example, this would allow you to put all the client-side errors in a
-//! HTTP webserver (4**) as successes, since it means the handler function
-//! _successfully_ rejected a bad request, and that should not affect the SLO or
-//! the success rate of the function in the metrics.
-//!
-//! ```rust,ignore
-//! #[derive(ResultLabels)]
-//! enum ServiceError {
-//! // By default, the variant will be labeled as an error,
-//! // so you do not need to decorate every variant
-//! Database,
-//! // It is possible to mention it as well of course.
-//! // Only "error" and "ok" are accepted values
-//! #[label(result = "error")]
-//! Network,
-//! #[label(result = "ok")]
-//! Authentication,
-//! #[label(result = "ok")]
-//! Authorization,
-//! }
-//! ```
+//! The definition of the ResultLabels derive macro, see
+//! autometrics::ResultLabels for more information.
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -41,15 +18,15 @@ const ACCEPTED_LABELS: [&str; 2] = [ERROR_KEY, OK_KEY];
 
 /// Entry point of the ResultLabels macro
 pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
-    let Data::Enum(DataEnum {
-        variants,
-        ..}) = &input.data else
-        {
-                return Err(Error::new_spanned(
-                    input,
-                    "ResultLabels only works with 'Enum's.",
-                ))
-        };
+    let variants = match &input.data {
+        Data::Enum(DataEnum { variants, .. }) => variants,
+        _ => {
+            return Err(Error::new_spanned(
+                input,
+                "ResultLabels only works with 'Enum's.",
+            ))
+        }
+    };
     let enum_name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let conditional_clauses_for_labels = conditional_label_clauses(variants, enum_name)?;
@@ -58,7 +35,7 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
         #[automatically_derived]
         impl #impl_generics ::autometrics::__private::GetLabels for #enum_name #ty_generics #where_clause {
             fn __autometrics_get_labels(&self) -> Option<&'static str> {
-                #(#conditional_clauses_for_labels)*
+                #conditional_clauses_for_labels
             }
         }
     })
@@ -68,36 +45,38 @@ pub(crate) fn expand(input: DeriveInput) -> Result<TokenStream> {
 fn conditional_label_clauses(
     variants: &Punctuated<Variant, Comma>,
     enum_name: &Ident,
-) -> Result<Vec<TokenStream>> {
-    // Dummy first clause to write all the useful payload with 'else if's
-    std::iter::once(Ok(quote![if false {
-        None
-    }]))
-    .chain(variants.iter().map(|variant| {
-        let variant_name = &variant.ident;
-        let variant_matcher: TokenStream = match variant.fields {
-            syn::Fields::Named(_) => quote! { #variant_name {..} },
-            syn::Fields::Unnamed(_) => quote! { #variant_name (_) },
-            syn::Fields::Unit => quote! { #variant_name },
-        };
-        if let Some(key) = extract_label_attribute(&variant.attrs)? {
-            Ok(quote! [
-                else if ::std::matches!(self, & #enum_name :: #variant_matcher) {
-                   Some(#key)
-                }
-            ])
-        } else {
-            // Let the code flow through the last value
-            Ok(quote! {})
+) -> Result<TokenStream> {
+    let clauses: Vec<TokenStream> = variants
+        .iter()
+        .map(|variant| {
+            let variant_name = &variant.ident;
+            let variant_matcher: TokenStream = match variant.fields {
+                syn::Fields::Named(_) => quote! { #variant_name {..} },
+                syn::Fields::Unnamed(_) => quote! { #variant_name (_) },
+                syn::Fields::Unit => quote! { #variant_name },
+            };
+            if let Some(key) = extract_label_attribute(&variant.attrs)? {
+                Ok(quote! [
+                    else if ::std::matches!(self, & #enum_name :: #variant_matcher) {
+                       Some(#key)
+                    }
+                ])
+            } else {
+                // Let the code flow through the last value
+                Ok(quote! {})
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(quote! [
+        if false {
+            None
         }
-    }))
-    // Fallback case: we return None
-    .chain(std::iter::once(Ok(quote! [
+        #(#clauses)*
         else {
             None
         }
-    ])))
-    .collect()
+    ])
 }
 
 /// Extract the wanted label from the annotation in the variant, if present.
@@ -124,11 +103,12 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         }
 
                         // Only lists are allowed
-                        let Some(syn::NestedMeta::Meta(syn::Meta::NameValue(pair))) = list.nested.first() else {
-                            return Some(Err(Error::new_spanned(
+                        let pair = match list.nested.first() {
+                            Some(syn::NestedMeta::Meta(syn::Meta::NameValue(pair))) => pair,
+                            _ => return Some(Err(Error::new_spanned(
                             meta,
                             format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
-                            )))
+                            ))),
                         };
 
                         // Inside list, only 'result = ...' are allowed
@@ -140,11 +120,14 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         }
 
                         // Inside 'result = val', 'val' must be a string literal
-                        let Lit::Str(ref lit_str) = pair.lit else {
+                        let lit_str = match pair.lit {
+                            Lit::Str(ref lit_str) => lit_str,
+                            _ => {
                             return Some(Err(Error::new_spanned(
                                 &pair.lit,
                             format!("Only {OK_KEY:?} or {ERROR_KEY:?}, as string literals, are accepted as result values"),
                             )));
+                        }
                         };
 
                         // Inside 'result = val', 'val' must be one of the allowed string literals

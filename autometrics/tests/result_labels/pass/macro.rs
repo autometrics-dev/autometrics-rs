@@ -2,9 +2,9 @@
 //!
 //! The goal here is to make sure that the macro has the effect we want.
 //! autometrics (the library) is then responsible for orchestrating the
-//! calls to `result_labels!` correctly when observing
+//! calls to `get_result_labels_for_value!` correctly when observing
 //! function call results for the metrics.
-use autometrics::result_labels;
+use autometrics::get_result_labels_for_value;
 use autometrics_macros::ResultLabels;
 
 #[derive(Clone)]
@@ -34,20 +34,20 @@ enum MyEnum {
 
 fn main() {
     let is_ok = MyEnum::ClientError { inner: Inner {} };
-    let labels = result_labels!(&is_ok);
+    let labels = get_result_labels_for_value!(&is_ok);
     assert_eq!(labels.unwrap().0, "ok");
 
     let err = MyEnum::Empty;
-    let labels = result_labels!(&err);
+    let labels = get_result_labels_for_value!(&err);
     assert_eq!(labels.unwrap().0, "error");
 
     let no_idea = MyEnum::AmbiguousValue(42);
-    let labels = result_labels!(&no_idea);
+    let labels = get_result_labels_for_value!(&no_idea);
     assert_eq!(labels, None);
 
     // Testing behaviour within an Ok() error variant
     let ok: Result<MyEnum, ()> = Ok(is_ok.clone());
-    let labels = result_labels!(&ok);
+    let labels = get_result_labels_for_value!(&ok);
     assert_eq!(
         labels.unwrap().0,
         "ok",
@@ -55,7 +55,7 @@ fn main() {
     );
 
     let ok: Result<MyEnum, ()> = Ok(no_idea.clone());
-    let labels = result_labels!(&ok);
+    let labels = get_result_labels_for_value!(&ok);
     assert_eq!(
         labels.unwrap().0,
         "ok",
@@ -63,7 +63,7 @@ fn main() {
     );
 
     let err_in_ok: Result<MyEnum, ()> = Ok(err.clone());
-    let labels = result_labels!(&err_in_ok);
+    let labels = get_result_labels_for_value!(&err_in_ok);
     assert_eq!(
         labels.unwrap().0,
         "error",
@@ -72,7 +72,7 @@ fn main() {
 
     // Testing behaviour within an Err() error variant
     let ok_in_err: Result<(), MyEnum> = Err(is_ok);
-    let labels = result_labels!(&ok_in_err);
+    let labels = get_result_labels_for_value!(&ok_in_err);
     assert_eq!(
         labels.unwrap().0,
         "ok",
@@ -80,7 +80,7 @@ fn main() {
     );
 
     let not_ok: Result<(), MyEnum> = Err(err);
-    let labels = result_labels!(&not_ok);
+    let labels = get_result_labels_for_value!(&not_ok);
     assert_eq!(
         labels.unwrap().0,
         "error",
@@ -88,7 +88,7 @@ fn main() {
     );
 
     let ambiguous: Result<(), MyEnum> = Err(no_idea);
-    let labels = result_labels!(&ambiguous);
+    let labels = get_result_labels_for_value!(&ambiguous);
     assert_eq!(
         labels.unwrap().0,
         "error",

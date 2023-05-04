@@ -139,7 +139,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! {
             {
                 use autometrics::__private::{CALLER, CounterLabels, GetLabels};
-                let result_labels = autometrics::result_labels!(&result);
+                let result_labels = autometrics::get_result_labels_for_value!(&result);
                 CounterLabels::new(
                     #function_name,
                     module_path!(),

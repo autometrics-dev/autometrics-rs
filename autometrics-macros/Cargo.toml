@@ -19,4 +19,3 @@ percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"
 syn =  { version = "1", features = ["full"] }
-spez = { version = "0.1.2" }
