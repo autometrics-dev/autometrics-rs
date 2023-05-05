@@ -6,5 +6,15 @@ You will only need to use this if you want to use objective percentiles other th
 
 To generate the rules file:
 1. Clone this repo
-2. Run `cargo run -p autometrics-cli generate-sloth-file -- --objectives=90,95,99,99.9 --output sloth.yml`
-3. `docker run -v $(pwd):/data  ghcr.io/slok/sloth generate -i /data/sloth.yml -o /data/autometrics.rules.yml`
+    ```sh
+    git clone https://github.com/autometrics-dev/autometrics-rs.git
+    cd autometrics-rs
+    ```
+2. Run the CLI to generate a Sloth YAML file:
+    ```sh
+    cargo run -p autometrics-cli generate-sloth-file -- --objectives=90,95,99,99.9 --output sloth.yml
+    ```
+3. Run Sloth to generate the Prometheus recording and alerting rules file:
+    ```sh
+    docker run -v $(pwd):/data  ghcr.io/slok/sloth generate -i /data/sloth.yml -o /data/autometrics.rules.yml
+    ```
