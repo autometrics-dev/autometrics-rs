@@ -53,7 +53,7 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
     GLOBAL_EXPORTER.clone()
 }
 
-/// Prometheus needs a metrics endpoint to scrape metrics from.
+/// Export the collected metrics to the Prometheus format.
 ///
 /// Create a handler on your API (often, this would be the
 /// handler for the route `/metrics`) that returns the result of this function.
@@ -62,7 +62,7 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
 /// ```rust
 /// # use http::StatusCode;
 /// // Mounted at the route `/metrics`
-/// pub fn metrics_get() -> (StatusCode, String) {
+/// pub async fn metrics_get() -> (StatusCode, String) {
 ///   match autometrics::encode_global_metrics() {
 ///     Ok(metrics) => (StatusCode::OK, metrics),
 ///     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
