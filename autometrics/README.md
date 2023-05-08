@@ -10,7 +10,9 @@ The Rust library provides a macro that makes it easy to instrument any function 
 
 To make it easy for you to spot and debug issues in production, Autometrics inserts links to live charts directly into each function’s doc comments and provides dashboards that work out of the box. It also enables you to create powerful alerts based on Service-Level Objectives (SLOs) directly in your source code. Lastly, Autometrics writes queries that correlate your software’s version info with anomalies in the metrics to help you quickly identify commits that introduced bugs or latency.
 
-## Example
+## Example Axum App
+
+Autometrics isn't tied to any web framework, but this shows how you can use the library in an [Axum](https://github.com/tokio-rs/axum) server.
 
 ```rust
 use autometrics::autometrics;
@@ -68,7 +70,7 @@ It produces a `build_info` metric and uses the following labels to expose the ve
 | `commit` | `AUTOMETRICS_COMMIT` or `VERGEN_GIT_COMMIT` | `""` |
 | `branch` | `AUTOMETRICS_BRANCH` or `VERGEN_GIT_BRANCH` | `""` |
 
-### Using [`vergen`](https://crates.io/crates/vergen) to set the Git details
+### (Optional) Using [`vergen`](https://crates.io/crates/vergen) to set the Git details
 
 ```toml
 # Cargo.toml
