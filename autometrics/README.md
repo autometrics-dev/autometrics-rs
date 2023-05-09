@@ -47,16 +47,16 @@ pub async fn main() {
 
 ## Features
 
-- ✨ [`#[autometrics]`](autometrics) macro instruments any function or `impl` block to track the most useful metrics
+- ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the most useful metrics
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [🔍 Identify commits](#identifying-commits-that-introduced-problems) that introduced errors or increased latency
-- [🚨 Define alerts](objectives) using SLO best practices directly in your source code
+- [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
 - [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
 - [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), or [`metrics`](https://crates.io/crates/metrics))
 - ⚡ Minimal runtime overhead
 
-See [Why Autometrics?](https://github.com/autometrics-dev#why-autometrics) for more details on the ideas behind autometrics.
+See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
 
 ## Identifying commits that introduced problems
 
