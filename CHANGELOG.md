@@ -10,19 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
--
+
+- `ResultLabels` derive macro allows to specify on an enum whether variants should
+  always be "ok", or "error" for the success rate metrics of functions using them. (#61)
 
 ### Changed
--
+
+- `GetLabels` trait (publicly exported but meant for internal use) changed the signature
+  of its function to accomodate the new `ResultLabels` macro. This change is not significant
+  if you never imported `autometrics::__private` manually (#61)
 
 ### Deprecated
 -
 
 ### Removed
--
+
+- `GetLabelsForResult` trait (publicly exported but meant for internal use) was removed
+  to accomodate the new `ResultLabels` macro. This change is not significant
+  if you never imported `autometrics::__private` manually (#61)
 
 ### Fixed
--
+
+- `#[autometrics]` now works on functions that use type inference in their return statement
+  (#74, #61)
 
 ### Security
 -
