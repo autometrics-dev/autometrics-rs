@@ -2,7 +2,7 @@ use crate::{constants::*, objectives::*};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
-type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
+pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
 /// These are the labels used for the `build_info` metric.
 pub struct BuildInfoLabels {
@@ -149,21 +149,6 @@ impl GaugeLabels {
 // and this answer explains why it works:
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
 
-pub trait GetLabelsFromResult {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        None
-    }
-}
-
-impl<T, E> GetLabelsFromResult for Result<T, E> {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        match self {
-            Ok(ok) => Some((OK_KEY, ok.__autometrics_static_str())),
-            Err(err) => Some((ERROR_KEY, err.__autometrics_static_str())),
-        }
-    }
-}
-
 pub enum LabelArray {
     Three([Label; 3]),
     Four([Label; 4]),
@@ -182,10 +167,9 @@ impl Deref for LabelArray {
     }
 }
 
+/// A trait to override the inferred label for the "result" of a function call.
 pub trait GetLabels {
-    fn __autometrics_get_labels(&self) -> Option<ResultAndReturnTypeLabels> {
-        None
-    }
+    fn __autometrics_get_labels(&self) -> Option<&'static str>;
 }
 
 /// Implement the given trait for &T and all primitive types.
@@ -225,8 +209,6 @@ macro_rules! impl_trait_for_types {
     };
 }
 
-impl_trait_for_types!(GetLabels);
-
 pub trait GetStaticStrFromIntoStaticStr<'a> {
     fn __autometrics_static_str(&'a self) -> Option<&'static str>;
 }
@@ -246,3 +228,86 @@ pub trait GetStaticStr {
     }
 }
 impl_trait_for_types!(GetStaticStr);
+
+/// Return the value of labels to use for the "result" counter according to
+/// the value's exact type and attributes.
+///
+/// The macro uses the autoref specialization trick through spez to get the labels for the type in a variety of circumstances.
+/// Specifically, if the value is a Result, it will add the ok or error label accordingly unless one or both of the types that
+/// the Result<T, E> is generic over implements the GetLabels trait. The label allows to override the inferred label, and the
+/// [`ResultLabels`](crate::result_labels) macro implements the GetLabels trait for the user using annotations.
+///
+/// The macro is meant to be called with a reference as argument: `get_result_labels_for_value(&return_value)`
+///
+/// Ref: https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md
+#[macro_export]
+macro_rules! get_result_labels_for_value {
+    ($e:expr) => {{
+        use $crate::__private::{
+            GetLabels, GetStaticStr, ResultAndReturnTypeLabels, ERROR_KEY, OK_KEY,
+        };
+        $crate::__private::spez! {
+            for val = $e;
+
+            match<T, E> &::std::result::Result<T, E> where T: GetLabels, E: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        err.__autometrics_get_labels().unwrap_or(ERROR_KEY),
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T, E> &::std::result::Result<T, E> where E: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        OK_KEY,
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        err.__autometrics_get_labels().unwrap_or(ERROR_KEY),
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T, E> &::std::result::Result<T, E> where T: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        ok.__autometrics_get_labels().unwrap_or(OK_KEY),
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        ERROR_KEY,
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T, E> &::std::result::Result<T, E> -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                match val {
+                    Ok(ok) => Some((
+                        OK_KEY,
+                        ok.__autometrics_static_str(),
+                    )),
+                    Err(err) => Some((
+                        ERROR_KEY,
+                        err.__autometrics_static_str(),
+                    )),
+                }
+            }
+
+            match<T> &T where T: GetLabels -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                val.__autometrics_get_labels().map(|label| (label, val.__autometrics_static_str()))
+            }
+
+            match<T> T -> ::std::option::Option<ResultAndReturnTypeLabels> {
+                None
+            }
+        }
+    }};
+}
