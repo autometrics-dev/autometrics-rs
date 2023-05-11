@@ -57,7 +57,7 @@ Here is a demo of jumping from function docs to live Prometheus charts:
 - [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), or [`metrics`](https://crates.io/crates/metrics))
 - ⚡ Minimal runtime overhead
 
-See [Why Autometrics?](https://github.com/autometrics-dev#why-autometrics) for more details on the ideas behind autometrics.
+See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
 
 ## Quickstart
 
