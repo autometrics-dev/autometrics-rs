@@ -3,9 +3,10 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result};
+use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result, ReturnType, Type};
 
 mod parse;
+mod result_labels;
 
 const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
 const HISTOGRAM_BUCKET_NAME_PROMETHEUS: &str = "function_calls_duration_bucket";
@@ -36,6 +37,14 @@ pub fn autometrics(
     output.into()
 }
 
+#[proc_macro_derive(ResultLabels, attributes(label))]
+pub fn result_labels(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    result_labels::expand(input)
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
+}
+
 /// Add autometrics instrumentation to a single function
 fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStream> {
     let sig = item.sig;
@@ -50,6 +59,36 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
     // Build the documentation we'll add to the function's RustDocs
     let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
+
+    // Type annotation to allow type inference to work on return expressions (such as `.collect()`), as
+    // well as prevent compiler type-inference from selecting the wrong branch in the `spez` macro later.
+    //
+    // Type inference can make the compiler select one of the early cases of `autometrics::result_labels!`
+    // even if the types `T` or `E` do not implement the `GetLabels` trait. That leads to a compilation error
+    // looking like this:
+    // ```
+    // error[E0277]: the trait bound `ApiError: GetLabels` is not satisfied
+    //  --> examples/full-api/src/routes.rs:48:1
+    //   |
+    //48 | #[autometrics(objective = API_SLO)]
+    //   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `GetLabels` is not implemented for `ApiError`
+    //   |
+    //   = help: the trait `create_user::{closure#0}::Match2` is implemented for `&&&&create_user::{closure#0}::Match<&Result<T, E>>`
+    //note: required for `&&&&create_user::{closure#0}::Match<&Result<Json<User>, ApiError>>` to implement `create_user::{closure#0}::Match2`
+    //  --> examples/full-api/src/routes.rs:48:1
+    //   |
+    //48 | #[autometrics(objective = API_SLO)]
+    //   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //   = note: this error originates in the macro `$crate::__private::spez` which comes from the expansion of the attribute macro `autometrics` (in Nightly builds, run with -Z macro-backtrace for more info)
+    // ```
+    //
+    // specifying the return type makes the compiler select the (correct) fallback case of `ApiError` not being a
+    // `GetLabels` implementor.
+    let return_type = match sig.output {
+        ReturnType::Default => quote! { : () },
+        ReturnType::Type(_, ref t) if matches!(t.as_ref(), &Type::ImplTrait(_)) => quote! {},
+        ReturnType::Type(_, ref t) => quote! { : #t },
+    };
 
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
@@ -97,12 +136,10 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
             }
         }
     } else {
-        // This will use the traits defined in the `labels` module to determine if
-        // the return value was a `Result` and, if so, assign the appropriate labels
         quote! {
             {
-                use autometrics::__private::{CALLER, CounterLabels, GetLabels, GetLabelsFromResult};
-                let result_labels = (&result).__autometrics_get_labels();
+                use autometrics::__private::{CALLER, CounterLabels, GetLabels};
+                let result_labels = autometrics::get_result_labels_for_value!(&result);
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
@@ -137,7 +174,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 AutometricsTracker::start(#gauge_labels)
             };
 
-            let result = #call_function;
+            let result #return_type = #call_function;
 
             {
                 use autometrics::__private::{HistogramLabels, TrackMetrics};

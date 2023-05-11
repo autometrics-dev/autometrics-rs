@@ -1,0 +1,5 @@
+error: Only "ok" or "error" are accepted as result values
+  --> tests/result_labels/fail/wrong_variant.rs:12:22
+   |
+12 |     #[label(result = "not ok")]
+   |                      ^^^^^^^^
