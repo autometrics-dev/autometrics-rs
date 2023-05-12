@@ -44,7 +44,7 @@ pub async fn create_user() {
 
 Here is a demo of jumping from function docs to live Prometheus charts:
 
-<video src="https://user-images.githubusercontent.com/3262610/220152261-2ad6ab2b-f951-4b51-8d6e-855fb71440a3.mp4" autoplay loop muted width="100%"></video>
+https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-45f3-a607-64797d5f0233
 
 ## Features
 
