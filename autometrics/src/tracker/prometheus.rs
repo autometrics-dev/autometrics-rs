@@ -1,4 +1,4 @@
-use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
+use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, ResultLabel};
 use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
 use const_format::{formatcp, str_replace};
 use once_cell::sync::Lazy;
@@ -107,27 +107,19 @@ impl TrackMetrics for PrometheusTracker {
                     counter_labels.function,
                     counter_labels.module,
                     counter_labels.caller,
-                    counter_labels.result.unwrap_or_default().0,
-                    if let Some((OK_KEY, Some(return_value_type))) = counter_labels.result {
-                        return_value_type
-                    } else {
-                        ""
+                    match counter_labels.result {
+                        Some(ResultLabel::Ok) => OK_KEY,
+                        Some(ResultLabel::Error) => ERROR_KEY,
+                        None => "",
                     },
-                    if let Some((ERROR_KEY, Some(return_value_type))) = counter_labels.result {
-                        return_value_type
-                    } else {
-                        ""
-                    },
+                    counter_labels.ok.unwrap_or_default(),
+                    counter_labels.error.unwrap_or_default(),
+                    counter_labels.objective_name.unwrap_or_default(),
                     counter_labels
-                        .objective
+                        .objective_percentile
                         .as_ref()
-                        .map(|obj| obj.0)
-                        .unwrap_or(""),
-                    counter_labels
-                        .objective
-                        .as_ref()
-                        .map(|obj| obj.1.as_str())
-                        .unwrap_or(""),
+                        .map(|p| p.as_str())
+                        .unwrap_or_default(),
                 ],
             )
             .inc();
@@ -136,21 +128,17 @@ impl TrackMetrics for PrometheusTracker {
             .with_label_values(&[
                 histogram_labels.function,
                 histogram_labels.module,
+                histogram_labels.objective_name.unwrap_or_default(),
                 histogram_labels
-                    .objective
+                    .objective_percentile
                     .as_ref()
-                    .map(|obj| obj.0)
-                    .unwrap_or(""),
+                    .map(|p| p.as_str())
+                    .unwrap_or_default(),
                 histogram_labels
-                    .objective
+                    .objective_latency_threshold
                     .as_ref()
-                    .map(|obj| obj.1.as_str())
-                    .unwrap_or(""),
-                histogram_labels
-                    .objective
-                    .as_ref()
-                    .map(|obj| obj.2.as_str())
-                    .unwrap_or(""),
+                    .map(|p| p.as_str())
+                    .unwrap_or_default(),
             ])
             .observe(duration);
 

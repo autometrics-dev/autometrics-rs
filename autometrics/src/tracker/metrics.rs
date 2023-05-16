@@ -42,7 +42,7 @@ impl TrackMetrics for MetricsTracker {
         }
     }
 
-    fn finish<'a>(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
+    fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         let duration = self.start.elapsed().as_secs_f64();
         register_counter!(COUNTER_NAME, &counter_labels.to_vec()).increment(1);
         register_histogram!(HISTOGRAM_NAME, &histogram_labels.to_vec()).record(duration);

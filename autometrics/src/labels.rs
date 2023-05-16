@@ -1,8 +1,6 @@
 use crate::{constants::*, objectives::*};
 #[cfg(feature = "prometheus-client")]
-use prometheus_client::encoding::{
-    EncodeLabelKey, EncodeLabelSet, EncodeLabelValue, LabelValueEncoder,
-};
+use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue, LabelValueEncoder};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
@@ -62,6 +60,15 @@ pub(crate) enum ResultLabel {
     Error,
 }
 
+impl ResultLabel {
+    pub(crate) const fn as_str(&self) -> &'static str {
+        match self {
+            ResultLabel::Ok => OK_KEY,
+            ResultLabel::Error => ERROR_KEY,
+        }
+    }
+}
+
 #[cfg(feature = "prometheus-client")]
 impl EncodeLabelValue for ResultLabel {
     fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
@@ -82,12 +89,21 @@ impl CounterLabels {
     ) -> Self {
         let (objective_name, objective_percentile) = if let Some(objective) = objective {
             if let Some(success_rate) = objective.success_rate {
-                (objective.name, success_rate)
+                (Some(objective.name), Some(success_rate))
             } else {
-                ("", "")
+                (None, None)
             }
         } else {
-            ("", "")
+            (None, None)
+        };
+        let (result, ok, error) = if let Some((result, return_value_type)) = result {
+            match result {
+                OK_KEY => (Some(ResultLabel::Ok), return_value_type, None),
+                ERROR_KEY => (Some(ResultLabel::Error), None, return_value_type),
+                _ => (None, None, None),
+            }
+        } else {
+            (None, None, None)
         };
         Self {
             function,
@@ -96,6 +112,8 @@ impl CounterLabels {
             objective_name,
             objective_percentile,
             result,
+            ok,
+            error,
         }
     }
 
@@ -105,15 +123,20 @@ impl CounterLabels {
             (MODULE_KEY, self.module),
             (CALLER_KEY, self.caller),
         ];
-        if let Some((result, return_value_type)) = self.result {
-            labels.push((RESULT_KEY, result));
-            if let Some(return_value_type) = return_value_type {
-                labels.push((result, return_value_type));
-            }
+        if let Some(result) = &self.result {
+            labels.push((RESULT_KEY, result.as_str()));
         }
-        if let Some((name, percentile)) = &self.objective {
-            labels.push((OBJECTIVE_NAME, name));
-            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
+        if let Some(ok) = self.ok {
+            labels.push((OK_KEY, ok));
+        }
+        if let Some(error) = self.error {
+            labels.push((ERROR_KEY, error));
+        }
+        if let Some(objective_name) = self.objective_name {
+            labels.push((OBJECTIVE_NAME, objective_name));
+        }
+        if let Some(objective_percentile) = &self.objective_percentile {
+            labels.push((OBJECTIVE_PERCENTILE, objective_percentile.as_str()));
         }
 
         labels
@@ -128,37 +151,47 @@ impl CounterLabels {
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
-    pub objective_name: &'static str,
-    pub objective_percentile: ObjectivePercentile,
-    pub objective_latency_threshold: ObjectiveLatency,
+    pub objective_name: Option<&'static str>,
+    pub objective_percentile: Option<ObjectivePercentile>,
+    pub objective_latency_threshold: Option<ObjectiveLatency>,
 }
 
 impl HistogramLabels {
     pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
-        let objective = if let Some(objective) = objective {
-            if let Some((latency, percentile)) = objective.latency {
-                Some((objective.name, percentile, latency))
+        let (objective_name, objective_percentile, objective_latency_threshold) =
+            if let Some(objective) = objective {
+                if let Some((latency, percentile)) = objective.latency {
+                    (Some(objective.name), Some(percentile), Some(latency))
+                } else {
+                    (None, None, None)
+                }
             } else {
-                None
-            }
-        } else {
-            None
-        };
+                (None, None, None)
+            };
 
         Self {
             function,
             module,
-            objective,
+            objective_name,
+            objective_percentile,
+            objective_latency_threshold,
         }
     }
 
     pub fn to_vec(&self) -> Vec<Label> {
         let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
 
-        if let Some((name, percentile, latency)) = &self.objective {
-            labels.push((OBJECTIVE_NAME, name));
-            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
-            labels.push((OBJECTIVE_LATENCY_THRESHOLD, latency.as_str()));
+        if let Some(objective_name) = self.objective_name {
+            labels.push((OBJECTIVE_NAME, objective_name));
+        }
+        if let Some(objective_percentile) = &self.objective_percentile {
+            labels.push((OBJECTIVE_PERCENTILE, objective_percentile.as_str()));
+        }
+        if let Some(objective_latency_threshold) = &self.objective_latency_threshold {
+            labels.push((
+                OBJECTIVE_LATENCY_THRESHOLD,
+                objective_latency_threshold.as_str(),
+            ));
         }
 
         labels

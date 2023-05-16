@@ -7,7 +7,7 @@ mod opentelemetry;
 #[cfg(feature = "prometheus")]
 mod prometheus;
 #[cfg(feature = "prometheus-client")]
-mod prometheus_client;
+pub(crate) mod prometheus_client;
 
 // By default, use the opentelemetry crate
 #[cfg(all(

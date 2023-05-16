@@ -30,6 +30,21 @@ impl GlobalPrometheus {
             output.push_str(&self.handle.render());
         }
 
+        #[cfg(feature = "prometheus-client")]
+        {
+            output.push('\n');
+            prometheus_client::encoding::text::encode(
+                &mut output,
+                &crate::PROMETHEUS_CLIENT_REGISTRY,
+            )
+            .map_err(|err| {
+                Error::Msg(format!(
+                    "Failed to encode prometheus-client metrics: {}",
+                    err
+                ))
+            })?;
+        }
+
         Ok(output)
     }
 }
