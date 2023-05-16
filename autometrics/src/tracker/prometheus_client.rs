@@ -35,6 +35,7 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
         },
     )
 });
+/// The [`Registry`] used to collect metrics when the `prometheus-client` feature is enabled
 pub static PROMETHEUS_CLIENT_REGISTRY: Lazy<&Registry> = Lazy::new(|| &REGISTRY_AND_METRICS.0);
 
 struct Metrics {

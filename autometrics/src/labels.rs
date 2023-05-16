@@ -312,11 +312,12 @@ impl_trait_for_types!(GetStaticStr);
 /// The macro uses the autoref specialization trick through spez to get the labels for the type in a variety of circumstances.
 /// Specifically, if the value is a Result, it will add the ok or error label accordingly unless one or both of the types that
 /// the Result<T, E> is generic over implements the GetLabels trait. The label allows to override the inferred label, and the
-/// [`ResultLabels`](crate::result_labels) macro implements the GetLabels trait for the user using annotations.
+/// [`ResultLabels`](crate::ResultLabels) macro implements the GetLabels trait for the user using annotations.
 ///
 /// The macro is meant to be called with a reference as argument: `get_result_labels_for_value(&return_value)`
 ///
-/// Ref: https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md
+/// See: <https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md>
+#[doc(hidden)]
 #[macro_export]
 macro_rules! get_result_labels_for_value {
     ($e:expr) => {{
