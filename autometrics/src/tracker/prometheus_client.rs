@@ -12,15 +12,23 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
     let mut registry = <Registry>::default();
 
     let counter = Family::<CounterLabels, Counter>::default();
-    registry.register(COUNTER_NAME, COUNTER_DESCRIPTION, counter.clone());
+    registry.register(
+        COUNTER_NAME_PROMETHEUS,
+        COUNTER_DESCRIPTION,
+        counter.clone(),
+    );
 
     let histogram = Family::<HistogramLabels, Histogram>::new_with_constructor(|| {
         Histogram::new(HISTOGRAM_BUCKETS.into_iter())
     });
-    registry.register(HISTOGRAM_NAME, HISTOGRAM_DESCRIPTION, histogram.clone());
+    registry.register(
+        HISTOGRAM_NAME_PROMETHEUS,
+        HISTOGRAM_DESCRIPTION,
+        histogram.clone(),
+    );
 
     let gauge = Family::<GaugeLabels, Gauge>::default();
-    registry.register(GAUGE_NAME, GAUGE_DESCRIPTION, gauge.clone());
+    registry.register(GAUGE_NAME_PROMETHEUS, GAUGE_DESCRIPTION, gauge.clone());
 
     let build_info = Family::<BuildInfoLabels, Gauge>::default();
     registry.register(BUILD_INFO_NAME, BUILD_INFO_DESCRIPTION, build_info.clone());

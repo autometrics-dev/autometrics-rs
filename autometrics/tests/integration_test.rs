@@ -17,7 +17,7 @@ fn single_function() {
     let metrics = autometrics::encode_global_metrics().unwrap();
     println!("{}", metrics);
     let call_count_metric: Regex = Regex::new(
-        r#"function_calls_count\{\S*function="hello_world"\S*module="integration_test"\S*\} 2"#,
+        r#"function_calls_count(?:_total)?\{\S*function="hello_world"\S*module="integration_test"\S*\} 2"#,
     )
     .unwrap();
     let duration_metric: Regex = Regex::new(
@@ -51,9 +51,9 @@ fn impl_block() {
 
     let metrics = autometrics::encode_global_metrics().unwrap();
     let test_fn_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="test_fn"\S*\} 1"#).unwrap();
+        Regex::new(r#"function_calls_count(?:_total)?\{\S*function="test_fn"\S*\} 1"#).unwrap();
     let test_method_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="test_method"\S*\} 1"#).unwrap();
+        Regex::new(r#"function_calls_count(?:_total)?\{\S*function="test_method"\S*\} 1"#).unwrap();
     let test_fn_duration: Regex =
         Regex::new(r#"function_calls_duration_bucket\{\S*function="test_fn"\S*\}"#).unwrap();
     let test_method_duration: Regex =
@@ -83,13 +83,15 @@ fn result() {
     result_fn(false).ok();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="result_fn"\S*result="error"\S*\} 2"#)
-            .unwrap();
+    let error_count: Regex = Regex::new(
+        r#"function_calls_count(?:_total)?\{\S*function="result_fn"\S*result="error"\S*\} 2"#,
+    )
+    .unwrap();
     assert!(error_count.is_match(&metrics));
-    let ok_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="result_fn"\S*result="ok"\S*\} 1"#)
-            .unwrap();
+    let ok_count: Regex = Regex::new(
+        r#"function_calls_count(?:_total)?\{\S*function="result_fn"\S*result="ok"\S*\} 1"#,
+    )
+    .unwrap();
     assert!(ok_count.is_match(&metrics));
 }
 
@@ -106,9 +108,10 @@ fn ok_if() {
     ok_if_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="ok_if_fn"\S*result="error"\S*\} 1"#)
-            .unwrap();
+    let error_count: Regex = Regex::new(
+        r#"function_calls_count(?:_total)?\{\S*function="ok_if_fn"\S*result="error"\S*\} 1"#,
+    )
+    .unwrap();
     assert!(error_count.is_match(&metrics));
 }
 
@@ -125,9 +128,10 @@ fn error_if() {
     error_if_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex =
-        Regex::new(r#"function_calls_count\{\S*function="error_if_fn"\S*result="error"\S*\} 1"#)
-            .unwrap();
+    let error_count: Regex = Regex::new(
+        r#"function_calls_count(?:_total)?\{\S*function="error_if_fn"\S*result="error"\S*\} 1"#,
+    )
+    .unwrap();
     assert!(error_count.is_match(&metrics));
 }
 
@@ -148,7 +152,7 @@ fn caller_label() {
 
     let metrics = autometrics::encode_global_metrics().unwrap();
     let call_count: Regex = Regex::new(
-        r#"function_calls_count\{\S*caller="function_1"\S*function="function_2"\S*\} 1"#,
+        r#"function_calls_count(?:_total)?\{\S*caller="function_1"\S*function="function_2"\S*\} 1"#,
     )
     .unwrap();
     assert!(call_count.is_match(&metrics));

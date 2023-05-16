@@ -12,9 +12,9 @@ pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct BuildInfoLabels {
-    pub(crate) version: &'static str,
-    pub(crate) commit: &'static str,
     pub(crate) branch: &'static str,
+    pub(crate) commit: &'static str,
+    pub(crate) version: &'static str,
 }
 
 impl BuildInfoLabels {

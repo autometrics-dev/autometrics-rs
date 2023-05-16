@@ -9,13 +9,6 @@ use prometheus::{
 };
 use std::{sync::Once, time::Instant};
 
-const COUNTER_NAME_PROMETHEUS: &str = str_replace!(COUNTER_NAME, ".", "_");
-const HISTOGRAM_NAME_PROMETHEUS: &str = str_replace!(HISTOGRAM_NAME, ".", "_");
-const GAUGE_NAME_PROMETHEUS: &str = str_replace!(GAUGE_NAME, ".", "_");
-const OBJECTIVE_NAME_PROMETHEUS: &str = str_replace!(OBJECTIVE_NAME, ".", "_");
-const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = str_replace!(OBJECTIVE_PERCENTILE, ".", "_");
-const OBJECTIVE_LATENCY_PROMETHEUS: &str = str_replace!(OBJECTIVE_LATENCY_THRESHOLD, ".", "_");
-
 static SET_BUILD_INFO: Once = Once::new();
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
@@ -54,7 +47,7 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
             MODULE_KEY,
             OBJECTIVE_NAME_PROMETHEUS,
             OBJECTIVE_PERCENTILE_PROMETHEUS,
-            OBJECTIVE_LATENCY_PROMETHEUS
+            OBJECTIVE_LATENCY_THRESHOLD_PROMETHEUS
         ]
     )
     .expect("Failed to register function_calls_duration histogram")

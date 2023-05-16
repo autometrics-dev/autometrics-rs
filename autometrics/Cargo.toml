@@ -16,7 +16,7 @@ readme = "README.md"
 default = ["opentelemetry"]
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api"]
-prometheus = ["const_format", "dep:prometheus", "once_cell"]
+prometheus = ["dep:prometheus", "once_cell"]
 prometheus-client = ["dep:prometheus-client", "once_cell"]
 prometheus-exporter = [
   "metrics-exporter-prometheus",
@@ -44,9 +44,6 @@ once_cell = { version = "1.17", optional = true }
 opentelemetry-prometheus = { version = "0.11", optional = true }
 opentelemetry_sdk = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 prometheus = { version = "0.13", default-features = false, optional = true }
-
-# Used for prometheus feature
-const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
 
 # Used for prometheus-client feature
 prometheus-client = { version = "0.21.1", optional = true }
