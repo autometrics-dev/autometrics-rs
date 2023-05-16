@@ -166,6 +166,7 @@ fn build_info() {
     function_just_to_initialize_build_info();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let build_info: Regex = Regex::new(r#"build_info\{commit="",version="\S+"\} 1"#).unwrap();
+    let build_info: Regex =
+        Regex::new(r#"build_info\{branch="",commit="",version="\S+"\} 1"#).unwrap();
     assert!(build_info.is_match(&metrics));
 }

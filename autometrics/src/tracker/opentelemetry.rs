@@ -3,7 +3,7 @@ use crate::{constants::*, tracker::TrackMetrics};
 use opentelemetry_api::{global, metrics::UpDownCounter, Context, KeyValue};
 use std::{sync::Once, time::Instant};
 
-const SET_BUILD_INFO: Once = Once::new();
+static SET_BUILD_INFO: Once = Once::new();
 
 /// Tracks the number of function calls, concurrent calls, and latency
 pub struct OpenTelemetryTracker {

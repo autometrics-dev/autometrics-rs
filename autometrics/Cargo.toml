@@ -6,6 +6,7 @@ authors = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
+homepage = { workspace = true }
 license = { workspace = true }
 keywords = { workspace = true }
 categories = { workspace = true }
@@ -28,7 +29,8 @@ custom-objective-percentile = []
 custom-objective-latency = []
 
 [dependencies]
-autometrics-macros = { version = "0.3.0", path = "../autometrics-macros" }
+autometrics-macros = { workspace = true }
+spez = { version = "0.1.2" }
 
 # Used for opentelemetry feature
 opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
@@ -50,8 +52,11 @@ const_format = { version = "0.2", features = ["rust_1_51"], optional = true }
 prometheus-client = { version = "0.21.1", optional = true }
 
 [dev-dependencies]
+axum = { version = "0.6", features = ["tokio"] }
 regex = "1.7"
 http = "0.2"
+tokio = { version = "1", features = ["full"] }
+trybuild = "1.0"
 vergen = { version = "8.1", features = ["git", "gitcl"] }
 
 [package.metadata.docs.rs]
