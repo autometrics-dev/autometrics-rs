@@ -1,8 +1,7 @@
 use crate::{constants::*, objectives::*};
-use prometheus_client::encoding::EncodeLabelKey;
 #[cfg(feature = "prometheus-client")]
 use prometheus_client::encoding::{
-    EncodeLabelSet, EncodeLabelValue, LabelSetEncoder, LabelValueEncoder,
+    EncodeLabelKey, EncodeLabelSet, EncodeLabelValue, LabelValueEncoder,
 };
 use std::ops::Deref;
 
@@ -58,8 +57,8 @@ pub(crate) enum ResultLabel {
 impl EncodeLabelValue for ResultLabel {
     fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
         match self {
-            ResultLabel::Ok => OK_KEY.encode(encoder),
-            ResultLabel::Error => ERROR_KEY.encode(encoder),
+            ResultLabel::Ok => EncodeLabelValue::encode(&OK_KEY, encoder),
+            ResultLabel::Error => EncodeLabelValue::encode(&ERROR_KEY, encoder),
         }
     }
 }
@@ -120,7 +119,6 @@ impl CounterLabels {
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
-    /// The SLO name, objective percentile, and latency threshold
     pub objective_name: &'static str,
     pub objective_percentile: ObjectivePercentile,
     pub objective_latency_threshold: ObjectiveLatency,
