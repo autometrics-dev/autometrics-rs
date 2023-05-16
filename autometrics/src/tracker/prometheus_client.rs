@@ -45,7 +45,7 @@ struct Metrics {
     build_info: Family<BuildInfoLabels, Gauge>,
 }
 
-struct PrometheusClientTracker {
+pub struct PrometheusClientTracker {
     gauge_labels: Option<GaugeLabels>,
     start_time: Instant,
 }

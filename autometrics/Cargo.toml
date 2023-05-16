@@ -23,7 +23,7 @@ prometheus-exporter = [
   "once_cell",
   "opentelemetry-prometheus",
   "opentelemetry_sdk",
-  "prometheus"
+  "dep:prometheus"
 ]
 custom-objective-percentile = []
 custom-objective-latency = []
