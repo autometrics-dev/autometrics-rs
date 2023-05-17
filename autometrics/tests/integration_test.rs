@@ -1,7 +1,6 @@
+#![cfg(feature = "prometheus-exporter")]
 use autometrics::autometrics;
-use regex::Regex;
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn single_function() {
     let _ = autometrics::global_metrics_exporter();
@@ -16,19 +15,21 @@ fn single_function() {
 
     let metrics = autometrics::encode_global_metrics().unwrap();
     println!("{}", metrics);
-    let call_count_metric: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*function="hello_world"\S*module="integration_test"\S*\} 2"#,
-    )
-    .unwrap();
-    let duration_metric: Regex = Regex::new(
-        r#"function_calls_duration_bucket\{\S*function="hello_world"\S*module="integration_test"\S*\}"#,
-    )
-    .unwrap();
-    assert!(call_count_metric.is_match(&metrics));
-    assert!(duration_metric.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="hello_world""#)
+            && line.contains(r#"module="integration_test""#)
+            && line.ends_with("} 2")
+    }));
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("function_calls_duration_bucket{")
+            && line.contains(r#"function="hello_world""#)
+            && line.contains(r#"module="integration_test""#)
+            && line.ends_with("} 2")));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn impl_block() {
     let _ = autometrics::global_metrics_exporter();
@@ -50,21 +51,32 @@ fn impl_block() {
     Foo.test_method();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let test_fn_count: Regex =
-        Regex::new(r#"function_calls_count(?:_total)?\{\S*function="test_fn"\S*\} 1"#).unwrap();
-    let test_method_count: Regex =
-        Regex::new(r#"function_calls_count(?:_total)?\{\S*function="test_method"\S*\} 1"#).unwrap();
-    let test_fn_duration: Regex =
-        Regex::new(r#"function_calls_duration_bucket\{\S*function="test_fn"\S*\}"#).unwrap();
-    let test_method_duration: Regex =
-        Regex::new(r#"function_calls_duration_bucket\{\S*function="test_method"\S*\}"#).unwrap();
-    assert!(test_fn_count.is_match(&metrics));
-    assert!(test_method_count.is_match(&metrics));
-    assert!(test_fn_duration.is_match(&metrics));
-    assert!(test_method_duration.is_match(&metrics));
+    println!("{}", metrics);
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="test_fn""#)
+            && line.ends_with("} 1")
+    }));
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("function_calls_duration_bucket{")
+            && line.contains(r#"function="test_fn""#)
+            && line.ends_with("} 1")));
+
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="test_method""#)
+            && line.ends_with("} 1")
+    }));
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("function_calls_duration_bucket{")
+            && line.contains(r#"function="test_method""#)
+            && line.ends_with("} 1")));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn result() {
     let _ = autometrics::global_metrics_exporter();
@@ -83,19 +95,23 @@ fn result() {
     result_fn(false).ok();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*function="result_fn"\S*result="error"\S*\} 2"#,
-    )
-    .unwrap();
-    assert!(error_count.is_match(&metrics));
-    let ok_count: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*function="result_fn"\S*result="ok"\S*\} 1"#,
-    )
-    .unwrap();
-    assert!(ok_count.is_match(&metrics));
+    println!("{}", metrics);
+    assert!(metrics
+        .lines()
+        .any(|line| (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="result_fn""#)
+            && line.contains(r#"result="error""#)
+            && line.ends_with("} 2")));
+    assert!(metrics
+        .lines()
+        .any(|line| (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="result_fn""#)
+            && line.contains(r#"result="ok""#)
+            && line.ends_with("} 1")));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn ok_if() {
     let _ = autometrics::global_metrics_exporter();
@@ -108,14 +124,15 @@ fn ok_if() {
     ok_if_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*function="ok_if_fn"\S*result="error"\S*\} 1"#,
-    )
-    .unwrap();
-    assert!(error_count.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="ok_if_fn""#)
+            && line.contains(r#"result="error""#)
+            && line.ends_with("} 1")
+    }));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn error_if() {
     let _ = autometrics::global_metrics_exporter();
@@ -128,14 +145,15 @@ fn error_if() {
     error_if_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let error_count: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*function="error_if_fn"\S*result="error"\S*\} 1"#,
-    )
-    .unwrap();
-    assert!(error_count.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="error_if_fn""#)
+            && line.contains(r#"result="error""#)
+            && line.ends_with("} 1")
+    }));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn caller_label() {
     let _ = autometrics::global_metrics_exporter();
@@ -151,14 +169,15 @@ fn caller_label() {
     function_1();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let call_count: Regex = Regex::new(
-        r#"function_calls_count(?:_total)?\{\S*caller="function_1"\S*function="function_2"\S*\} 1"#,
-    )
-    .unwrap();
-    assert!(call_count.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"caller="function_1""#)
+            && line.contains(r#"function="function_2""#)
+            && line.ends_with("} 1")
+    }));
 }
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn build_info() {
     let _ = autometrics::global_metrics_exporter();
@@ -170,7 +189,9 @@ fn build_info() {
     function_just_to_initialize_build_info();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let build_info: Regex =
-        Regex::new(r#"build_info\{branch="",commit="",version="\S+"\} 1"#).unwrap();
-    assert!(build_info.is_match(&metrics));
+    assert!(metrics.lines().any(|line| line.starts_with("build_info{")
+        && line.contains(r#"branch="""#)
+        && line.contains(r#"commit="""#)
+        && line.contains(&format!("version=\"{}\"", env!("CARGO_PKG_VERSION")))
+        && line.ends_with("} 1")));
 }
