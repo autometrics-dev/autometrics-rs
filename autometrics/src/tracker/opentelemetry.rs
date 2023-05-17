@@ -6,22 +6,22 @@ use opentelemetry_api::{global, Context, KeyValue};
 use std::{sync::Once, time::Instant};
 
 static SET_BUILD_INFO: Once = Once::new();
-static CONCURRENCY_TRACKER: Lazy<UpDownCounter<i64>> = Lazy::new(|| {
-    global::meter("autometrics")
-        .i64_up_down_counter(GAUGE_NAME)
-        .with_description(GAUGE_DESCRIPTION)
-        .init()
-});
-static COUNTER: Lazy<Counter<f64>> = Lazy::new(|| {
-    global::meter("autometrics")
-        .f64_counter(COUNTER_NAME)
+static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
+    global::meter("")
+        .u64_counter(COUNTER_NAME)
         .with_description(COUNTER_DESCRIPTION)
         .init()
 });
 static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
-    global::meter("autometrics")
+    global::meter("")
         .f64_histogram(HISTOGRAM_NAME)
         .with_description(HISTOGRAM_DESCRIPTION)
+        .init()
+});
+static GAUGE: Lazy<UpDownCounter<i64>> = Lazy::new(|| {
+    global::meter("")
+        .i64_up_down_counter(GAUGE_NAME)
+        .with_description(GAUGE_DESCRIPTION)
         .init()
 });
 
@@ -39,7 +39,7 @@ impl TrackMetrics for OpenTelemetryTracker {
         let gauge_labels = if let Some(gauge_labels) = gauge_labels {
             let gauge_labels = to_key_values(gauge_labels.to_array());
             // Increase the number of concurrent requests
-            CONCURRENCY_TRACKER.add(&context, 1, &gauge_labels);
+            GAUGE.add(&context, 1, &gauge_labels);
             Some(gauge_labels)
         } else {
             None
@@ -57,7 +57,7 @@ impl TrackMetrics for OpenTelemetryTracker {
 
         // Track the function calls
         let counter_labels = to_key_values(counter_labels.to_vec());
-        COUNTER.add(&self.context, 1.0, &counter_labels);
+        COUNTER.add(&self.context, 1, &counter_labels);
 
         // Track the latency
         let histogram_labels = to_key_values(histogram_labels.to_vec());
@@ -65,14 +65,14 @@ impl TrackMetrics for OpenTelemetryTracker {
 
         // Decrease the number of concurrent requests
         if let Some(gauge_labels) = self.gauge_labels {
-            CONCURRENCY_TRACKER.add(&self.context, -1, &gauge_labels);
+            GAUGE.add(&self.context, -1, &gauge_labels);
         }
     }
 
     fn set_build_info(build_info_labels: &BuildInfoLabels) {
         SET_BUILD_INFO.call_once(|| {
             let build_info_labels = to_key_values(build_info_labels.to_vec());
-            let build_info = global::meter("autometrics")
+            let build_info = global::meter("")
                 .f64_up_down_counter(BUILD_INFO_NAME)
                 .with_description(BUILD_INFO_DESCRIPTION)
                 .init();
