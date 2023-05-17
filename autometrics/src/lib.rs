@@ -49,7 +49,7 @@ mod tracker;
 ///
 /// For each of the generated metrics, Autometrics attaches the following labels:
 /// - `function` - the name of the function
-/// - `module` - the module path of the function (with `::` replaced by `.`)
+/// - `module` - the module path of the function
 ///
 /// For the function call counter, Autometrics attaches these additional labels:
 /// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
