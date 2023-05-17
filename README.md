@@ -156,7 +156,16 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
 
       <br />
 
-      Configure `autometrics` to use the same underlying metrics library you use with the appropriate feature flag (see [below](#metrics-libraries)).
+      [Configure `autometrics`](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) to use the same underlying metrics library you use with the appropriate feature flag: `opentelemetry`, `prometheus`, or `metrics`.
+
+      ```toml
+      [dependencies]
+      autometrics = {
+        version = "*",
+        features = ["prometheus"],
+        default-features = false
+      }
+      ```
 
       The `autometrics` metrics will be produced alongside yours.
 
