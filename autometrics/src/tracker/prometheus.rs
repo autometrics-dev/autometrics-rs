@@ -1,6 +1,5 @@
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, ResultLabel};
 use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
-use const_format::{formatcp, str_replace};
 use once_cell::sync::Lazy;
 use prometheus::core::{AtomicI64, GenericGauge};
 use prometheus::{
@@ -26,7 +25,7 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             OBJECTIVE_PERCENTILE_PROMETHEUS,
         ]
     )
-    .expect(formatcp!(
+    .expect(&format!(
         "Failed to register {COUNTER_NAME_PROMETHEUS} counter"
     ))
 });

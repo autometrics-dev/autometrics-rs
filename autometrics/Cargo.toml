@@ -16,11 +16,10 @@ readme = "README.md"
 default = ["opentelemetry"]
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api"]
-prometheus = ["dep:prometheus", "once_cell"]
-prometheus-client = ["dep:prometheus-client", "once_cell"]
+prometheus = ["dep:prometheus"]
+prometheus-client = ["dep:prometheus-client"]
 prometheus-exporter = [
   "metrics-exporter-prometheus",
-  "once_cell",
   "opentelemetry-prometheus",
   "opentelemetry_sdk",
   "dep:prometheus"
@@ -30,7 +29,8 @@ custom-objective-latency = []
 
 [dependencies]
 autometrics-macros = { workspace = true }
-spez = { version = "0.1.2" }
+spez = "0.1.2"
+once_cell = "1.17"
 
 # Used for opentelemetry feature
 opentelemetry_api = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
@@ -40,7 +40,6 @@ metrics = { version = "0.21", default-features = false, optional = true }
 
 # Used for prometheus-exporter feature
 metrics-exporter-prometheus = { version = "0.12", default-features = false, optional = true }
-once_cell = { version = "1.17", optional = true }
 opentelemetry-prometheus = { version = "0.11", optional = true }
 opentelemetry_sdk = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 prometheus = { version = "0.13", default-features = false, optional = true }
