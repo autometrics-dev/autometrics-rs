@@ -35,7 +35,7 @@ impl GlobalPrometheus {
             output.push('\n');
             prometheus_client::encoding::text::encode(
                 &mut output,
-                &crate::tracker::prometheus_client::PROMETHEUS_CLIENT_REGISTRY,
+                &crate::tracker::prometheus_client::REGISTRY,
             )
             .map_err(|err| {
                 Error::Msg(format!(

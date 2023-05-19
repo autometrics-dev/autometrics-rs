@@ -190,7 +190,7 @@ pub use self::prometheus_exporter::*;
 pub mod integrations {
     #[cfg(feature = "prometheus-client")]
     pub mod prometheus_client {
-        pub use crate::tracker::prometheus_client::PROMETHEUS_CLIENT_REGISTRY;
+        pub use crate::tracker::prometheus_client::REGISTRY;
     }
 }
 
