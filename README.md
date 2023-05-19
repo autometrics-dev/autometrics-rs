@@ -54,7 +54,7 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
 - [🔍 Identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-commits-that-introduced-problems) that introduced errors or increased latency
 - [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
 - [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
-- [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), or [`metrics`](https://crates.io/crates/metrics))
+- [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
 - ⚡ Minimal runtime overhead
 
 See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
@@ -156,7 +156,7 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
 
       <br />
 
-      [Configure `autometrics`](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) to use the same underlying metrics library you use with the appropriate feature flag: `opentelemetry`, `prometheus`, or `metrics`.
+      [Configure `autometrics`](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) to use the same underlying metrics library you use with the appropriate feature flag: `opentelemetry`, `prometheus`, `prometheus-client`, or `metrics`.
 
       ```toml
       [dependencies]
