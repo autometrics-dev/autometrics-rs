@@ -22,10 +22,12 @@ jobs:
       - run: cargo build --features=custom-objective-percentile,custom-objective-latency
 
       # Run the tests with each of the different metrics libraries
-      - run: cargo test --features=prometheus-exporter
       - run: cargo test --no-default-features --features=prometheus-exporter,metrics --tests
       - run: cargo test --no-default-features --features=prometheus-exporter,prometheus --tests
       - run: cargo test --no-default-features --features=prometheus-exporter,prometheus-client --tests
+      - run: cargo test --no-default-features --features=prometheus-exporter,opentelemetry --tests
+
+      - run: cargo test --features=prometheus-exporter
 
       # Compile the examples
       - run: cargo build --package example-axum
