@@ -186,8 +186,13 @@ pub use autometrics_macros::ResultLabels;
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus_exporter::*;
 
-#[cfg(feature = "prometheus-client")]
-pub use self::tracker::prometheus_client::PROMETHEUS_CLIENT_REGISTRY;
+/// Functionality specific to the libraries used to collect metrics
+pub mod integrations {
+    #[cfg(feature = "prometheus-client")]
+    pub mod prometheus_client {
+        pub use crate::tracker::prometheus_client::PROMETHEUS_CLIENT_REGISTRY;
+    }
+}
 
 /// We use the histogram buckets recommended by the OpenTelemetry specification
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
