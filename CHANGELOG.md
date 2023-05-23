@@ -18,7 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Users must configure the metrics library they want to use autometrics with
-- Previously,
+- Previously, `autometrics` would only produce metrics using a single metrics library if multiple
+  feature flags were enabled, using a prioritization order defined internally. Now, enabling
+  multiple metrics library feature flags will cause the metrics to be tracked using all of the
+  enabled libraries
 - `GetLabels` trait (publicly exported but meant for internal use) changed the signature
   of its function to accomodate the new `ResultLabels` macro. This change is not significant
   if you never imported `autometrics::__private` manually (#61)
