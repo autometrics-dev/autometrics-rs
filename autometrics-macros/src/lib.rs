@@ -234,35 +234,34 @@ fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<T
 /// Create Prometheus queries for the generated metric and
 /// package them up into a RustDoc string
 fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: bool) -> String {
-    let request_rate = request_rate_query(&COUNTER_NAME_PROMETHEUS, "function", &function);
+    let request_rate = request_rate_query(COUNTER_NAME_PROMETHEUS, "function", function);
     let request_rate_url = make_prometheus_url(
-        &prometheus_url,
+        prometheus_url,
         &request_rate,
         &format!(
             "Rate of calls to the `{function}` function per second, averaged over 5 minute windows"
         ),
     );
-    let callee_request_rate = request_rate_query(&COUNTER_NAME_PROMETHEUS, "caller", &function);
-    let callee_request_rate_url = make_prometheus_url(&prometheus_url, &callee_request_rate, &format!("Rate of calls to functions called by `{function}` per second, averaged over 5 minute windows"));
+    let callee_request_rate = request_rate_query(COUNTER_NAME_PROMETHEUS, "caller", function);
+    let callee_request_rate_url = make_prometheus_url(prometheus_url, &callee_request_rate, &format!("Rate of calls to functions called by `{function}` per second, averaged over 5 minute windows"));
 
-    let error_ratio = &error_ratio_query(&COUNTER_NAME_PROMETHEUS, "function", &function);
-    let error_ratio_url = make_prometheus_url(&prometheus_url, &error_ratio, &format!("Percentage of calls to the `{function}` function that return errors, averaged over 5 minute windows"));
-    let callee_error_ratio = &error_ratio_query(&COUNTER_NAME_PROMETHEUS, "caller", &function);
-    let callee_error_ratio_url = make_prometheus_url(&prometheus_url, &callee_error_ratio, &format!("Percentage of calls to functions called by `{function}` that return errors, averaged over 5 minute windows"));
+    let error_ratio = &error_ratio_query(COUNTER_NAME_PROMETHEUS, "function", function);
+    let error_ratio_url = make_prometheus_url(prometheus_url, error_ratio, &format!("Percentage of calls to the `{function}` function that return errors, averaged over 5 minute windows"));
+    let callee_error_ratio = &error_ratio_query(COUNTER_NAME_PROMETHEUS, "caller", function);
+    let callee_error_ratio_url = make_prometheus_url(prometheus_url, callee_error_ratio, &format!("Percentage of calls to functions called by `{function}` that return errors, averaged over 5 minute windows"));
 
-    let latency = latency_query(&HISTOGRAM_BUCKET_NAME_PROMETHEUS, "function", &function);
+    let latency = latency_query(HISTOGRAM_BUCKET_NAME_PROMETHEUS, "function", function);
     let latency_url = make_prometheus_url(
-        &prometheus_url,
+        prometheus_url,
         &latency,
         &format!("95th and 99th percentile latencies (in seconds) for the `{function}` function"),
     );
 
     // Only include the concurrent calls query if the user has enabled it for this function
     let concurrent_calls_doc = if track_concurrency {
-        let concurrent_calls =
-            concurrent_calls_query(&GAUGE_NAME_PROMETHEUS, "function", &function);
+        let concurrent_calls = concurrent_calls_query(GAUGE_NAME_PROMETHEUS, "function", function);
         let concurrent_calls_url = make_prometheus_url(
-            &prometheus_url,
+            prometheus_url,
             &concurrent_calls,
             &format!("Concurrent calls to the `{function}` function"),
         );

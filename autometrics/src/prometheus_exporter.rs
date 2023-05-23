@@ -87,6 +87,21 @@ impl GlobalPrometheus {
             )?;
         }
 
+        #[cfg(feature = "prometheus-client")]
+        {
+            output.push('\n');
+            prometheus_client::encoding::text::encode(
+                &mut output,
+                &crate::tracker::prometheus_client::REGISTRY,
+            )
+            .map_err(|err| {
+                Error::Msg(format!(
+                    "Failed to encode prometheus-client metrics: {}",
+                    err
+                ))
+            })?;
+        }
+
         Ok(output)
     }
 }
