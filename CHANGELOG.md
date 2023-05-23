@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GetLabels` trait (publicly exported but meant for internal use) changed the signature
   of its function to accomodate the new `ResultLabels` macro. This change is not significant
   if you never imported `autometrics::__private` manually (#61)
+- Updated `opentelemetry` dependencies to v0.19. This means that users using autometrics
+  with `opentelemetry` but not using the `prometheus-exporter` must update the `opentelemetry`
+  to use v0.19.
 
 ### Deprecated
 -
