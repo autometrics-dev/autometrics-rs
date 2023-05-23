@@ -63,7 +63,7 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
 
 1. Add `autometrics` to your project:
     ```sh
-    cargo add autometrics --features=prometheus-exporter
+    cargo add autometrics --features=prometheus,prometheus-exporter
     ```
 2. Instrument your functions with the [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro
 

@@ -115,8 +115,9 @@ fn main() {
 
 #### Metrics Libraries
 
-Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
+**Required:** Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
 
-- `opentelemetry` (enabled by default) - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics
+- `opentelemetry` - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics
 - `metrics` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
 - `prometheus` - use the [prometheus](https://crates.io/crates/prometheus) crate for producing metrics
+- `prometheus-client` - use the official [prometheus-client](https://crates.io/crates/prometheus-client) crate for producing metrics

@@ -13,7 +13,6 @@ categories = { workspace = true }
 readme = "README.md"
 
 [features]
-default = ["opentelemetry"]
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api"]
 prometheus = ["dep:prometheus"]
@@ -22,7 +21,8 @@ prometheus-exporter = [
   "metrics-exporter-prometheus",
   "opentelemetry-prometheus",
   "opentelemetry_sdk",
-  "prometheus"
+  "dep:prometheus",
+  "thiserror"
 ]
 custom-objective-percentile = []
 custom-objective-latency = []
@@ -43,6 +43,7 @@ metrics-exporter-prometheus = { version = "0.12", default-features = false, opti
 opentelemetry-prometheus = { version = "0.11", optional = true }
 opentelemetry_sdk = { version = "0.18", default-features = false, features = ["metrics"], optional = true }
 prometheus = { version = "0.13", default-features = false, optional = true }
+thiserror = { version = "1", optional = true }
 
 # Used for prometheus-client feature
 prometheus-client = { version = "0.21.1", optional = true }
