@@ -18,10 +18,14 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Run the tests with each of the different metrics libraries
-      - run: cargo test --features=prometheus-exporter,opentelemetry
-      - run: cargo test --features=prometheus-exporter,metrics --tests
+      - run: cargo test --features=prometheus-exporter,metrics
       - run: cargo test --features=prometheus-exporter,prometheus --tests
       - run: cargo test --features=prometheus-exporter,prometheus-client --tests
+      # The tests using opentelemetry are currently failing because of this issue:
+      # https://github.com/open-telemetry/opentelemetry-rust/issues/1070
+      # We should re-enable them once 0.20 or 0.19.1 are released
+      # - run: cargo test --features=prometheus-exporter,opentelemetry
+      - run: cargo build --features=opentelemetry
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics,custom-objective-percentile,custom-objective-latency
