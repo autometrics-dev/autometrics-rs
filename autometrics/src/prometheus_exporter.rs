@@ -1,4 +1,3 @@
-use crate::HISTOGRAM_BUCKETS;
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
@@ -25,7 +24,7 @@ pub enum EncodingError {
 static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
     #[cfg(feature = "metrics")]
     metrics_exporter: PrometheusBuilder::new()
-        .set_buckets(&HISTOGRAM_BUCKETS)
+        .set_buckets(&crate::HISTOGRAM_BUCKETS)
         .expect("Failed to set histogram buckets")
         .install_recorder()
         .expect("Failed to install recorder"),
@@ -33,7 +32,7 @@ static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
     #[cfg(feature = "opentelemetry")]
     opentelemetry_exporter: exporter(
         controllers::basic(processors::factory(
-            selectors::simple::histogram(HISTOGRAM_BUCKETS),
+            selectors::simple::histogram(crate::HISTOGRAM_BUCKETS),
             aggregation::cumulative_temporality_selector(),
         ))
         .build(),
@@ -90,13 +89,7 @@ impl GlobalPrometheus {
             prometheus_client::encoding::text::encode(
                 &mut output,
                 &crate::tracker::prometheus_client::REGISTRY,
-            )
-            .map_err(|err| {
-                Error::Msg(format!(
-                    "Failed to encode prometheus-client metrics: {}",
-                    err
-                ))
-            })?;
+            )?;
         }
 
         Ok(output)
