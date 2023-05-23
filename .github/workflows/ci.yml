@@ -20,7 +20,7 @@ jobs:
       # Lint
       - name: Run Clippy
         # GitHub hosted runners using the latest stable version of Rust have Clippy pre-installed.
-        run: cargo clippy --all-targets --all-features
+        run: cargo clippy --all-targets --features=prometheus-exporter,opentelemetry,metrics,prometheus
 
       # Build the packages
       - run: cargo build
