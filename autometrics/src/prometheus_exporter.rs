@@ -7,7 +7,7 @@ use opentelemetry_sdk::export::metrics::aggregation;
 use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::{default_registry, Error, TextEncoder};
 
-static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
+static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(initialize_metrics_exporter);
 
 #[derive(Clone)]
 #[doc(hidden)]
