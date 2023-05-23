@@ -118,6 +118,7 @@ fn main() {
 Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
 
 > **Note**
+>
 > If you are **not** using the `prometheus-exporter`, you must ensure that you are using the exact same version of the metrics library as `autometrics` (and it must come from `crates.io` rather than git or another source). If not, the autometrics metrics will not appear in your exported metrics.
 
 - `opentelemetry` (enabled by default) - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics.

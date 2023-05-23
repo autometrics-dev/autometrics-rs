@@ -170,6 +170,7 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
       The `autometrics` metrics will be produced alongside yours.
 
       > **Note**
+      >
       > You must ensure that you are using the exact same version of the library as `autometrics`. If not, the `autometrics` metrics will not appear in your exported metrics.
       > This is because Cargo will include both versions of the crate and the global statics used for the metrics registry will be different.
 
