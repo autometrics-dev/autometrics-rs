@@ -83,15 +83,6 @@ impl GlobalPrometheus {
             )?;
         }
 
-        #[cfg(feature = "prometheus-client")]
-        {
-            output.push('\n');
-            prometheus_client::encoding::text::encode(
-                &mut output,
-                &crate::tracker::prometheus_client::REGISTRY,
-            )?;
-        }
-
         Ok(output)
     }
 }
