@@ -7,7 +7,7 @@ use opentelemetry_sdk::export::metrics::aggregation;
 use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::{default_registry, Error, TextEncoder};
 
-static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| initialize_metrics_exporter());
+static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(initialize_metrics_exporter);
 
 #[derive(Clone)]
 #[doc(hidden)]
@@ -89,13 +89,10 @@ pub fn encode_global_metrics() -> Result<String, Error> {
 }
 
 fn initialize_metrics_exporter() -> GlobalPrometheus {
-    let controller = controllers::basic(
-        processors::factory(
-            selectors::simple::histogram(HISTOGRAM_BUCKETS),
-            aggregation::cumulative_temporality_selector(),
-        )
-        .with_memory(true),
-    )
+    let controller = controllers::basic(processors::factory(
+        selectors::simple::histogram(HISTOGRAM_BUCKETS),
+        aggregation::cumulative_temporality_selector(),
+    ))
     .build();
 
     // Use the prometheus crate's default registry so it still works with custom
