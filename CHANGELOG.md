@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ResultLabels` derive macro allows to specify on an enum whether variants should
   always be "ok", or "error" for the success rate metrics of functions using them. (#61)
+- Support the official `prometheus-client` crate for producing metrics
 
 ### Changed
 

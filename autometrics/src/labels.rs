@@ -1,14 +1,20 @@
 use crate::{constants::*, objectives::*};
+#[cfg(feature = "prometheus-client")]
+use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue, LabelValueEncoder};
 use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
 pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
 /// These are the labels used for the `build_info` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct BuildInfoLabels {
-    pub(crate) version: &'static str,
-    pub(crate) commit: &'static str,
     pub(crate) branch: &'static str,
+    pub(crate) commit: &'static str,
+    pub(crate) version: &'static str,
 }
 
 impl BuildInfoLabels {
@@ -30,12 +36,47 @@ impl BuildInfoLabels {
 }
 
 /// These are the labels used for the `function.calls.count` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct CounterLabels {
     pub(crate) function: &'static str,
     pub(crate) module: &'static str,
     pub(crate) caller: &'static str,
-    pub(crate) result: Option<ResultAndReturnTypeLabels>,
-    pub(crate) objective: Option<(&'static str, ObjectivePercentile)>,
+    pub(crate) result: Option<ResultLabel>,
+    pub(crate) ok: Option<&'static str>,
+    pub(crate) error: Option<&'static str>,
+    pub(crate) objective_name: Option<&'static str>,
+    pub(crate) objective_percentile: Option<ObjectivePercentile>,
+}
+
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(Debug, Clone, PartialEq, Eq, Hash)
+)]
+pub(crate) enum ResultLabel {
+    Ok,
+    Error,
+}
+
+impl ResultLabel {
+    pub(crate) const fn as_str(&self) -> &'static str {
+        match self {
+            ResultLabel::Ok => OK_KEY,
+            ResultLabel::Error => ERROR_KEY,
+        }
+    }
+}
+
+#[cfg(feature = "prometheus-client")]
+impl EncodeLabelValue for ResultLabel {
+    fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
+        match self {
+            ResultLabel::Ok => EncodeLabelValue::encode(&OK_KEY, encoder),
+            ResultLabel::Error => EncodeLabelValue::encode(&ERROR_KEY, encoder),
+        }
+    }
 }
 
 impl CounterLabels {
@@ -46,21 +87,33 @@ impl CounterLabels {
         result: Option<ResultAndReturnTypeLabels>,
         objective: Option<Objective>,
     ) -> Self {
-        let objective = if let Some(objective) = objective {
+        let (objective_name, objective_percentile) = if let Some(objective) = objective {
             if let Some(success_rate) = objective.success_rate {
-                Some((objective.name, success_rate))
+                (Some(objective.name), Some(success_rate))
             } else {
-                None
+                (None, None)
             }
         } else {
-            None
+            (None, None)
+        };
+        let (result, ok, error) = if let Some((result, return_value_type)) = result {
+            match result {
+                OK_KEY => (Some(ResultLabel::Ok), return_value_type, None),
+                ERROR_KEY => (Some(ResultLabel::Error), None, return_value_type),
+                _ => (None, None, None),
+            }
+        } else {
+            (None, None, None)
         };
         Self {
             function,
             module,
             caller,
+            objective_name,
+            objective_percentile,
             result,
-            objective,
+            ok,
+            error,
         }
     }
 
@@ -70,15 +123,20 @@ impl CounterLabels {
             (MODULE_KEY, self.module),
             (CALLER_KEY, self.caller),
         ];
-        if let Some((result, return_value_type)) = self.result {
-            labels.push((RESULT_KEY, result));
-            if let Some(return_value_type) = return_value_type {
-                labels.push((result, return_value_type));
-            }
+        if let Some(result) = &self.result {
+            labels.push((RESULT_KEY, result.as_str()));
         }
-        if let Some((name, percentile)) = &self.objective {
-            labels.push((OBJECTIVE_NAME, name));
-            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
+        if let Some(ok) = self.ok {
+            labels.push((OK_KEY, ok));
+        }
+        if let Some(error) = self.error {
+            labels.push((ERROR_KEY, error));
+        }
+        if let Some(objective_name) = self.objective_name {
+            labels.push((OBJECTIVE_NAME, objective_name));
+        }
+        if let Some(objective_percentile) = &self.objective_percentile {
+            labels.push((OBJECTIVE_PERCENTILE, objective_percentile.as_str()));
         }
 
         labels
@@ -86,39 +144,54 @@ impl CounterLabels {
 }
 
 /// These are the labels used for the `function.calls.duration` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
-    /// The SLO name, objective percentile, and latency threshold
-    pub objective: Option<(&'static str, ObjectivePercentile, ObjectiveLatency)>,
+    pub objective_name: Option<&'static str>,
+    pub objective_percentile: Option<ObjectivePercentile>,
+    pub objective_latency_threshold: Option<ObjectiveLatency>,
 }
 
 impl HistogramLabels {
     pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
-        let objective = if let Some(objective) = objective {
-            if let Some((latency, percentile)) = objective.latency {
-                Some((objective.name, percentile, latency))
+        let (objective_name, objective_percentile, objective_latency_threshold) =
+            if let Some(objective) = objective {
+                if let Some((latency, percentile)) = objective.latency {
+                    (Some(objective.name), Some(percentile), Some(latency))
+                } else {
+                    (None, None, None)
+                }
             } else {
-                None
-            }
-        } else {
-            None
-        };
+                (None, None, None)
+            };
 
         Self {
             function,
             module,
-            objective,
+            objective_name,
+            objective_percentile,
+            objective_latency_threshold,
         }
     }
 
     pub fn to_vec(&self) -> Vec<Label> {
         let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
 
-        if let Some((name, percentile, latency)) = &self.objective {
-            labels.push((OBJECTIVE_NAME, name));
-            labels.push((OBJECTIVE_PERCENTILE, percentile.as_str()));
-            labels.push((OBJECTIVE_LATENCY_THRESHOLD, latency.as_str()));
+        if let Some(objective_name) = self.objective_name {
+            labels.push((OBJECTIVE_NAME, objective_name));
+        }
+        if let Some(objective_percentile) = &self.objective_percentile {
+            labels.push((OBJECTIVE_PERCENTILE, objective_percentile.as_str()));
+        }
+        if let Some(objective_latency_threshold) = &self.objective_latency_threshold {
+            labels.push((
+                OBJECTIVE_LATENCY_THRESHOLD,
+                objective_latency_threshold.as_str(),
+            ));
         }
 
         labels
@@ -126,6 +199,10 @@ impl HistogramLabels {
 }
 
 /// These are the labels used for the `function.calls.concurrent` metric.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
+)]
 pub struct GaugeLabels {
     pub function: &'static str,
     pub module: &'static str,
@@ -235,11 +312,12 @@ impl_trait_for_types!(GetStaticStr);
 /// The macro uses the autoref specialization trick through spez to get the labels for the type in a variety of circumstances.
 /// Specifically, if the value is a Result, it will add the ok or error label accordingly unless one or both of the types that
 /// the Result<T, E> is generic over implements the GetLabels trait. The label allows to override the inferred label, and the
-/// [`ResultLabels`](crate::result_labels) macro implements the GetLabels trait for the user using annotations.
+/// [`ResultLabels`](crate::ResultLabels) macro implements the GetLabels trait for the user using annotations.
 ///
 /// The macro is meant to be called with a reference as argument: `get_result_labels_for_value(&return_value)`
 ///
-/// Ref: https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md
+/// See: <https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md>
+#[doc(hidden)]
 #[macro_export]
 macro_rules! get_result_labels_for_value {
     ($e:expr) => {{

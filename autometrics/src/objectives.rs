@@ -24,6 +24,9 @@
 //! }
 //! ```
 
+#[cfg(feature = "prometheus-client")]
+use prometheus_client::encoding::{EncodeLabelValue, LabelValueEncoder};
+
 /// A Service-Level Objective (SLO) for a function or group of functions.
 ///
 /// The objective should be given a descriptive name and can represent
@@ -119,6 +122,10 @@ impl Objective {
 }
 
 /// The percentage of requests that must meet the given criteria (success rate or latency).
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(Clone, Debug, PartialEq, Eq, Hash)
+)]
 #[non_exhaustive]
 pub enum ObjectivePercentile {
     /// 90%
@@ -152,7 +159,18 @@ impl ObjectivePercentile {
     }
 }
 
+#[cfg(feature = "prometheus-client")]
+impl EncodeLabelValue for ObjectivePercentile {
+    fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
+        self.as_str().encode(encoder)
+    }
+}
+
 /// The latency threshold, in milliseoncds, for a given objective.
+#[cfg_attr(
+    feature = "prometheus-client",
+    derive(Clone, Debug, PartialEq, Eq, Hash)
+)]
 #[non_exhaustive]
 pub enum ObjectiveLatency {
     /// 5 milliseconds
@@ -232,5 +250,12 @@ impl ObjectiveLatency {
             #[cfg(feature = "custom-objective-latency")]
             ObjectiveLatency::Custom(custom) => custom,
         }
+    }
+}
+
+#[cfg(feature = "prometheus-client")]
+impl EncodeLabelValue for ObjectiveLatency {
+    fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
+        self.as_str().encode(encoder)
     }
 }

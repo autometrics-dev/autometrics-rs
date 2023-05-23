@@ -18,18 +18,21 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Lint
-      - name: Run Clippy
-        # GitHub hosted runners using the latest stable version of Rust have Clippy pre-installed.
-        run: cargo clippy --all-targets --features=prometheus-exporter,opentelemetry,metrics,prometheus
+      # Note: GitHub hosted runners using the latest stable version of Rust have Clippy pre-installed.
+      - run: cargo clippy --features=metrics,prometheus-exporter
+      - run: cargo clippy --features=prometheus
+      - run: cargo clippy --features=prometheus-client
+      - run: cargo clippy --features=opentelemetry
 
       # Build the packages
       - run: cargo build
-      - run: cargo build --features=metrics
-      - run: cargo build --features=prometheus
       - run: cargo build --features=custom-objective-percentile,custom-objective-latency
 
-      # Run the tests
+      # Run the tests with each of the different metrics libraries
       - run: cargo test --features=prometheus-exporter
+      - run: cargo test --no-default-features --features=prometheus-exporter,metrics --tests
+      - run: cargo test --no-default-features --features=prometheus-exporter,prometheus --tests
+      - run: cargo test --no-default-features --features=prometheus-exporter,prometheus-client --tests
 
       # Compile the examples
       - run: cargo build --package example-axum

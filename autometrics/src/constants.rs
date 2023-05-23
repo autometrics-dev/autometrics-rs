@@ -4,6 +4,11 @@ pub const HISTOGRAM_NAME: &str = "function.calls.duration";
 pub const GAUGE_NAME: &str = "function.calls.concurrent";
 pub const BUILD_INFO_NAME: &str = "build_info";
 
+// Prometheus-flavored metric names
+pub const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
+pub const HISTOGRAM_NAME_PROMETHEUS: &str = "function_calls_duration";
+pub const GAUGE_NAME_PROMETHEUS: &str = "function_calls_concurrent";
+
 // Descriptions
 pub const COUNTER_DESCRIPTION: &str = "Autometrics counter for tracking function calls";
 pub const HISTOGRAM_DESCRIPTION: &str = "Autometrics histogram for tracking function call duration";

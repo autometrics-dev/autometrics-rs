@@ -1,5 +1,4 @@
 use autometrics::{autometrics, objectives::*};
-use regex::Regex;
 
 #[cfg(feature = "prometheus-exporter")]
 #[test]
@@ -17,11 +16,14 @@ fn success_rate() {
     success_rate_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let call_count_metric: Regex = Regex::new(
-        r#"function_calls_count\{\S*function="success_rate_fn"\S*objective_name="test",objective_percentile="99"\S*\} 2"#,
-    )
-    .unwrap();
-    assert!(call_count_metric.is_match(&metrics));
+    assert!(metrics
+        .lines()
+        .any(|line| (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="success_rate_fn""#)
+            && line.contains(r#"objective_name="test""#)
+            && line.contains(r#"objective_percentile="99""#)
+            && line.ends_with("} 2")));
 }
 
 #[cfg(feature = "prometheus-exporter")]
@@ -41,11 +43,14 @@ fn latency() {
     latency_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let duration_metric: Regex = Regex::new(
-        r#"function_calls_duration_bucket\{\S*function="latency_fn"\S*objective_latency_threshold="0.1",objective_name="test",objective_percentile="99.9"\S*\} 2"#,
-    )
-    .unwrap();
-    assert!(duration_metric.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        line.starts_with("function_calls_duration_bucket{")
+            && line.contains(r#"function="latency_fn""#)
+            && line.contains(r#"objective_latency_threshold="0.1""#)
+            && line.contains(r#"objective_name="test""#)
+            && line.contains(r#"objective_percentile="99.9""#)
+            && line.ends_with("} 2")
+    }));
 }
 
 #[cfg(feature = "prometheus-exporter")]
@@ -66,14 +71,20 @@ fn combined_objective() {
     combined_objective_fn();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    let call_count_metric: Regex = Regex::new(
-        r#"function_calls_count\{\S*function="combined_objective_fn"\S*objective_name="test",objective_percentile="99"\S*\} 2"#,
-    )
-    .unwrap();
-    let duration_metric: Regex = Regex::new(
-        r#"function_calls_duration_bucket\{\S*function="combined_objective_fn"\S*objective_latency_threshold="0.1",objective_name="test",objective_percentile="99.9"\S*\} 2"#,
-    )
-    .unwrap();
-    assert!(call_count_metric.is_match(&metrics));
-    assert!(duration_metric.is_match(&metrics));
+    assert!(metrics.lines().any(|line| {
+        (line.starts_with("function_calls_count{")
+            || line.starts_with("function_calls_count_total{"))
+            && line.contains(r#"function="combined_objective_fn""#)
+            && line.contains(r#"objective_name="test""#)
+            && line.contains(r#"objective_percentile="99""#)
+            && line.ends_with("} 2")
+    }));
+    assert!(metrics.lines().any(|line| {
+        line.starts_with("function_calls_duration_bucket{")
+            && line.contains(r#"function="combined_objective_fn""#)
+            && line.contains(r#"objective_latency_threshold="0.1""#)
+            && line.contains(r#"objective_name="test""#)
+            && line.contains(r#"objective_percentile="99.9""#)
+            && line.ends_with("} 2")
+    }));
 }
