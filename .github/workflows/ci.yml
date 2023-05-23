@@ -23,9 +23,9 @@ jobs:
       - run: cargo test --features=prometheus-exporter,prometheus-client --tests
       # The tests using opentelemetry are currently failing because of this issue:
       # https://github.com/open-telemetry/opentelemetry-rust/issues/1070
-      # We should re-enable them once 0.20 or 0.19.1 are released
-      # - run: cargo test --features=prometheus-exporter,opentelemetry
-      - run: cargo build --features=opentelemetry
+      # We should remove the continue-on-error once that is fixed
+      - run: cargo test --features=prometheus-exporter,opentelemetry
+        continue-on-error: true
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics,custom-objective-percentile,custom-objective-latency
