@@ -12,15 +12,18 @@ pub const BUILD_INFO_DESCRIPTION: &str =
     "Autometrics info metric for tracking software version and build details";
 
 // Labels
-pub const FUNCTION_KEY: &'static str = "function";
-pub const MODULE_KEY: &'static str = "module";
-pub const CALLER_KEY: &'static str = "caller";
-pub const RESULT_KEY: &'static str = "result";
-pub const OK_KEY: &'static str = "ok";
-pub const ERROR_KEY: &'static str = "error";
-pub const OBJECTIVE_NAME: &'static str = "objective.name";
-pub const OBJECTIVE_PERCENTILE: &'static str = "objective.percentile";
-pub const OBJECTIVE_LATENCY_THRESHOLD: &'static str = "objective.latency_threshold";
-pub const VERSION_KEY: &'static str = "version";
-pub const COMMIT_KEY: &'static str = "commit";
-pub const BRANCH_KEY: &'static str = "branch";
+pub const FUNCTION_KEY: &str = "function";
+pub const MODULE_KEY: &str = "module";
+pub const CALLER_KEY: &str = "caller";
+pub const RESULT_KEY: &str = "result";
+pub const OK_KEY: &str = "ok";
+pub const ERROR_KEY: &str = "error";
+pub const OBJECTIVE_NAME: &str = "objective.name";
+pub const OBJECTIVE_NAME_PROMETHEUS: &str = "objective_name";
+pub const OBJECTIVE_PERCENTILE: &str = "objective.percentile";
+pub const OBJECTIVE_PERCENTILE_PROMETHEUS: &str = "objective_percentile";
+pub const OBJECTIVE_LATENCY_THRESHOLD: &str = "objective.latency.threshold";
+pub const OBJECTIVE_LATENCY_THRESHOLD_PROMETHEUS: &str = "objective_latency_threshold";
+pub const VERSION_KEY: &str = "version";
+pub const COMMIT_KEY: &str = "commit";
+pub const BRANCH_KEY: &str = "branch";
