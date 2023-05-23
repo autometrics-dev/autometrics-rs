@@ -32,13 +32,10 @@ static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
 
     #[cfg(feature = "opentelemetry")]
     opentelemetry_exporter: exporter(
-        controllers::basic(
-            processors::factory(
-                selectors::simple::histogram(HISTOGRAM_BUCKETS),
-                aggregation::cumulative_temporality_selector(),
-            )
-            .with_memory(true),
-        )
+        controllers::basic(processors::factory(
+            selectors::simple::histogram(HISTOGRAM_BUCKETS),
+            aggregation::cumulative_temporality_selector(),
+        ))
         .build(),
     )
     .init(),
