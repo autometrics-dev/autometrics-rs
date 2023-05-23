@@ -11,6 +11,14 @@ use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::TextEncoder;
 use thiserror::Error;
 
+#[cfg(not(any(
+    feature = "metrics",
+    feature = "opentelemetry",
+    feature = "prometheus",
+    feature = "prometheus-client"
+)))]
+compile_error!("At least one of the metrics, opentelemetry, prometheus, or prometheus-client features must be enabled in order to use the prometheus-exporter");
+
 #[derive(Debug, Error)]
 pub enum EncodingError {
     #[cfg(any(feature = "prometheus", feature = "opentelemetry"))]

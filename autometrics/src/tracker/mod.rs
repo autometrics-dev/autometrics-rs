@@ -18,13 +18,22 @@ pub use self::prometheus::PrometheusTracker;
 #[cfg(feature = "prometheus-client")]
 pub use self::prometheus_client::PrometheusClientTracker;
 
-#[cfg(not(any(
-    feature = "metrics",
-    feature = "opentelemetry",
-    feature = "prometheus",
-    feature = "prometheus-client"
-)))]
-compile_error!("At least one of the following features must be enabled: metrics, opentelemetry, prometheus, prometheus-client");
+#[cfg(any(
+    all(
+        feature = "metrics",
+        any(
+            feature = "opentelemetry",
+            feature = "prometheus",
+            feature = "prometheus-client"
+        )
+    ),
+    all(
+        feature = "opentelemetry",
+        any(feature = "prometheus", feature = "prometheus-client")
+    ),
+    all(feature = "prometheus", feature = "prometheus-client")
+))]
+compile_error!("Only one of the metrics, opentelemetry, prometheus, or prometheus-client features can be enabled at a time");
 
 pub trait TrackMetrics {
     fn set_build_info(build_info_labels: &BuildInfoLabels);
@@ -44,6 +53,7 @@ pub struct AutometricsTracker {
 }
 
 impl TrackMetrics for AutometricsTracker {
+    #[allow(unused_variables)]
     fn set_build_info(build_info_labels: &BuildInfoLabels) {
         #[cfg(feature = "metrics")]
         MetricsTracker::set_build_info(build_info_labels);
@@ -55,6 +65,7 @@ impl TrackMetrics for AutometricsTracker {
         PrometheusClientTracker::set_build_info(build_info_labels);
     }
 
+    #[allow(unused_variables)]
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self {
         Self {
             #[cfg(feature = "metrics")]
@@ -68,6 +79,7 @@ impl TrackMetrics for AutometricsTracker {
         }
     }
 
+    #[allow(unused_variables)]
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         #[cfg(feature = "metrics")]
         self.metrics_tracker
