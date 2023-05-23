@@ -14,7 +14,6 @@ fn single_function() {
     hello_world();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -51,7 +50,6 @@ fn impl_block() {
     Foo.test_method();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -95,7 +93,6 @@ fn result() {
     result_fn(false).ok();
 
     let metrics = autometrics::encode_global_metrics().unwrap();
-    println!("{}", metrics);
     assert!(metrics
         .lines()
         .any(|line| (line.starts_with("function_calls_count{")
