@@ -92,18 +92,17 @@ impl TrackMetrics for PrometheusClientTracker {
         #[cfg(feature = "exemplars-tracing")]
         let exemplar = get_exemplar();
 
-        let counter = METRICS.counter.get_or_create(&counter_labels);
-        #[cfg(feature = "exemplars-tracing")]
-        counter.inc_by(1, exemplar.clone());
-        #[cfg(not(feature = "exemplars-tracing"))]
-        counter.inc();
+        METRICS.counter.get_or_create(&counter_labels).inc_by(
+            1,
+            #[cfg(feature = "exemplars-tracing")]
+            exemplar.clone(),
+        );
 
-        let histogram = METRICS.histogram.get_or_create(&histogram_labels);
-        let duration = self.start_time.elapsed().as_secs_f64();
-        #[cfg(feature = "exemplars-tracing")]
-        histogram.observe(duration, exemplar);
-        #[cfg(not(feature = "exemplars-tracing"))]
-        histogram.observe(duration);
+        METRICS.histogram.get_or_create(&histogram_labels).observe(
+            self.start_time.elapsed().as_secs_f64(),
+            #[cfg(feature = "exemplars-tracing")]
+            exemplar,
+        );
 
         if let Some(gauge_labels) = self.gauge_labels {
             METRICS.gauge.get_or_create(&gauge_labels).dec();
