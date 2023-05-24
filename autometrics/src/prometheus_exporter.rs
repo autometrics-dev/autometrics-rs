@@ -1,48 +1,94 @@
-use crate::HISTOGRAM_BUCKETS;
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
+#[cfg(feature = "opentelemetry")]
 use opentelemetry_prometheus::{exporter, PrometheusExporter};
+#[cfg(feature = "opentelemetry")]
 use opentelemetry_sdk::export::metrics::aggregation;
+#[cfg(feature = "opentelemetry")]
 use opentelemetry_sdk::metrics::{controllers, processors, selectors};
-use prometheus::{default_registry, Error, TextEncoder};
+#[cfg(any(feature = "opentelemetry", feature = "prometheus"))]
+use prometheus::TextEncoder;
+use thiserror::Error;
 
-static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(initialize_metrics_exporter);
+#[cfg(not(any(
+    feature = "metrics",
+    feature = "opentelemetry",
+    feature = "prometheus",
+    feature = "prometheus-client"
+)))]
+compile_error!("At least one of the metrics, opentelemetry, prometheus, or prometheus-client features must be enabled in order to use the prometheus-exporter");
+
+#[derive(Debug, Error)]
+pub enum EncodingError {
+    #[cfg(any(feature = "prometheus", feature = "opentelemetry"))]
+    #[error(transparent)]
+    Prometheus(#[from] prometheus::Error),
+    #[cfg(feature = "prometheus-client")]
+    #[error(transparent)]
+    Format(#[from] std::fmt::Error),
+}
+
+static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
+    #[cfg(feature = "metrics")]
+    metrics_exporter: PrometheusBuilder::new()
+        .set_buckets(&crate::HISTOGRAM_BUCKETS)
+        .expect("Failed to set histogram buckets")
+        .install_recorder()
+        .expect("Failed to install recorder"),
+
+    #[cfg(feature = "opentelemetry")]
+    opentelemetry_exporter: exporter(
+        controllers::basic(processors::factory(
+            selectors::simple::histogram(crate::HISTOGRAM_BUCKETS),
+            aggregation::cumulative_temporality_selector(),
+        ))
+        .build(),
+    )
+    .init(),
+});
 
 #[derive(Clone)]
 #[doc(hidden)]
 pub struct GlobalPrometheus {
-    exporter: PrometheusExporter,
+    #[cfg(feature = "opentelemetry")]
+    opentelemetry_exporter: PrometheusExporter,
     #[cfg(feature = "metrics")]
-    handle: PrometheusHandle,
+    metrics_exporter: PrometheusHandle,
 }
 
 impl GlobalPrometheus {
-    fn encode_metrics(&self) -> Result<String, Error> {
-        let metric_families = self.exporter.registry().gather();
-        let encoder = TextEncoder::new();
-        #[allow(unused_mut)]
-        let mut output = encoder.encode_to_string(&metric_families)?;
+    fn encode_metrics(&self) -> Result<String, EncodingError> {
+        let mut output = String::new();
 
         #[cfg(feature = "metrics")]
         {
+            output.push_str(&self.metrics_exporter.render());
             output.push('\n');
-            output.push_str(&self.handle.render());
+        }
+
+        #[cfg(feature = "opentelemetry")]
+        {
+            let metric_families = self.opentelemetry_exporter.registry().gather();
+            let encoder = TextEncoder::new();
+            encoder.encode_utf8(&metric_families, &mut output)?;
+            output.push('\n');
+        }
+
+        #[cfg(feature = "prometheus")]
+        {
+            let metric_families = prometheus::default_registry().gather();
+            let encoder = TextEncoder::new();
+            encoder.encode_utf8(&metric_families, &mut output)?;
+            output.push('\n');
         }
 
         #[cfg(feature = "prometheus-client")]
         {
-            output.push('\n');
             prometheus_client::encoding::text::encode(
                 &mut output,
                 &crate::tracker::prometheus_client::REGISTRY,
-            )
-            .map_err(|err| {
-                Error::Msg(format!(
-                    "Failed to encode prometheus-client metrics: {}",
-                    err
-                ))
-            })?;
+            )?;
         }
 
         Ok(output)
@@ -84,30 +130,6 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
 ///   }
 /// }
 /// ```
-pub fn encode_global_metrics() -> Result<String, Error> {
+pub fn encode_global_metrics() -> Result<String, EncodingError> {
     GLOBAL_EXPORTER.encode_metrics()
-}
-
-fn initialize_metrics_exporter() -> GlobalPrometheus {
-    let controller = controllers::basic(processors::factory(
-        selectors::simple::histogram(HISTOGRAM_BUCKETS),
-        aggregation::cumulative_temporality_selector(),
-    ))
-    .build();
-
-    // Use the prometheus crate's default registry so it still works with custom
-    // metrics defined through the prometheus crate
-    let registry = default_registry().clone();
-    let prometheus_exporter = exporter(controller).with_registry(registry).init();
-
-    GlobalPrometheus {
-        exporter: prometheus_exporter,
-
-        #[cfg(feature = "metrics")]
-        handle: PrometheusBuilder::new()
-            .set_buckets(&HISTOGRAM_BUCKETS)
-            .expect("Failed to set histogram buckets")
-            .install_recorder()
-            .expect("Failed to install recorder"),
-    }
 }

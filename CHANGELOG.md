@@ -17,9 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Users must configure the metrics library they want to use autometrics with
+- Metrics library feature flags are now mutually exclusive (previously, `autometrics` would only
+  produce metrics using a single metrics library if multiple feature flags were enabled, using
+  a prioritization order defined internally)
 - `GetLabels` trait (publicly exported but meant for internal use) changed the signature
   of its function to accomodate the new `ResultLabels` macro. This change is not significant
   if you never imported `autometrics::__private` manually (#61)
+- When using the `opentelemetry` together with the `prometheus-exporter`, it will no longer
+  use the default registry provided by the `prometheus` crate. It will instead use a new registry
+- The `prometheus-exporter`'s `encode_global_metrics` feature now returns an error enum
+  defined by `autometrics` as opposed to directly returning the `prometheus::Error` type
 - Updated `opentelemetry` dependencies to v0.19. This means that users using autometrics
   with `opentelemetry` but not using the `prometheus-exporter` must update the `opentelemetry`
   to use v0.19.
@@ -29,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `opentelemetry` is no longer used by default
 - `GetLabelsForResult` trait (publicly exported but meant for internal use) was removed
   to accomodate the new `ResultLabels` macro. This change is not significant
   if you never imported `autometrics::__private` manually (#61)

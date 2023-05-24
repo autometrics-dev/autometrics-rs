@@ -24,15 +24,18 @@ jobs:
       - run: cargo clippy --features=prometheus-client
       - run: cargo clippy --features=opentelemetry
 
-      # Build the packages
-      - run: cargo build
-      - run: cargo build --features=custom-objective-percentile,custom-objective-latency
-
       # Run the tests with each of the different metrics libraries
-      - run: cargo test --features=prometheus-exporter
-      - run: cargo test --no-default-features --features=prometheus-exporter,metrics --tests
-      - run: cargo test --no-default-features --features=prometheus-exporter,prometheus --tests
-      - run: cargo test --no-default-features --features=prometheus-exporter,prometheus-client --tests
+      - run: cargo test --features=prometheus-exporter,metrics
+      - run: cargo test --features=prometheus-exporter,prometheus --tests
+      - run: cargo test --features=prometheus-exporter,prometheus-client --tests
+      # The tests using opentelemetry are currently failing because of this issue:
+      # https://github.com/open-telemetry/opentelemetry-rust/issues/1070
+      # We should remove the continue-on-error once that is fixed
+      - run: cargo test --features=prometheus-exporter,opentelemetry
+        continue-on-error: true
+
+      # Build the crate using the other optional features
+      - run: cargo build --features=metrics,custom-objective-percentile,custom-objective-latency
 
       # Compile the examples
       - run: cargo build --package example-axum
