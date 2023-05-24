@@ -6,6 +6,8 @@
 #![doc = include_str!("../README.md")]
 
 mod constants;
+/// Functionality specific to the libraries used to collect metrics
+pub mod integrations;
 mod labels;
 pub mod objectives;
 #[cfg(feature = "prometheus-exporter")]
@@ -185,14 +187,6 @@ pub use autometrics_macros::ResultLabels;
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
 pub use self::prometheus_exporter::*;
-
-/// Functionality specific to the libraries used to collect metrics
-pub mod integrations {
-    #[cfg(feature = "prometheus-client")]
-    pub mod prometheus_client {
-        pub use crate::tracker::prometheus_client::REGISTRY;
-    }
-}
 
 /// We use the histogram buckets recommended by the OpenTelemetry specification
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation

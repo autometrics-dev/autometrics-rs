@@ -1,25 +1,39 @@
 use super::TrackMetrics;
+#[cfg(feature = "exemplars-tracing")]
+use crate::integrations::tracing::{get_exemplar, TraceLabel};
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;
-use prometheus_client::metrics::{
-    counter::Counter, family::Family, gauge::Gauge, histogram::Histogram,
-};
+#[cfg(feature = "exemplars-tracing")]
+use prometheus_client::metrics::exemplar::{CounterWithExemplar, HistogramWithExemplars};
+#[cfg(not(feature = "exemplars-tracing"))]
+use prometheus_client::metrics::{counter::Counter, histogram::Histogram};
+use prometheus_client::metrics::{family::Family, gauge::Gauge};
 use prometheus_client::registry::Registry;
 use std::time::Instant;
+
+#[cfg(feature = "exemplars-tracing")]
+type CounterType = CounterWithExemplar<TraceLabel>;
+#[cfg(not(feature = "exemplars-tracing"))]
+type CounterType = Counter;
+
+#[cfg(feature = "exemplars-tracing")]
+type HistogramType = HistogramWithExemplars<TraceLabel>;
+#[cfg(not(feature = "exemplars-tracing"))]
+type HistogramType = Histogram;
 
 static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
     let mut registry = <Registry>::default();
 
-    let counter = Family::<CounterLabels, Counter>::default();
+    let counter = Family::<CounterLabels, CounterType>::default();
     registry.register(
         COUNTER_NAME_PROMETHEUS,
         COUNTER_DESCRIPTION,
         counter.clone(),
     );
 
-    let histogram = Family::<HistogramLabels, Histogram>::new_with_constructor(|| {
-        Histogram::new(HISTOGRAM_BUCKETS.into_iter())
+    let histogram = Family::<HistogramLabels, HistogramType>::new_with_constructor(|| {
+        HistogramType::new(HISTOGRAM_BUCKETS.into_iter())
     });
     registry.register(
         HISTOGRAM_NAME_PROMETHEUS,
@@ -45,10 +59,11 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
 });
 /// The [`Registry`] used to collect metrics when the `prometheus-client` feature is enabled
 pub static REGISTRY: Lazy<&Registry> = Lazy::new(|| &REGISTRY_AND_METRICS.0);
+static METRICS: Lazy<&Metrics> = Lazy::new(|| &REGISTRY_AND_METRICS.1);
 
 struct Metrics {
-    counter: Family<CounterLabels, Counter>,
-    histogram: Family<HistogramLabels, Histogram>,
+    counter: Family<CounterLabels, CounterType>,
+    histogram: Family<HistogramLabels, HistogramType>,
     gauge: Family<GaugeLabels, Gauge>,
     build_info: Family<BuildInfoLabels, Gauge>,
 }
@@ -60,20 +75,12 @@ pub struct PrometheusClientTracker {
 
 impl TrackMetrics for PrometheusClientTracker {
     fn set_build_info(build_info_labels: &BuildInfoLabels) {
-        REGISTRY_AND_METRICS
-            .1
-            .build_info
-            .get_or_create(&build_info_labels)
-            .set(1);
+        METRICS.build_info.get_or_create(&build_info_labels).set(1);
     }
 
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self {
         if let Some(gauge_labels) = gauge_labels {
-            REGISTRY_AND_METRICS
-                .1
-                .gauge
-                .get_or_create(&gauge_labels)
-                .inc();
+            METRICS.gauge.get_or_create(&gauge_labels).inc();
         }
         Self {
             gauge_labels: gauge_labels.cloned(),
@@ -82,22 +89,24 @@ impl TrackMetrics for PrometheusClientTracker {
     }
 
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
-        REGISTRY_AND_METRICS
-            .1
-            .counter
-            .get_or_create(&counter_labels)
-            .inc();
-        REGISTRY_AND_METRICS
-            .1
-            .histogram
-            .get_or_create(&histogram_labels)
-            .observe(self.start_time.elapsed().as_secs_f64());
+        #[cfg(feature = "exemplars-tracing")]
+        let exemplar = get_exemplar();
+
+        let counter = METRICS.counter.get_or_create(&counter_labels);
+        #[cfg(feature = "exemplars-tracing")]
+        counter.inc_by(1, exemplar.clone());
+        #[cfg(not(feature = "exemplars-tracing"))]
+        counter.inc();
+
+        let histogram = METRICS.histogram.get_or_create(&histogram_labels);
+        let duration = self.start_time.elapsed().as_secs_f64();
+        #[cfg(feature = "exemplars-tracing")]
+        histogram.observe(duration, exemplar);
+        #[cfg(not(feature = "exemplars-tracing"))]
+        histogram.observe(duration);
+
         if let Some(gauge_labels) = self.gauge_labels {
-            REGISTRY_AND_METRICS
-                .1
-                .gauge
-                .get_or_create(&gauge_labels)
-                .dec();
+            METRICS.gauge.get_or_create(&gauge_labels).dec();
         }
     }
 }

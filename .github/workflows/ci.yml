@@ -41,3 +41,4 @@ jobs:
       - run: cargo build --package example-axum
       - run: cargo build --package example-custom-metrics
       - run: cargo build --package example-full-api
+      - run: cargo build --package example-tracing

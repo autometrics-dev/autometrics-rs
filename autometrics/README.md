@@ -110,6 +110,7 @@ fn main() {
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
+- `exemplars-tracing` - extract the `trace_id` field from [`tracing::Span`](https://docs.rs/tracing/latest/tracing/struct.Span.html)s and attach it as an [exemplar](https://grafana.com/docs/grafana/latest/fundamentals/exemplars/) for the metrics produced by Autometrics. This is currently only supported with the `prometheus-client` feature, because only that crate has support for exemplars. Note that Prometheus must be specifically [configured](https://prometheus.io/docs/prometheus/latest/feature_flags/#exemplars-storage) to use the experimental exemplars feature.
 - `custom-objective-latency` - by default, Autometrics only supports a fixed set of latency thresholds for objectives. Enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
 - `custom-objective-percentile` by default, Autometrics only supports a fixed set of objective percentiles. Enable this to use a custom percentile. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
 
