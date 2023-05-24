@@ -6,12 +6,14 @@ use uuid::Uuid;
 // Autometrics looks for a field called `trace_id` and attaches
 // that as an exemplar for the metrics it generates.
 #[autometrics]
-#[instrument(fields(trace_id = %Uuid::new_v4(), foo = "bar"))]
+#[instrument(fields(trace_id = %Uuid::new_v4()))]
 fn outer_function() {
     trace!("Outer function called");
     inner_function("hello")
 }
 
+// This function will also have the `trace_id` attached as an exemplar
+// because it is called within the same span as `outer_function`.
 #[autometrics]
 #[instrument]
 fn inner_function(param: &str) {
