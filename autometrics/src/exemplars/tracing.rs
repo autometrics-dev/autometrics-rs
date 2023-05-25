@@ -2,10 +2,6 @@
 //!
 //! This module enables autometrics to use fields such as `trace_id` from the current [`Span`] as exemplars.
 //!
-//! Exemplars are a newer Prometheus / OpenMetrics / OpenTelemetry feature that allows you to associate
-//! specific traces or samples with a given metric. This enables you to investigate what caused metrics
-//! to change by looking at individual examples that contributed to the metrics.
-//!
 //! # Example
 //!
 //! ```rust
