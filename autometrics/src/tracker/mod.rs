@@ -18,20 +18,23 @@ pub use self::prometheus::PrometheusTracker;
 #[cfg(feature = "prometheus-client")]
 pub use self::prometheus_client::PrometheusClientTracker;
 
-#[cfg(any(
-    all(
-        feature = "metrics",
-        any(
+#[cfg(all(
+    not(doc),
+    any(
+        all(
+            feature = "metrics",
+            any(
+                feature = "opentelemetry",
+                feature = "prometheus",
+                feature = "prometheus-client"
+            )
+        ),
+        all(
             feature = "opentelemetry",
-            feature = "prometheus",
-            feature = "prometheus-client"
-        )
-    ),
-    all(
-        feature = "opentelemetry",
-        any(feature = "prometheus", feature = "prometheus-client")
-    ),
-    all(feature = "prometheus", feature = "prometheus-client")
+            any(feature = "prometheus", feature = "prometheus-client")
+        ),
+        all(feature = "prometheus", feature = "prometheus-client")
+    )
 ))]
 compile_error!("Only one of the metrics, opentelemetry, prometheus, or prometheus-client features can be enabled at a time");
 

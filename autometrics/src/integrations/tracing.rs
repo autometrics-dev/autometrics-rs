@@ -1,19 +1,22 @@
-//! Tracing integration for autometrics
+//! Extract fields from [`tracing::Span`]s as exemplars.
 //!
-//! This module enables autometrics to use the `trace_id` field from the current span as an exemplar.
+//! This module enables autometrics to use fields such as `trace_id` from the current [`Span`] as exemplars.
+//!
 //! Exemplars are a newer Prometheus / OpenMetrics / OpenTelemetry feature that allows you to associate
-//! specific traces with a given metric. This enables you to dig into the specifics that produced
-//! a certain metric by looking at a detailed example.
+//! specific traces or samples with a given metric. This enables you to investigate what caused metrics
+//! to change by looking at individual examples that contributed to the metrics.
 //!
 //! # Example
+//!
 //! ```rust
-//! use autometrics::{autometrics, integrations::tracing::AutometricsExemplarExtractor};
+//! use autometrics::autometrics;
+//! use autometrics::integrations::tracing::AutometricsExemplarExtractor:
 //! use tracing::{instrument, trace};
 //! use tracing_subscriber::prelude::*;
 //! use uuid::Uuid;
 //!
 //! #[autometrics]
-//! #[instrument(fields(trace_id = %Uuid::new_v4())]
+//! #[instrument(fields(trace_id = %Uuid::new_v4()))]
 //! fn my_function() {
 //!     trace!("Hello world!");
 //! }
@@ -25,6 +28,8 @@
 //!         .init();
 //! }
 //! ```
+//!
+//! [`Span`]: tracing::Span
 
 use std::collections::HashMap;
 use tracing::field::{Field, Visit};
@@ -49,7 +54,7 @@ pub(crate) fn get_exemplar() -> Option<TraceLabels> {
     .flatten()
 }
 
-/// A tracing [`Layer`] that enables autometrics to use fields from the current span as exemplars for
+/// A [`tracing_subscriber::Layer`] that enables autometrics to use fields from the current span as exemplars for
 /// the metrics it produces.
 ///
 /// By default, it will look for a field called `trace_id` in the current span scope and use that
@@ -75,12 +80,16 @@ pub struct AutometricsExemplarExtractor {
 impl AutometricsExemplarExtractor {
     /// Create a new [`AutometricsExemplarExtractor`] that will extract the given field from the current [`Span`] scope
     /// to use as the labels for the exemplars.
+    ///
+    /// [`Span`]: tracing::Span
     pub const fn from_field(field: &'static str) -> Self {
         Self { fields: &[field] }
     }
 
     /// Create a new [`AutometricsExemplarExtractor`] that will extract the given fields from the current [`Span`] scope
     /// to use as the labels for the exemplars.
+    ///
+    /// [`Span`]: tracing::Span
     pub const fn from_fields(fields: &'static [&'static str]) -> Self {
         Self { fields }
     }

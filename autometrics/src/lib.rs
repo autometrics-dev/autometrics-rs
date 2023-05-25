@@ -6,7 +6,6 @@
 #![doc = include_str!("../README.md")]
 
 mod constants;
-/// Functionality specific to the libraries used to collect metrics
 pub mod integrations;
 mod labels;
 pub mod objectives;
