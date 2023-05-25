@@ -1,4 +1,6 @@
-use autometrics::{autometrics, encode_global_metrics, integrations::tracing::AutometricsLayer};
+use autometrics::{
+    autometrics, encode_global_metrics, integrations::tracing::AutometricsExemplarExtractor,
+};
 use tracing::{instrument, trace};
 use tracing_subscriber::{prelude::*, EnvFilter};
 use uuid::Uuid;
@@ -24,7 +26,7 @@ fn main() {
     tracing_subscriber::fmt::fmt()
         .finish()
         .with(EnvFilter::from_default_env())
-        .with(AutometricsLayer::default())
+        .with(AutometricsExemplarExtractor::from_field("trace_id"))
         .init();
 
     for _i in 0..10 {

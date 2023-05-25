@@ -1,6 +1,6 @@
 use super::TrackMetrics;
 #[cfg(feature = "exemplars-tracing")]
-use crate::integrations::tracing::{get_exemplar, TraceLabel};
+use crate::integrations::tracing::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;
@@ -13,12 +13,12 @@ use prometheus_client::registry::Registry;
 use std::time::Instant;
 
 #[cfg(feature = "exemplars-tracing")]
-type CounterType = CounterWithExemplar<TraceLabel>;
+type CounterType = CounterWithExemplar<Vec<(&'static str, String)>>;
 #[cfg(not(feature = "exemplars-tracing"))]
 type CounterType = Counter;
 
 #[cfg(feature = "exemplars-tracing")]
-type HistogramType = HistogramWithExemplars<TraceLabel>;
+type HistogramType = HistogramWithExemplars<Vec<(&'static str, String)>>;
 #[cfg(not(feature = "exemplars-tracing"))]
 type HistogramType = Histogram;
 
@@ -90,7 +90,7 @@ impl TrackMetrics for PrometheusClientTracker {
 
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         #[cfg(feature = "exemplars-tracing")]
-        let exemplar = get_exemplar();
+        let exemplar = get_exemplar().map(|exemplar| exemplar.into_iter().collect::<Vec<_>>());
 
         METRICS.counter.get_or_create(&counter_labels).inc_by(
             1,
