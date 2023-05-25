@@ -26,7 +26,7 @@ fn main() {
     tracing_subscriber::fmt::fmt()
         .finish()
         .with(EnvFilter::from_default_env())
-        .with(AutometricsExemplarExtractor::from_field("trace_id"))
+        .with(AutometricsExemplarExtractor::from_fields(&["trace_id"]))
         .init();
 
     outer_function();

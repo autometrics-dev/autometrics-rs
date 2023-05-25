@@ -24,7 +24,7 @@
 //! fn main() {
 //!     tracing_subscriber::fmt::fmt()
 //!         .finish()
-//!         .with(AutometricsExemplarExtractor::from_field("trace_id"))
+//!         .with(AutometricsExemplarExtractor::from_fields(&["trace_id"]))
 //!         .init();
 //! }
 //! ```
@@ -58,8 +58,7 @@ pub(crate) fn get_exemplar() -> Option<TraceLabels> {
 /// the metrics it produces.
 ///
 /// By default, it will look for a field called `trace_id` in the current span scope and use that
-/// as the exemplar. You can customize this by using [`AutometricsExemplarExtractor::from_field`]
-/// or [`AutometricsExemplarExtractor::from_fields`].
+/// as the exemplar. You can customize this by using [`AutometricsExemplarExtractor::from_fields`].
 ///
 /// # Example
 /// ```rust
@@ -78,14 +77,6 @@ pub struct AutometricsExemplarExtractor {
 }
 
 impl AutometricsExemplarExtractor {
-    /// Create a new [`AutometricsExemplarExtractor`] that will extract the given field from the current [`Span`] scope
-    /// to use as the labels for the exemplars.
-    ///
-    /// [`Span`]: tracing::Span
-    pub const fn from_field(field: &'static str) -> Self {
-        Self { fields: &[field] }
-    }
-
     /// Create a new [`AutometricsExemplarExtractor`] that will extract the given fields from the current [`Span`] scope
     /// to use as the labels for the exemplars.
     ///
