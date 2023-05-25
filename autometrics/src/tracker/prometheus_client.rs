@@ -1,6 +1,6 @@
 use super::TrackMetrics;
 #[cfg(feature = "exemplars-tracing")]
-use crate::integrations::tracing::get_exemplar;
+use crate::exemplars::tracing::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;

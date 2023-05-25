@@ -1,5 +1,5 @@
 use autometrics::{
-    autometrics, encode_global_metrics, integrations::tracing::AutometricsExemplarExtractor,
+    autometrics, encode_global_metrics, exemplars::tracing::AutometricsExemplarExtractor,
 };
 use tracing::{instrument, trace};
 use tracing_subscriber::{prelude::*, EnvFilter};
