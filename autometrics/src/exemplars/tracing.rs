@@ -58,7 +58,8 @@ pub(crate) fn get_exemplar() -> Option<TraceLabels> {
 ///
 /// # Example
 /// ```rust
-/// use autometrics::integrations::tracing::AutometricsExemplarExtractor;
+/// use autometrics::exemplars::tracing::AutometricsExemplarExtractor;
+/// use tracing_subscriber::prelude::*;
 ///
 /// fn main() {
 ///     tracing_subscriber::fmt::fmt()

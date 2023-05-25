@@ -26,8 +26,8 @@ jobs:
 
       # Run the tests with each of the different metrics libraries
       - run: cargo test --features=prometheus-exporter,metrics
-      - run: cargo test --features=prometheus-exporter,prometheus --tests
-      - run: cargo test --features=prometheus-exporter,prometheus-client,exemplars-tracing --tests
+      - run: cargo test --features=prometheus-exporter,prometheus
+      - run: cargo test --features=prometheus-exporter,prometheus-client,exemplars-tracing
       # The tests using opentelemetry are currently failing because of this issue:
       # https://github.com/open-telemetry/opentelemetry-rust/issues/1070
       # We should remove the continue-on-error once that is fixed

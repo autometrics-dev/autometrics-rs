@@ -23,6 +23,27 @@
 //!   ```http
 //!   Content-Type: application/openmetrics-text; version=1.0.0; charset=utf-8
 //!   ```
+//!
+//!  ```rust
+//!   use http::{header::CONTENT_TYPE, Response};
+//!
+//!   /// Expose the metrics to Prometheus in the OpenMetrics format
+//!   async fn get_metrics() -> Response<String> {
+//!       match autometrics::encode_global_metrics() {
+//!           Ok(metrics) => Response::builder()
+//!               .header(
+//!                   CONTENT_TYPE,
+//!                   "application/openmetrics-text; version=1.0.0; charset=utf-8",
+//!               )
+//!               .body(metrics)
+//!               .unwrap(),
+//!           Err(err) => Response::builder()
+//!               .status(500)
+//!               .body(err.to_string())
+//!               .unwrap(),
+//!       }
+//!   }
+//!   ```
 
 #[cfg(feature = "exemplars-tracing")]
 pub mod tracing;
