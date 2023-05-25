@@ -6,7 +6,7 @@
 //!
 //! ```rust
 //! use autometrics::autometrics;
-//! use autometrics::integrations::tracing::AutometricsExemplarExtractor;
+//! use autometrics::exemplars::tracing::AutometricsExemplarExtractor;
 //! use tracing::{instrument, trace};
 //! use tracing_subscriber::prelude::*;
 //! use uuid::Uuid;
