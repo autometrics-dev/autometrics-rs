@@ -1,6 +1,6 @@
 //! Extract fields from [`tracing::Span`]s as exemplars.
 //!
-//! This module enables autometrics to use fields such as `trace_id` from the current [`Span`] as exemplars.
+//! This module enables autometrics to use fields from the current [`Span`] as exemplar labels.
 //!
 //! # Example
 //!
@@ -53,9 +53,6 @@ pub(crate) fn get_exemplar() -> Option<TraceLabels> {
 /// A [`tracing_subscriber::Layer`] that enables autometrics to use fields from the current span as exemplars for
 /// the metrics it produces.
 ///
-/// By default, it will look for a field called `trace_id` in the current span scope and use that
-/// as the exemplar. You can customize this by using [`AutometricsExemplarExtractor::from_fields`].
-///
 /// # Example
 /// ```rust
 /// use autometrics::exemplars::tracing::AutometricsExemplarExtractor;
@@ -64,7 +61,7 @@ pub(crate) fn get_exemplar() -> Option<TraceLabels> {
 /// fn main() {
 ///     tracing_subscriber::fmt::fmt()
 ///         .finish()
-///         .with(AutometricsExemplarExtractor::default())
+///         .with(AutometricsExemplarExtractor::from_fields(&["trace_id"]))
 ///         .init();
 /// }
 /// ```
@@ -78,16 +75,8 @@ impl AutometricsExemplarExtractor {
     /// to use as the labels for the exemplars.
     ///
     /// [`Span`]: tracing::Span
-    pub const fn from_fields(fields: &'static [&'static str]) -> Self {
+    pub fn from_fields(fields: &'static [&'static str]) -> Self {
         Self { fields }
-    }
-}
-
-impl Default for AutometricsExemplarExtractor {
-    fn default() -> Self {
-        Self {
-            fields: &["trace_id"],
-        }
     }
 }
 
