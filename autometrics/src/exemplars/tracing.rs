@@ -128,4 +128,10 @@ impl Visit for TraceLabelVisitor {
             self.labels.insert(field.name(), format!("{:?}", value));
         }
     }
+
+    fn record_str(&mut self, field: &Field, value: &str) {
+        if self.fields.contains(&field.name()) && !self.labels.contains_key(field.name()) {
+            self.labels.insert(field.name(), value.to_string());
+        }
+    }
 }
