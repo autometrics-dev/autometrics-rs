@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   always be "ok", or "error" for the success rate metrics of functions using them. (#61)
 - Support the official `prometheus-client` crate for producing metrics
 - Exemplar support when using the feature flags `exemplars-tracing` and `prometheus-client`.
-  Autometrics now provides a `tracing_subscriber::Layer` that makes the `trace_id` available
-  to the library, and it will automatically be added to the counter and histogram metrics
-  as an exemplar
+  Autometrics now provides a `tracing_subscriber::Layer` that makes the specific `Span` fields
+  available to the library, and autometrics will automatically attach those fields as exemplars
+  on the counter and histogram metrics
 
 ### Changed
 
