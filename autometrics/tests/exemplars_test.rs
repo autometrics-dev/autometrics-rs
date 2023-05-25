@@ -1,9 +1,10 @@
+#![cfg(all(feature = "exemplars-tracing", feature = "prometheus-exporter"))]
+
 use autometrics::exemplars::tracing::AutometricsExemplarExtractor;
 use autometrics::{autometrics, encode_global_metrics, global_metrics_exporter};
 use tracing::instrument;
 use tracing_subscriber::prelude::*;
 
-#[cfg(all(feature = "exemplars-tracing", feature = "prometheus-exporter"))]
 #[test]
 fn single_field() {
     let _ = global_metrics_exporter();
@@ -25,7 +26,6 @@ fn single_field() {
     }))
 }
 
-#[cfg(all(feature = "exemplars-tracing", feature = "prometheus-exporter"))]
 #[test]
 fn multiple_fields() {
     let _ = global_metrics_exporter();
