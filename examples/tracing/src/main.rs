@@ -29,9 +29,7 @@ fn main() {
         .with(AutometricsExemplarExtractor::from_field("trace_id"))
         .init();
 
-    for _i in 0..10 {
-        outer_function();
-    }
+    outer_function();
 
     println!("{}", encode_global_metrics().unwrap());
 }
