@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Autometrics now provides a `tracing_subscriber::Layer` that makes the specific `Span` fields
   available to the library, and autometrics will automatically attach those fields as exemplars
   on the counter and histogram metrics
+- `AUTOMETRICS_DISABLE_DOCS` environment variable can be set to disable doc comment generation
+  (this is mainly for use with editor extensions that generate doc comments themselves)
 
 ### Changed
 
