@@ -27,13 +27,11 @@
 //!
 //! [`Span`]: tracing::Span
 
-use std::collections::HashMap;
+use super::TraceLabels;
 use tracing::field::{Field, Visit};
 use tracing::{span::Attributes, Id, Subscriber};
 use tracing_subscriber::layer::{Context, Layer};
 use tracing_subscriber::registry::{LookupSpan, Registry};
-
-pub(crate) type TraceLabels = HashMap<&'static str, String>;
 
 /// Get the exemplar from the current tracing span
 pub(crate) fn get_exemplar() -> Option<TraceLabels> {
@@ -103,7 +101,7 @@ impl TraceLabelVisitor {
     fn new(fields: &'static [&'static str]) -> Self {
         Self {
             fields,
-            labels: HashMap::with_capacity(fields.len()),
+            labels: TraceLabels::with_capacity(fields.len()),
         }
     }
 }

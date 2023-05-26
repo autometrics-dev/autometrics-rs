@@ -6,7 +6,7 @@
 #![doc = include_str!("../README.md")]
 
 mod constants;
-#[cfg(feature = "exemplars-tracing")]
+#[cfg(feature = "_exemplars")]
 pub mod exemplars;
 pub mod integrations;
 mod labels;

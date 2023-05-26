@@ -1,26 +1,24 @@
 use super::TrackMetrics;
-#[cfg(feature = "exemplars-tracing")]
-use crate::exemplars::tracing::get_exemplar;
+#[cfg(feature = "_exemplars")]
+use crate::exemplars::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;
-#[cfg(feature = "exemplars-tracing")]
-use prometheus_client::metrics::exemplar::{CounterWithExemplar, HistogramWithExemplars};
-#[cfg(not(feature = "exemplars-tracing"))]
-use prometheus_client::metrics::{counter::Counter, histogram::Histogram};
 use prometheus_client::metrics::{family::Family, gauge::Gauge};
 use prometheus_client::registry::Registry;
 use std::time::Instant;
 
-#[cfg(feature = "exemplars-tracing")]
-type CounterType = CounterWithExemplar<Vec<(&'static str, String)>>;
-#[cfg(not(feature = "exemplars-tracing"))]
-type CounterType = Counter;
+#[cfg(feature = "_exemplars")]
+type CounterType =
+    prometheus_client::metrics::exemplar::CounterWithExemplar<Vec<(&'static str, String)>>;
+#[cfg(not(feature = "_exemplars"))]
+type CounterType = prometheus_client::metrics::counter::Counter;
 
-#[cfg(feature = "exemplars-tracing")]
-type HistogramType = HistogramWithExemplars<Vec<(&'static str, String)>>;
-#[cfg(not(feature = "exemplars-tracing"))]
-type HistogramType = Histogram;
+#[cfg(feature = "_exemplars")]
+type HistogramType =
+    prometheus_client::metrics::exemplar::HistogramWithExemplars<Vec<(&'static str, String)>>;
+#[cfg(not(feature = "_exemplars"))]
+type HistogramType = prometheus_client::metrics::histogram::Histogram;
 
 static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
     let mut registry = <Registry>::default();
@@ -89,18 +87,18 @@ impl TrackMetrics for PrometheusClientTracker {
     }
 
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
-        #[cfg(feature = "exemplars-tracing")]
+        #[cfg(feature = "_exemplars")]
         let exemplar = get_exemplar().map(|exemplar| exemplar.into_iter().collect::<Vec<_>>());
 
         METRICS.counter.get_or_create(&counter_labels).inc_by(
             1,
-            #[cfg(feature = "exemplars-tracing")]
+            #[cfg(feature = "_exemplars")]
             exemplar.clone(),
         );
 
         METRICS.histogram.get_or_create(&histogram_labels).observe(
             self.start_time.elapsed().as_secs_f64(),
-            #[cfg(feature = "exemplars-tracing")]
+            #[cfg(feature = "_exemplars")]
             exemplar,
         );
 

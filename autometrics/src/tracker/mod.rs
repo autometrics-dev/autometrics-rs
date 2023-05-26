@@ -38,9 +38,6 @@ pub use self::prometheus_client::PrometheusClientTracker;
 ))]
 compile_error!("Only one of the metrics, opentelemetry, prometheus, or prometheus-client features can be enabled at a time");
 
-#[cfg(all(feature = "exemplars-tracing", not(feature = "prometheus-client")))]
-compile_error!("The exemplars-tracing feature can only be used with the `prometheus-client` metrics library because that is the only one that currently supports exemplars");
-
 pub trait TrackMetrics {
     fn set_build_info(build_info_labels: &BuildInfoLabels);
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self;
