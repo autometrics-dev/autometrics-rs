@@ -27,17 +27,21 @@ pub async fn create_user() {
   _If your eyes glaze over when you see this, don't worry! Autometrics writes complex queries like this so you don't have to!_
 
   ```promql
-  # Percentage of calls to the `create_user` function that return errors, averaged over 5 minute windows
-
-  sum by (function, module, commit, version) (
-    rate(function_calls_count{function="create_user",result="error"}[5m])
-    * on (instance, job) group_left(version, commit) last_over_time(build_info[1s])
-  )
+    (
+      sum by (function, module, commit, version) (
+          rate({__name__=~"function_calls(_count)?(_total)?",function="create_user",result="error"}[5m])
+        * on (instance, job) group_left (version, commit)
+          last_over_time(build_info[1s])
+      )
+    )
   /
-  sum by (function, module, commit, version) (
-    rate(function_calls_count{function="create_user"}[5m])
-    * on (instance, job) group_left(version, commit) last_over_time(build_info[1s])
-  )
+    (
+      sum by (function, module, commit, version) (
+          rate({__name__=~"function_calls(_count)?(_total)?",function="create_user"}[5m])
+        * on (instance, job) group_left (version, commit)
+          last_over_time(build_info[1s])
+      )
+    )
   ```
 
 </details>
