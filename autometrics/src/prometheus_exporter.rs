@@ -31,10 +31,10 @@ use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 use prometheus::TextEncoder;
 use thiserror::Error;
 
-#[cfg(not(feature = "exemplars-tracing"))]
+#[cfg(not(feature = "_exemplars"))]
 /// Prometheus text format content type
 const RESPONSE_CONTENT_TYPE: &str = "text/plain; version=0.0.4";
-#[cfg(feature = "exemplars-tracing")]
+#[cfg(feature = "_exemplars")]
 /// OpenMetrics content type
 const RESPONSE_CONTENT_TYPE: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
 
