@@ -58,7 +58,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
     // Build the documentation we'll add to the function's RustDocs, unless it is disabled by the environment variable
-    let metrics_docs = if option_env!("AUTOMETRICS_DISABLE_DOCS").is_some() {
+    let metrics_docs = if env::var("AUTOMETRICS_DISABLE_DOCS").is_ok() {
         String::new()
     } else {
         create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency)
