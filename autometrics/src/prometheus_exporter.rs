@@ -1,3 +1,23 @@
+//! Helper functions for easily collecting and exporting metrics to Prometheus.
+//!
+//! You do not need this module if you are already collecting custom metrics and exporting them to Prometheus.
+//!
+//! # Example
+//! ```rust
+//! use autometrics::prometheus_exporter::{self, PrometheusResponse};
+//!
+//! /// Exports metrics to Prometheus.
+//! /// This should be mounted on `/metrics` on your API server
+//! pub async fn get_metrics() -> PrometheusResponse {
+//!     prometheus_exporter::encode_http_response()
+//! }
+//!
+//! pub fn main() {
+//!     prometheus_exporter::init();
+//! }
+//! ```
+
+use http::{header::CONTENT_TYPE, Response};
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
@@ -10,6 +30,15 @@ use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 #[cfg(any(feature = "opentelemetry", feature = "prometheus"))]
 use prometheus::TextEncoder;
 use thiserror::Error;
+
+#[cfg(not(feature = "exemplars-tracing"))]
+/// Prometheus text format content type
+const RESPONSE_CONTENT_TYPE: &str = "text/plain; version=0.0.4";
+#[cfg(feature = "exemplars-tracing")]
+/// OpenMetrics content type
+const RESPONSE_CONTENT_TYPE: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+
+pub type PrometheusResponse = Response<String>;
 
 #[cfg(not(any(
     feature = "metrics",
@@ -29,7 +58,7 @@ pub enum EncodingError {
     Format(#[from] std::fmt::Error),
 }
 
-static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
+pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
     #[cfg(feature = "metrics")]
     metrics_exporter: PrometheusBuilder::new()
         .set_buckets(&crate::HISTOGRAM_BUCKETS)
@@ -107,11 +136,12 @@ impl GlobalPrometheus {
 /// ```
 /// # fn main() {
 /// # #[cfg(feature="prometheus-exporter")]
-///     let _exporter = autometrics::global_metrics_exporter();
+///     autometrics::prometheus_exporter::init();
 /// # }
 /// ```
-pub fn global_metrics_exporter() -> GlobalPrometheus {
-    GLOBAL_EXPORTER.clone()
+pub fn init() {
+    // This will cause the Lazy to be initialized
+    let _ = GLOBAL_EXPORTER.clone();
 }
 
 /// Export the collected metrics to the Prometheus format.
@@ -124,12 +154,31 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
 /// # use http::StatusCode;
 /// // Mounted at the route `/metrics`
 /// pub async fn metrics_get() -> (StatusCode, String) {
-///   match autometrics::encode_global_metrics() {
+///   match autometrics::prometheus_exporter::encode_to_string() {
 ///     Ok(metrics) => (StatusCode::OK, metrics),
 ///     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
 ///   }
 /// }
 /// ```
-pub fn encode_global_metrics() -> Result<String, EncodingError> {
+pub fn encode_to_string() -> Result<String, EncodingError> {
     GLOBAL_EXPORTER.encode_metrics()
+}
+
+/// Export the collected metrics to the Prometheus or OpenMetrics format and wrap
+/// them in an HTTP response.
+///
+/// If you are using exemplars, this will automatically use the OpenMetrics
+/// content type so that Prometheus can scrape the metrics and exemplars.
+pub fn encode_http_response() -> PrometheusResponse {
+    match encode_to_string() {
+        Ok(metrics) => http::Response::builder()
+            .status(200)
+            .header(CONTENT_TYPE, RESPONSE_CONTENT_TYPE)
+            .body(metrics)
+            .expect("Error building response"),
+        Err(err) => http::Response::builder()
+            .status(500)
+            .body(format!("{:?}", err))
+            .expect("Error building response"),
+    }
 }

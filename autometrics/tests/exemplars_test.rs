@@ -1,13 +1,13 @@
 #![cfg(feature = "prometheus-exporter")]
 
-use autometrics::{autometrics, encode_global_metrics, global_metrics_exporter};
+use autometrics::{autometrics, prometheus_exporter};
 use tracing::instrument;
 use tracing_subscriber::prelude::*;
 
 #[cfg(feature = "exemplars-tracing")]
 #[test]
 fn single_field() {
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     #[instrument(fields(trace_id = "test_trace_id"))]
@@ -18,7 +18,7 @@ fn single_field() {
     );
     tracing::subscriber::with_default(subscriber, || single_field_fn());
 
-    let metrics = encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_count_total{")
             && line.contains(r#"function="single_field_fn""#)
@@ -29,7 +29,7 @@ fn single_field() {
 #[cfg(feature = "exemplars-tracing")]
 #[test]
 fn multiple_fields() {
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     #[instrument(fields(trace_id = "test_trace_id", foo = 99))]
@@ -42,7 +42,7 @@ fn multiple_fields() {
     );
     tracing::subscriber::with_default(subscriber, || multiple_fields_fn());
 
-    let metrics = encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_count_total{")
@@ -56,7 +56,7 @@ fn multiple_fields() {
 #[test]
 fn opentelemetry_context() {
     use opentelemetry_api::trace::Tracer;
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     fn opentelemetry_context_fn() {}
@@ -64,6 +64,10 @@ fn opentelemetry_context() {
     let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline().install_simple();
     tracer.in_span("my_span", |_cx| opentelemetry_context_fn());
 
-    let metrics = encode_global_metrics().unwrap();
-    println!("{}", metrics);
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
+    assert!(metrics.lines().any(|line| {
+        line.starts_with("function_calls_count_total{")
+            && line.contains(r#"function="opentelemetry_context_fn""#)
+            && (line.contains(r#"trace_id=""#) || line.contains(r#"span_id=""#))
+    }))
 }

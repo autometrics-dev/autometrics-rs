@@ -27,17 +27,21 @@ pub async fn create_user() {
   _If your eyes glaze over when you see this, don't worry! Autometrics writes complex queries like this so you don't have to!_
 
   ```promql
-  # Percentage of calls to the `create_user` function that return errors, averaged over 5 minute windows
-
-  sum by (function, module, commit, version) (
-    rate(function_calls_count{function="create_user",result="error"}[5m])
-    * on (instance, job) group_left(version, commit) last_over_time(build_info[1s])
-  )
+    (
+      sum by (function, module, commit, version) (
+          rate({__name__=~"function_calls(_count)?(_total)?",function="create_user",result="error"}[5m])
+        * on (instance, job) group_left (version, commit)
+          last_over_time(build_info[1s])
+      )
+    )
   /
-  sum by (function, module, commit, version) (
-    rate(function_calls_count{function="create_user"}[5m])
-    * on (instance, job) group_left(version, commit) last_over_time(build_info[1s])
-  )
+    (
+      sum by (function, module, commit, version) (
+          rate({__name__=~"function_calls(_count)?(_total)?",function="create_user"}[5m])
+        * on (instance, job) group_left (version, commit)
+          last_over_time(build_info[1s])
+      )
+    )
   ```
 
 </details>
@@ -124,11 +128,11 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
 
       Autometrics includes optional functions to help collect and prepare metrics to be collected by Prometheus.
 
-      In your `main` function, initialize the `global_metrics_exporter`:
+      In your `main` function, initialize the `prometheus_exporter`:
 
       ```rust
       pub fn main() {
-        let _exporter = autometrics::global_metrics_exporter();
+        prometheus_exporter::init();
         // ...
       }
       ```
@@ -136,14 +140,11 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
       And create a route on your API (probably mounted under `/metrics`) that returns the following:
 
       ```rust
-      use http::StatusCode;
+      use autometrics::prometheus_exporter::{self, PrometheusResponse};
 
       /// Export metrics for Prometheus to scrape
-      pub fn get_metrics() -> (StatusCode, String) {
-        match autometrics::encode_global_metrics() {
-          Ok(metrics) => (StatusCode::OK, metrics),
-          Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-        }
+      pub fn get_metrics() -> PrometheusResponse {
+        prometheus_exporter::encode_http_response()
       }
       ```
 

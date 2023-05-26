@@ -1,9 +1,9 @@
 #![cfg(feature = "prometheus-exporter")]
-use autometrics::autometrics;
+use autometrics::{autometrics, prometheus_exporter};
 
 #[test]
 fn single_function() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     fn hello_world() -> &'static str {
@@ -13,7 +13,7 @@ fn single_function() {
     hello_world();
     hello_world();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -31,7 +31,7 @@ fn single_function() {
 
 #[test]
 fn impl_block() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     struct Foo;
 
@@ -49,7 +49,7 @@ fn impl_block() {
     Foo::test_fn();
     Foo.test_method();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -77,7 +77,7 @@ fn impl_block() {
 
 #[test]
 fn result() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     fn result_fn(should_error: bool) -> Result<(), ()> {
@@ -92,7 +92,7 @@ fn result() {
     result_fn(true).ok();
     result_fn(false).ok();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics
         .lines()
         .any(|line| (line.starts_with("function_calls_count{")
@@ -111,7 +111,7 @@ fn result() {
 
 #[test]
 fn ok_if() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics(ok_if = Option::is_some)]
     fn ok_if_fn() -> Option<()> {
@@ -120,7 +120,7 @@ fn ok_if() {
 
     ok_if_fn();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -132,7 +132,7 @@ fn ok_if() {
 
 #[test]
 fn error_if() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics(error_if = Option::is_none)]
     fn error_if_fn() -> Option<()> {
@@ -141,7 +141,7 @@ fn error_if() {
 
     error_if_fn();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -153,7 +153,7 @@ fn error_if() {
 
 #[test]
 fn caller_label() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     fn function_1() {
@@ -165,7 +165,7 @@ fn caller_label() {
 
     function_1();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))
@@ -177,7 +177,7 @@ fn caller_label() {
 
 #[test]
 fn build_info() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     fn function_just_to_initialize_build_info() {}
@@ -185,7 +185,7 @@ fn build_info() {
     function_just_to_initialize_build_info();
     function_just_to_initialize_build_info();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| line.starts_with("build_info{")
         && line.contains(r#"branch="""#)
         && line.contains(r#"commit="""#)

@@ -1,9 +1,9 @@
-use autometrics::{autometrics, objectives::*};
+#![cfg(feature = "prometheus-exporter")]
+use autometrics::{autometrics, objectives::*, prometheus_exporter};
 
-#[cfg(feature = "prometheus-exporter")]
 #[test]
 fn success_rate() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     const OBJECTIVE: Objective = Objective::new("test").success_rate(ObjectivePercentile::P99);
 
@@ -15,7 +15,7 @@ fn success_rate() {
     success_rate_fn();
     success_rate_fn();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics
         .lines()
         .any(|line| (line.starts_with("function_calls_count{")
@@ -29,7 +29,7 @@ fn success_rate() {
 #[cfg(feature = "prometheus-exporter")]
 #[test]
 fn latency() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     const OBJECTIVE: Objective =
         Objective::new("test").latency(ObjectiveLatency::Ms100, ObjectivePercentile::P99_9);
@@ -42,7 +42,7 @@ fn latency() {
     latency_fn();
     latency_fn();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_duration_bucket{")
             && line.contains(r#"function="latency_fn""#)
@@ -56,7 +56,7 @@ fn latency() {
 #[cfg(feature = "prometheus-exporter")]
 #[test]
 fn combined_objective() {
-    let _ = autometrics::global_metrics_exporter();
+    prometheus_exporter::init();
 
     const OBJECTIVE: Objective = Objective::new("test")
         .success_rate(ObjectivePercentile::P99)
@@ -70,7 +70,7 @@ fn combined_objective() {
     combined_objective_fn();
     combined_objective_fn();
 
-    let metrics = autometrics::encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_count{")
             || line.starts_with("function_calls_count_total{"))

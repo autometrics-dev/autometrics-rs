@@ -1,4 +1,4 @@
-use autometrics::{autometrics, encode_global_metrics, objectives::*};
+use autometrics::{autometrics, objectives::*};
 use autometrics_example_util::sleep_random_duration;
 use axum::{extract::State, http::StatusCode, Json};
 use rand::{thread_rng, Rng};
@@ -73,12 +73,4 @@ pub struct CreateUser {
 pub struct User {
     pub id: u64,
     pub username: String,
-}
-
-/// This handler serializes the metrics into a string for Prometheus to scrape
-pub async fn get_metrics() -> (StatusCode, String) {
-    match encode_global_metrics() {
-        Ok(metrics) => (StatusCode::OK, metrics),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err)),
-    }
 }
