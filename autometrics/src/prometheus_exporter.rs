@@ -1,3 +1,26 @@
+//! Helper functions for easily collecting and exporting metrics to Prometheus.
+//!
+//! You do not need this module if you are already collecting custom metrics and exporting them to Prometheus.
+//!
+//! # Example
+//! ```rust
+//! use autometrics::prometheus_exporter;
+//! use http::StatusCode;
+//!
+//! /// Exports metrics to Prometheus.
+//! /// This should be mounted on `/metrics` on your API server
+//! pub async fn metrics_get() -> (StatusCode, String) {
+//!   match prometheus_exporter::encode_to_string() {
+//!     Ok(metrics) => (StatusCode::OK, metrics),
+//!     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
+//!   }
+//! }
+//!
+//! pub fn main() {
+//!     prometheus_exporter::init();
+//! }
+//! ```
+
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
@@ -29,7 +52,7 @@ pub enum EncodingError {
     Format(#[from] std::fmt::Error),
 }
 
-static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
+pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
     #[cfg(feature = "metrics")]
     metrics_exporter: PrometheusBuilder::new()
         .set_buckets(&crate::HISTOGRAM_BUCKETS)
@@ -107,11 +130,11 @@ impl GlobalPrometheus {
 /// ```
 /// # fn main() {
 /// # #[cfg(feature="prometheus-exporter")]
-///     let _exporter = autometrics::global_metrics_exporter();
+///     autometrics::prometheus_exporter::init();
 /// # }
 /// ```
-pub fn global_metrics_exporter() -> GlobalPrometheus {
-    GLOBAL_EXPORTER.clone()
+pub fn init() {
+    let _exporter = GLOBAL_EXPORTER.clone();
 }
 
 /// Export the collected metrics to the Prometheus format.
@@ -124,12 +147,12 @@ pub fn global_metrics_exporter() -> GlobalPrometheus {
 /// # use http::StatusCode;
 /// // Mounted at the route `/metrics`
 /// pub async fn metrics_get() -> (StatusCode, String) {
-///   match autometrics::encode_global_metrics() {
+///   match autometrics::prometheus_exporter::encode_to_string() {
 ///     Ok(metrics) => (StatusCode::OK, metrics),
 ///     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
 ///   }
 /// }
 /// ```
-pub fn encode_global_metrics() -> Result<String, EncodingError> {
+pub fn encode_to_string() -> Result<String, EncodingError> {
     GLOBAL_EXPORTER.encode_metrics()
 }
