@@ -140,7 +140,8 @@ impl GlobalPrometheus {
 /// # }
 /// ```
 pub fn init() {
-    let _exporter = GLOBAL_EXPORTER.clone();
+    // This will cause the Lazy to be initialized
+    let _ = &GLOBAL_EXPORTER;
 }
 
 /// Export the collected metrics to the Prometheus format.
