@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Autometrics now provides a `tracing_subscriber::Layer` that makes the specific `Span` fields
   available to the library, and autometrics will automatically attach those fields as exemplars
   on the counter and histogram metrics
+- The `prometheus_exporter` module contains all functions related to the `prometheus-exporter` feature
+- `prometheus_exporter::encode_http_response` function returns an `http::Response` with the metrics.
+  This is especially recommended when using exemplars, because it automatically uses the OpenMetrics
+  `Content-Type` header, which is required for Prometheus to scrape metrics with exemplars
 
 ### Changed
 
@@ -37,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to use v0.19.
 
 ### Deprecated
--
+- `global_metrics_exporter` and `encode_global_metrics` have been deprecated and replaced by
+  `prometheus_exporter::init` and `prometheus_exporter::encode_to_string`, respectively
 
 ### Removed
 
