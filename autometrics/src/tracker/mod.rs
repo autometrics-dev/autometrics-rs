@@ -18,22 +18,28 @@ pub use self::prometheus::PrometheusTracker;
 #[cfg(feature = "prometheus-client")]
 pub use self::prometheus_client::PrometheusClientTracker;
 
-#[cfg(any(
-    all(
-        feature = "metrics",
-        any(
+#[cfg(all(
+    not(doc),
+    any(
+        all(
+            feature = "metrics",
+            any(
+                feature = "opentelemetry",
+                feature = "prometheus",
+                feature = "prometheus-client"
+            )
+        ),
+        all(
             feature = "opentelemetry",
-            feature = "prometheus",
-            feature = "prometheus-client"
-        )
-    ),
-    all(
-        feature = "opentelemetry",
-        any(feature = "prometheus", feature = "prometheus-client")
-    ),
-    all(feature = "prometheus", feature = "prometheus-client")
+            any(feature = "prometheus", feature = "prometheus-client")
+        ),
+        all(feature = "prometheus", feature = "prometheus-client")
+    )
 ))]
 compile_error!("Only one of the metrics, opentelemetry, prometheus, or prometheus-client features can be enabled at a time");
+
+#[cfg(all(feature = "exemplars-tracing", not(feature = "prometheus-client")))]
+compile_error!("The exemplars-tracing feature can only be used with the `prometheus-client` metrics library because that is the only one that currently supports exemplars");
 
 pub trait TrackMetrics {
     fn set_build_info(build_info_labels: &BuildInfoLabels);

@@ -16,9 +16,14 @@ impl Drop for ChildGuard {
     }
 }
 
-pub fn run_prometheus() -> ChildGuard {
+pub fn run_prometheus(enable_exemplars: bool) -> ChildGuard {
+    let mut args = vec!["--config.file", PROMETHEUS_CONFIG_PATH];
+    if enable_exemplars {
+        args.push("--enable-feature=exemplar-storage");
+    }
+
     match Command::new("prometheus")
-        .args(["--config.file", PROMETHEUS_CONFIG_PATH])
+        .args(&args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -31,9 +36,13 @@ pub fn run_prometheus() -> ChildGuard {
         }
         Ok(child) => {
             eprintln!(
-                "Running Prometheus on port 9090 (using config file: {})\n",
-                PROMETHEUS_CONFIG_PATH
+                "Running Prometheus on port 9090 (using config file: {PROMETHEUS_CONFIG_PATH})",
             );
+            if enable_exemplars {
+                eprintln!(
+                    "Exemplars are enabled (using the flag: --enable-feature=exemplar-storage)"
+                );
+            }
             ChildGuard(child)
         }
     }

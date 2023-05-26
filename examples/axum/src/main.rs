@@ -54,7 +54,7 @@ pub async fn get_metrics() -> (StatusCode, String) {
 pub async fn main() {
     // Run Prometheus and generate random traffic for the app
     // (You would not actually do this in production, but it makes it easier to see the example in action)
-    let _prometheus = run_prometheus();
+    let _prometheus = run_prometheus(false);
     tokio::spawn(generate_random_traffic());
 
     let app = Router::new()
