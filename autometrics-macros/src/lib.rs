@@ -8,9 +8,6 @@ use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result, ReturnType, Typ
 mod parse;
 mod result_labels;
 
-const COUNTER_NAME_PROMETHEUS: &str = "function_calls_count";
-const HISTOGRAM_BUCKET_NAME_PROMETHEUS: &str = "function_calls_duration_bucket";
-const GAUGE_NAME_PROMETHEUS: &str = "function_calls_concurrent";
 const ADD_BUILD_INFO_LABELS: &str =
     "* on (instance, job) group_left(version, commit) last_over_time(build_info[1s])";
 
@@ -57,8 +54,12 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     let prometheus_url =
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
-    // Build the documentation we'll add to the function's RustDocs
-    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
+    // Build the documentation we'll add to the function's RustDocs, unless it is disabled by the environment variable
+    let metrics_docs = if env::var("AUTOMETRICS_DISABLE_DOCS").is_ok() {
+        String::new()
+    } else {
+        create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency)
+    };
 
     // Type annotation to allow type inference to work on return expressions (such as `.collect()`), as
     // well as prevent compiler type-inference from selecting the wrong branch in the `spez` macro later.
@@ -234,7 +235,7 @@ fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<T
 /// Create Prometheus queries for the generated metric and
 /// package them up into a RustDoc string
 fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: bool) -> String {
-    let request_rate = request_rate_query(COUNTER_NAME_PROMETHEUS, "function", function);
+    let request_rate = request_rate_query("function", function);
     let request_rate_url = make_prometheus_url(
         prometheus_url,
         &request_rate,
@@ -242,15 +243,15 @@ fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: 
             "Rate of calls to the `{function}` function per second, averaged over 5 minute windows"
         ),
     );
-    let callee_request_rate = request_rate_query(COUNTER_NAME_PROMETHEUS, "caller", function);
+    let callee_request_rate = request_rate_query("caller", function);
     let callee_request_rate_url = make_prometheus_url(prometheus_url, &callee_request_rate, &format!("Rate of calls to functions called by `{function}` per second, averaged over 5 minute windows"));
 
-    let error_ratio = &error_ratio_query(COUNTER_NAME_PROMETHEUS, "function", function);
+    let error_ratio = &error_ratio_query("function", function);
     let error_ratio_url = make_prometheus_url(prometheus_url, error_ratio, &format!("Percentage of calls to the `{function}` function that return errors, averaged over 5 minute windows"));
-    let callee_error_ratio = &error_ratio_query(COUNTER_NAME_PROMETHEUS, "caller", function);
+    let callee_error_ratio = &error_ratio_query("caller", function);
     let callee_error_ratio_url = make_prometheus_url(prometheus_url, callee_error_ratio, &format!("Percentage of calls to functions called by `{function}` that return errors, averaged over 5 minute windows"));
 
-    let latency = latency_query(HISTOGRAM_BUCKET_NAME_PROMETHEUS, "function", function);
+    let latency = latency_query("function", function);
     let latency_url = make_prometheus_url(
         prometheus_url,
         &latency,
@@ -259,7 +260,7 @@ fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: 
 
     // Only include the concurrent calls query if the user has enabled it for this function
     let concurrent_calls_doc = if track_concurrency {
-        let concurrent_calls = concurrent_calls_query(GAUGE_NAME_PROMETHEUS, "function", function);
+        let concurrent_calls = concurrent_calls_query("function", function);
         let concurrent_calls_url = make_prometheus_url(
             prometheus_url,
             &concurrent_calls,
@@ -302,20 +303,20 @@ fn make_prometheus_url(url: &str, query: &str, comment: &str) -> String {
     url
 }
 
-fn request_rate_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
+fn request_rate_query(label_key: &str, label_value: &str) -> String {
+    format!("sum by (function, module, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
 }
 
-fn error_ratio_query(counter_name: &str, label_key: &str, label_value: &str) -> String {
-    let request_rate = request_rate_query(counter_name, label_key, label_value);
-    format!("(sum by (function, module, commit, version) (rate({counter_name}{{{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
+fn error_ratio_query(label_key: &str, label_value: &str) -> String {
+    let request_rate = request_rate_query(label_key, label_value);
+    format!("(sum by (function, module, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
 /
 ({request_rate})",)
 }
 
-fn latency_query(bucket_name: &str, label_key: &str, label_value: &str) -> String {
+fn latency_query(label_key: &str, label_value: &str) -> String {
     let latency = format!(
-        "sum by (le, function, module, commit, version) (rate({bucket_name}{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
+        "sum by (le, function, module, commit, version) (rate(function_calls_duration_bucket{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
     );
     format!(
         "label_replace(histogram_quantile(0.99, {latency}), \"percentile_latency\", \"99\", \"\", \"\")
@@ -324,6 +325,6 @@ label_replace(histogram_quantile(0.95, {latency}), \"percentile_latency\", \"95\
     )
 }
 
-fn concurrent_calls_query(gauge_name: &str, label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module, commit, version) ({gauge_name}{{{label_key}=\"{label_value}\"}} {ADD_BUILD_INFO_LABELS})")
+fn concurrent_calls_query(label_key: &str, label_value: &str) -> String {
+    format!("sum by (function, module, commit, version) (function_calls_concurrent{{{label_key}=\"{label_value}\"}} {ADD_BUILD_INFO_LABELS})")
 }

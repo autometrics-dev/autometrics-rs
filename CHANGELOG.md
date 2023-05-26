@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `prometheus_exporter::encode_http_response` function returns an `http::Response` with the metrics.
   This is especially recommended when using exemplars, because it automatically uses the OpenMetrics
   `Content-Type` header, which is required for Prometheus to scrape metrics with exemplars
+- `AUTOMETRICS_DISABLE_DOCS` environment variable can be set to disable doc comment generation
+  (this is mainly for use with editor extensions that generate doc comments themselves)
 
 ### Changed
 
