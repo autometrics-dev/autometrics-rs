@@ -54,8 +54,12 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     let prometheus_url =
         env::var("PROMETHEUS_URL").unwrap_or_else(|_| DEFAULT_PROMETHEUS_URL.to_string());
 
-    // Build the documentation we'll add to the function's RustDocs
-    let metrics_docs = create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency);
+    // Build the documentation we'll add to the function's RustDocs, unless it is disabled by the environment variable
+    let metrics_docs = if env::var("AUTOMETRICS_DISABLE_DOCS").is_ok() {
+        String::new()
+    } else {
+        create_metrics_docs(&prometheus_url, &function_name, args.track_concurrency)
+    };
 
     // Type annotation to allow type inference to work on return expressions (such as `.collect()`), as
     // well as prevent compiler type-inference from selecting the wrong branch in the `spez` macro later.
