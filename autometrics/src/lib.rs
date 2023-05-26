@@ -188,7 +188,7 @@ pub use autometrics_macros::ResultLabels;
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
 #[deprecated(
-    since = "0.5",
+    since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
 )]
 pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
@@ -196,7 +196,7 @@ pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingEr
 }
 #[cfg(feature = "prometheus-exporter")]
 #[deprecated(
-    since = "0.5",
+    since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"
 )]
 pub fn global_metrics_exporter() -> prometheus_exporter::GlobalPrometheus {
