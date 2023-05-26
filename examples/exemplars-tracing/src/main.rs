@@ -1,6 +1,5 @@
 use autometrics::{
-    autometrics, encode_global_metrics, exemplars::tracing::AutometricsExemplarExtractor,
-    global_metrics_exporter,
+    autometrics, exemplars::tracing::AutometricsExemplarExtractor, prometheus_exporter,
 };
 use autometrics_example_util::run_prometheus;
 use axum::{http::header::CONTENT_TYPE, response::Response, routing::get, Router};
@@ -27,33 +26,13 @@ fn inner_function(param: &str) {
     trace!("Inner function called");
 }
 
-/// Expose the metrics to Prometheus in the OpenMetrics format
-///
-/// Note that setting the content type is necessary in order for
-/// Prometheus to scrape the metrics with the exemplars.
-async fn get_metrics() -> Response<String> {
-    match encode_global_metrics() {
-        Ok(metrics) => Response::builder()
-            .header(
-                CONTENT_TYPE,
-                "application/openmetrics-text; version=1.0.0; charset=utf-8",
-            )
-            .body(metrics)
-            .unwrap(),
-        Err(err) => Response::builder()
-            .status(500)
-            .body(err.to_string())
-            .unwrap(),
-    }
-}
-
 #[tokio::main]
 async fn main() {
     // Run Prometheus with flag --enable-feature=exemplars-storage
     let _prometheus = run_prometheus(true);
     tokio::spawn(generate_random_traffic());
 
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
     tracing_subscriber::fmt::fmt()
         .finish()
         .with(EnvFilter::from_default_env())
@@ -61,9 +40,11 @@ async fn main() {
         .with(AutometricsExemplarExtractor::from_fields(&["trace_id"]))
         .init();
 
-    let app = Router::new()
-        .route("/", get(outer_function))
-        .route("/metrics", get(get_metrics));
+    let app = Router::new().route("/", get(outer_function)).route(
+        "/metrics",
+        // Expose the metrics to Prometheus in the OpenMetrics format
+        get(|| async { prometheus_exporter::encode_http_response() }),
+    );
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let server = axum::Server::bind(&addr);

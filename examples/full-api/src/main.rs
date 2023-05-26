@@ -1,6 +1,6 @@
 use crate::database::Database;
 use crate::util::generate_random_traffic;
-use autometrics::global_metrics_exporter;
+use autometrics::prometheus_exporter;
 use autometrics_example_util::run_prometheus;
 use axum::routing::{get, post};
 use axum::Router;
@@ -20,14 +20,17 @@ async fn main() {
     tokio::spawn(generate_random_traffic());
 
     // Set up the exporter to collect metrics
-    let _exporter = global_metrics_exporter();
+    prometheus_exporter::init();
 
     let app = Router::new()
         .route("/", get(routes::get_index))
         .route("/users", post(routes::create_user))
         .route("/random-error", get(routes::get_random_error))
         // Expose the metrics for Prometheus to scrape
-        .route("/metrics", get(routes::get_metrics))
+        .route(
+            "/metrics",
+            get(|| async { prometheus_exporter::encode_http_response() }),
+        )
         .with_state(Database::new());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

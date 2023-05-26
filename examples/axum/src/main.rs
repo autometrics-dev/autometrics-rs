@@ -1,4 +1,4 @@
-use autometrics::{autometrics, encode_global_metrics};
+use autometrics::{autometrics, prometheus_exporter};
 use autometrics_example_util::{run_prometheus, sleep_random_duration};
 use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 use rand::{random, thread_rng, Rng};
@@ -42,14 +42,6 @@ where
     response.into_response().status().is_success()
 }
 
-/// This handler serializes the metrics into a string for Prometheus to scrape
-pub async fn get_metrics() -> (StatusCode, String) {
-    match encode_global_metrics() {
-        Ok(metrics) => (StatusCode::OK, metrics),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err)),
-    }
-}
-
 #[tokio::main]
 pub async fn main() {
     // Run Prometheus and generate random traffic for the app
@@ -61,7 +53,10 @@ pub async fn main() {
         .route("/", get(get_index))
         .route("/random-error", get(get_random_error))
         // Expose the metrics for Prometheus to scrape
-        .route("/metrics", get(get_metrics));
+        .route(
+            "/metrics",
+            get(|| async { prometheus_exporter::encode_http_response() }),
+        );
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let server = axum::Server::bind(&addr);

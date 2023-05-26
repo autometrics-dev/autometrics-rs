@@ -12,7 +12,7 @@ pub mod integrations;
 mod labels;
 pub mod objectives;
 #[cfg(feature = "prometheus-exporter")]
-mod prometheus_exporter;
+pub mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
@@ -187,7 +187,22 @@ pub use autometrics_macros::ResultLabels;
 
 // Optional exports
 #[cfg(feature = "prometheus-exporter")]
-pub use self::prometheus_exporter::*;
+#[deprecated(
+    since = "0.5.0",
+    note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
+)]
+pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
+    prometheus_exporter::encode_to_string()
+}
+#[cfg(feature = "prometheus-exporter")]
+#[deprecated(
+    since = "0.5.0",
+    note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"
+)]
+pub fn global_metrics_exporter() -> prometheus_exporter::GlobalPrometheus {
+    prometheus_exporter::init();
+    prometheus_exporter::GLOBAL_EXPORTER.clone()
+}
 
 /// We use the histogram buckets recommended by the OpenTelemetry specification
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation

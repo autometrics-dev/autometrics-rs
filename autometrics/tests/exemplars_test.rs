@@ -1,13 +1,13 @@
 #![cfg(all(feature = "exemplars-tracing", feature = "prometheus-exporter"))]
 
 use autometrics::exemplars::tracing::AutometricsExemplarExtractor;
-use autometrics::{autometrics, encode_global_metrics, global_metrics_exporter};
+use autometrics::{autometrics, prometheus_exporter};
 use tracing::instrument;
 use tracing_subscriber::prelude::*;
 
 #[test]
 fn single_field() {
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     #[instrument(fields(trace_id = "test_trace_id"))]
@@ -18,7 +18,7 @@ fn single_field() {
         .with(AutometricsExemplarExtractor::from_fields(&["trace_id"]));
     tracing::subscriber::with_default(subscriber, || single_field_fn());
 
-    let metrics = encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_count_total{")
             && line.contains(r#"function="single_field_fn""#)
@@ -28,7 +28,7 @@ fn single_field() {
 
 #[test]
 fn multiple_fields() {
-    let _ = global_metrics_exporter();
+    prometheus_exporter::init();
 
     #[autometrics]
     #[instrument(fields(trace_id = "test_trace_id", foo = 99))]
@@ -42,7 +42,7 @@ fn multiple_fields() {
             ]));
     tracing::subscriber::with_default(subscriber, || multiple_fields_fn());
 
-    let metrics = encode_global_metrics().unwrap();
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
     println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_count_total{")
