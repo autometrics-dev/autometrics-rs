@@ -124,11 +124,11 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
 
       Autometrics includes optional functions to help collect and prepare metrics to be collected by Prometheus.
 
-      In your `main` function, initialize the `global_metrics_exporter`:
+      In your `main` function, initialize the `prometheus_exporter`:
 
       ```rust
       pub fn main() {
-        let _exporter = autometrics::global_metrics_exporter();
+        prometheus_exporter::init();
         // ...
       }
       ```
@@ -136,14 +136,11 @@ See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for
       And create a route on your API (probably mounted under `/metrics`) that returns the following:
 
       ```rust
-      use http::StatusCode;
+      use autometrics::prometheus_exporter::{self, PrometheusResponse};
 
       /// Export metrics for Prometheus to scrape
-      pub fn get_metrics() -> (StatusCode, String) {
-        match autometrics::encode_global_metrics() {
-          Ok(metrics) => (StatusCode::OK, metrics),
-          Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-        }
+      pub fn get_metrics() -> PrometheusResponse {
+        prometheus_exporter::encode_http_response()
       }
       ```
 

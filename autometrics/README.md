@@ -15,31 +15,26 @@ To make it easy for you to spot and debug issues in production, Autometrics inse
 Autometrics isn't tied to any web framework, but this shows how you can use the library in an [Axum](https://github.com/tokio-rs/axum) server.
 
 ```rust
-use autometrics::autometrics;
-use axum::{http::StatusCode, routing::*, Router, Server};
+use autometrics::{autometrics, prometheus_exporter};
+use axum::{routing::*, Router, Server};
 
-// 1. Instrument your functions with metrics
+// Instrument your functions with metrics
 #[autometrics]
 pub async fn create_user() -> Result<(), ()> {
   Ok(())
 }
 
-// 2. Export your metrics to Prometheus
-pub async fn get_metrics() -> (StatusCode, String) {
-  match autometrics::encode_global_metrics() {
-    Ok(metrics) => (StatusCode::OK, metrics),
-    Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-  }
-}
-
-// 3. Initialize the metrics collector in your main function
+// Export the metrics to Prometheus
 #[tokio::main]
 pub async fn main() {
-  let _exporter = autometrics::global_metrics_exporter();
+  prometheus_exporter::init();
 
   let app = Router::new()
       .route("/users", post(create_user))
-      .route("/metrics", get(get_metrics));
+      .route(
+          "/metrics",
+          get(|| async { prometheus_exporter::encode_http_response() }),
+      );
   Server::bind(&([127, 0, 0, 1], 0).into())
       .serve(app.into_make_service());
 }

@@ -4,16 +4,12 @@
 //!
 //! # Example
 //! ```rust
-//! use autometrics::prometheus_exporter;
-//! use http::StatusCode;
+//! use autometrics::prometheus_exporter::{self, PrometheusResponse};
 //!
 //! /// Exports metrics to Prometheus.
 //! /// This should be mounted on `/metrics` on your API server
-//! pub async fn metrics_get() -> (StatusCode, String) {
-//!   match prometheus_exporter::encode_to_string() {
-//!     Ok(metrics) => (StatusCode::OK, metrics),
-//!     Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-//!   }
+//! pub async fn get_metrics() -> PrometheusResponse {
+//!     prometheus_exporter::encode_http_response()
 //! }
 //!
 //! pub fn main() {
@@ -21,6 +17,7 @@
 //! }
 //! ```
 
+use http::{header::CONTENT_TYPE, Response};
 #[cfg(feature = "metrics")]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::Lazy;
@@ -33,6 +30,15 @@ use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 #[cfg(any(feature = "opentelemetry", feature = "prometheus"))]
 use prometheus::TextEncoder;
 use thiserror::Error;
+
+#[cfg(not(feature = "exemplars-tracing"))]
+/// Prometheus text format content type
+const RESPONSE_CONTENT_TYPE: &str = "text/plain; version=0.0.4";
+#[cfg(feature = "exemplars-tracing")]
+/// OpenMetrics content type
+const RESPONSE_CONTENT_TYPE: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+
+pub type PrometheusResponse = Response<String>;
 
 #[cfg(not(any(
     feature = "metrics",
@@ -155,4 +161,23 @@ pub fn init() {
 /// ```
 pub fn encode_to_string() -> Result<String, EncodingError> {
     GLOBAL_EXPORTER.encode_metrics()
+}
+
+/// Export the collected metrics to the Prometheus or OpenMetrics format and wrap
+/// them in an HTTP response.
+///
+/// If you are using exemplars, this will automatically use the OpenMetrics
+/// content type so that Prometheus can scrape the metrics and exemplars.
+pub fn encode_http_response() -> PrometheusResponse {
+    match encode_to_string() {
+        Ok(metrics) => http::Response::builder()
+            .status(200)
+            .header(CONTENT_TYPE, RESPONSE_CONTENT_TYPE)
+            .body(metrics)
+            .expect("Error building response"),
+        Err(err) => http::Response::builder()
+            .status(500)
+            .body(format!("{:?}", err))
+            .expect("Error building response"),
+    }
 }
