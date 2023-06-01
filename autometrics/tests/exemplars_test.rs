@@ -65,12 +65,10 @@ fn tracing_opentelemetry_context() {
     let subscriber = Registry::default().with(otel_layer);
 
     #[autometrics]
+    #[tracing::instrument]
     fn opentelemetry_context_fn() {}
 
-    tracing::subscriber::with_default(subscriber, || {
-        // Create a new span and execute the function inside it
-        tracing::info_span!("my_span").in_scope(opentelemetry_context_fn);
-    });
+    tracing::subscriber::with_default(subscriber, opentelemetry_context_fn);
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {

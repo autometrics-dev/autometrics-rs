@@ -7,9 +7,12 @@ use tracing::{instrument, trace};
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{layer::SubscriberExt, prelude::*, Registry};
 
-// Autometrics looks for a field called `trace_id` and attaches
-// that as an exemplar for the metrics it generates.
+// The OpenTelemetryLayer attaches the OpenTelemetry Context to every
+// Span, including those created by the instrument macro.
+//
+// Autometrics will pick up that Context and create exemplars from it.
 #[autometrics]
+#[instrument]
 async fn outer_function() -> String {
     trace!("Outer function called");
     inner_function("hello");
@@ -17,10 +20,9 @@ async fn outer_function() -> String {
     "Hello world!".to_string()
 }
 
-// This function will also have the `trace_id` attached as an exemplar
-// because it is called within the same span as `outer_function`.
+// This function will also have exemplars because it is called within
+// the span of the outer_function
 #[autometrics]
-#[instrument]
 fn inner_function(param: &str) {
     trace!("Inner function called");
 }
@@ -38,21 +40,16 @@ async fn main() {
         .with_writer(io::sink())
         .install_simple();
 
-    // Create a tracing layer with the configured tracer
-    let otel_layer = OpenTelemetryLayer::new(tracer);
-    Registry::default().with(otel_layer).init();
+    // Create a tracing subscriber with the OpenTelemetry layer
+    Registry::default()
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .init();
 
-    let app = Router::new()
-        .route("/", get(outer_function))
-        .route(
-            "/metrics",
-            // Expose the metrics to Prometheus in the OpenMetrics format
-            get(|| async { prometheus_exporter::encode_http_response() }),
-        )
-        // This layer creates a `tracing::Span` for every request.
-        // You can do that manually instead, but there needs to be a Span in order
-        // for the OpenTelemetryLayer to attach the Context to the Span
-        .layer(axum_tracing_opentelemetry::opentelemetry_tracing_layer());
+    let app = Router::new().route("/", get(outer_function)).route(
+        "/metrics",
+        // Expose the metrics to Prometheus in the OpenMetrics format
+        get(|| async { prometheus_exporter::encode_http_response() }),
+    );
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let server = axum::Server::bind(&addr);
