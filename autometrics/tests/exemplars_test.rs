@@ -1,6 +1,7 @@
 #![cfg(all(feature = "prometheus-exporter", feature = "_exemplars"))]
 
 use autometrics::{autometrics, prometheus_exporter};
+use tracing_subscriber::prelude::*;
 
 #[cfg(feature = "exemplars-tracing")]
 #[test]
@@ -53,17 +54,14 @@ fn multiple_fields() {
 #[cfg(feature = "exemplars-tracing-opentelemetry")]
 #[test]
 fn tracing_opentelemetry_context() {
-    use tracing_opentelemetry::OpenTelemetryLayer;
-    use tracing_subscriber::{prelude::*, Registry};
-
     prometheus_exporter::init();
 
     let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline()
         .with_writer(std::io::sink())
         .install_simple();
     // This adds the OpenTelemetry Context to every tracing Span
-    let otel_layer = OpenTelemetryLayer::new(tracer);
-    let subscriber = Registry::default().with(otel_layer);
+    let otel_layer = tracing_opentelemetry::OpenTelemetryLayer::new(tracer);
+    let subscriber = tracing_subscriber::Registry::default().with(otel_layer);
 
     #[autometrics]
     #[tracing::instrument]
