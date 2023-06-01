@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support the official `prometheus-client` crate for producing metrics
-- Exemplar support when using the feature flags `exemplars-tracing` or `exemplars-tracing-opentelemetry`.
+- Support exemplars when using the feature flags `exemplars-tracing` or `exemplars-tracing-opentelemetry`.
   Autometrics can now extract fields from the current span and attach them as exemplars on the
   counter and histogram metrics
 - `ResultLabels` derive macro allows to specify on an enum whether variants should
@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Users must configure the metrics library they want to use autometrics with
+- Users must configure the metrics library they want to use autometrics with, unless the
+  `prometheus-exporter` feature is enabled. In that case, the official `prometheus-client` will be used
 - Metrics library feature flags are now mutually exclusive (previously, `autometrics` would only
   produce metrics using a single metrics library if multiple feature flags were enabled, using
   a prioritization order defined internally)

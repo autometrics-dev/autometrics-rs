@@ -5,10 +5,10 @@
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 #![doc = include_str!("../README.md")]
 
+pub mod backends;
 mod constants;
 #[cfg(exemplars)]
 pub mod exemplars;
-pub mod integrations;
 mod labels;
 pub mod objectives;
 #[cfg(prometheus_exporter)]

@@ -1,4 +1,4 @@
-//! Functionality that is specific to an optional dependency
+//! Functionality specific to one of the metrics libraries
 
 /// Access the [`Registry`] used to collect metrics when the `prometheus-client` feature is enabled
 ///

@@ -25,6 +25,7 @@ jobs:
       - run: cargo clippy --features=opentelemetry
 
       # Run the tests with each of the different metrics libraries
+      - run: cargo test --features=prometheus-exporter
       - run: cargo test --features=prometheus-exporter,metrics
       - run: cargo test --features=prometheus-exporter,prometheus
       - run: cargo test --features=prometheus-exporter,prometheus-client,exemplars-tracing

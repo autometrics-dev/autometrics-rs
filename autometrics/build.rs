@@ -1,6 +1,8 @@
 use cfg_aliases::cfg_aliases;
 
 pub fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+
     cfg_aliases! {
       // Backends
       metrics: { feature = "metrics" },

@@ -109,9 +109,9 @@ fn main() {
 - `custom-objective-latency` - by default, Autometrics only supports a fixed set of latency thresholds for objectives. Enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
 - `custom-objective-percentile` by default, Autometrics only supports a fixed set of objective percentiles. Enable this to use a custom percentile. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
 
-#### Metrics libraries
+#### Metrics backends
 
-**Required:** Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
+**Required:** Configure which library autometrics will use to produce metrics by using one of the following feature flags:
 
 > **Note**
 >
