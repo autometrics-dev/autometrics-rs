@@ -44,3 +44,6 @@ jobs:
       - run: cargo build --package example-custom-metrics
       - run: cargo build --package example-full-api
       - run: cargo build --package example-exemplars-tracing
+
+      # Make sure the docs can be built
+      - run: cargo doc --all-features
