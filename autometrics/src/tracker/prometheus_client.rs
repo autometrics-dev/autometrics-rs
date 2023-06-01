@@ -1,5 +1,5 @@
 use super::TrackMetrics;
-#[cfg(feature = "_exemplars")]
+#[cfg(exemplars)]
 use crate::exemplars::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::{constants::*, HISTOGRAM_BUCKETS};
@@ -8,16 +8,16 @@ use prometheus_client::metrics::{family::Family, gauge::Gauge};
 use prometheus_client::registry::Registry;
 use std::time::Instant;
 
-#[cfg(feature = "_exemplars")]
+#[cfg(exemplars)]
 type CounterType =
     prometheus_client::metrics::exemplar::CounterWithExemplar<Vec<(&'static str, String)>>;
-#[cfg(not(feature = "_exemplars"))]
+#[cfg(not(exemplars))]
 type CounterType = prometheus_client::metrics::counter::Counter;
 
-#[cfg(feature = "_exemplars")]
+#[cfg(exemplars)]
 type HistogramType =
     prometheus_client::metrics::exemplar::HistogramWithExemplars<Vec<(&'static str, String)>>;
-#[cfg(not(feature = "_exemplars"))]
+#[cfg(not(exemplars))]
 type HistogramType = prometheus_client::metrics::histogram::Histogram;
 
 static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
@@ -87,18 +87,18 @@ impl TrackMetrics for PrometheusClientTracker {
     }
 
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
-        #[cfg(feature = "_exemplars")]
+        #[cfg(exemplars)]
         let exemplar = get_exemplar().map(|exemplar| exemplar.into_iter().collect::<Vec<_>>());
 
         METRICS.counter.get_or_create(counter_labels).inc_by(
             1,
-            #[cfg(feature = "_exemplars")]
+            #[cfg(exemplars)]
             exemplar.clone(),
         );
 
         METRICS.histogram.get_or_create(histogram_labels).observe(
             self.start_time.elapsed().as_secs_f64(),
-            #[cfg(feature = "_exemplars")]
+            #[cfg(exemplars)]
             exemplar,
         );
 

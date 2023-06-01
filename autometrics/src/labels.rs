@@ -1,5 +1,5 @@
 use crate::{constants::*, objectives::*};
-#[cfg(feature = "prometheus-client")]
+#[cfg(prometheus_client)]
 use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue, LabelValueEncoder};
 use std::ops::Deref;
 
@@ -8,7 +8,7 @@ pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
 
 /// These are the labels used for the `build_info` metric.
 #[cfg_attr(
-    feature = "prometheus-client",
+    prometheus_client,
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct BuildInfoLabels {
@@ -37,7 +37,7 @@ impl BuildInfoLabels {
 
 /// These are the labels used for the `function.calls.count` metric.
 #[cfg_attr(
-    feature = "prometheus-client",
+    prometheus_client,
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct CounterLabels {
@@ -51,10 +51,7 @@ pub struct CounterLabels {
     pub(crate) objective_percentile: Option<ObjectivePercentile>,
 }
 
-#[cfg_attr(
-    feature = "prometheus-client",
-    derive(Debug, Clone, PartialEq, Eq, Hash)
-)]
+#[cfg_attr(prometheus_client, derive(Debug, Clone, PartialEq, Eq, Hash))]
 pub(crate) enum ResultLabel {
     Ok,
     Error,
@@ -69,7 +66,7 @@ impl ResultLabel {
     }
 }
 
-#[cfg(feature = "prometheus-client")]
+#[cfg(prometheus_client)]
 impl EncodeLabelValue for ResultLabel {
     fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), std::fmt::Error> {
         match self {
@@ -145,7 +142,7 @@ impl CounterLabels {
 
 /// These are the labels used for the `function.calls.duration` metric.
 #[cfg_attr(
-    feature = "prometheus-client",
+    prometheus_client,
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct HistogramLabels {
@@ -200,7 +197,7 @@ impl HistogramLabels {
 
 /// These are the labels used for the `function.calls.concurrent` metric.
 #[cfg_attr(
-    feature = "prometheus-client",
+    prometheus_client,
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct GaugeLabels {

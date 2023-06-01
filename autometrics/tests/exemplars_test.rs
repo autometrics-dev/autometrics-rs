@@ -1,9 +1,9 @@
-#![cfg(all(feature = "prometheus-exporter", feature = "_exemplars"))]
+#![cfg(all(prometheus_exporter, exemplars))]
 
 use autometrics::{autometrics, prometheus_exporter};
 use tracing_subscriber::prelude::*;
 
-#[cfg(feature = "exemplars-tracing")]
+#[cfg(exemplars_tracing)]
 #[test]
 fn single_field() {
     prometheus_exporter::init();
@@ -25,7 +25,7 @@ fn single_field() {
     }))
 }
 
-#[cfg(feature = "exemplars-tracing")]
+#[cfg(exemplars_tracing)]
 #[test]
 fn multiple_fields() {
     prometheus_exporter::init();
@@ -51,7 +51,7 @@ fn multiple_fields() {
     }))
 }
 
-#[cfg(feature = "exemplars-tracing-opentelemetry")]
+#[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
     prometheus_exporter::init();
