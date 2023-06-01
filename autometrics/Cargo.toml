@@ -26,7 +26,12 @@ prometheus-exporter = [
   "thiserror"
 ]
 exemplars-tracing = ["tracing", "tracing-subscriber", "_exemplars"]
-exemplars-opentelemetry = ["opentelemetry_api/trace", "_exemplars"]
+exemplars-tracing-opentelemetry = [
+  "opentelemetry_api/trace",
+  "tracing",
+  "tracing-opentelemetry",
+  "_exemplars"
+]
 custom-objective-percentile = []
 custom-objective-latency = []
 _exemplars = []
@@ -57,12 +62,16 @@ prometheus-client = { version = "0.21.1", optional = true }
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["registry"], optional = true }
 
+# Used for exemplars-tracing-opentelemetry feature
+tracing-opentelemetry = { version = "0.19", default-features = false, optional = true }
+
 [dev-dependencies]
 axum = { version = "0.6", features = ["tokio"] }
 http = "0.2"
 opentelemetry_sdk = "0.19"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
+tracing-opentelemetry = "0.19"
 tracing-subscriber = "0.3"
 trybuild = "1.0"
 uuid = { version = "1", features = ["v4"] }

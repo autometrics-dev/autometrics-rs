@@ -1,8 +1,8 @@
 #![cfg(feature = "prometheus-exporter")]
 
 use autometrics::{autometrics, prometheus_exporter};
-use tracing::instrument;
-use tracing_subscriber::prelude::*;
+use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::{prelude::*, Registry};
 
 #[cfg(feature = "exemplars-tracing")]
 #[test]
@@ -10,7 +10,7 @@ fn single_field() {
     prometheus_exporter::init();
 
     #[autometrics]
-    #[instrument(fields(trace_id = "test_trace_id"))]
+    #[tracing::instrument(fields(trace_id = "test_trace_id"))]
     fn single_field_fn() {}
 
     let subscriber = tracing_subscriber::fmt::fmt().finish().with(
@@ -32,7 +32,7 @@ fn multiple_fields() {
     prometheus_exporter::init();
 
     #[autometrics]
-    #[instrument(fields(trace_id = "test_trace_id", foo = 99))]
+    #[tracing::instrument(fields(trace_id = "test_trace_id", foo = 99))]
     fn multiple_fields_fn() {}
 
     let subscriber = tracing_subscriber::fmt::fmt().finish().with(
@@ -52,17 +52,25 @@ fn multiple_fields() {
     }))
 }
 
-#[cfg(feature = "exemplars-opentelemetry")]
+#[cfg(feature = "exemplars-tracing-opentelemetry")]
 #[test]
-fn opentelemetry_context() {
-    use opentelemetry_api::trace::Tracer;
+fn tracing_opentelemetry_context() {
     prometheus_exporter::init();
+
+    let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline()
+        .with_writer(std::io::sink())
+        .install_simple();
+    // This adds the OpenTelemetry Context to every tracing Span
+    let otel_layer = OpenTelemetryLayer::new(tracer);
+    let subscriber = Registry::default().with(otel_layer);
 
     #[autometrics]
     fn opentelemetry_context_fn() {}
 
-    let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline().install_simple();
-    tracer.in_span("my_span", |_cx| opentelemetry_context_fn());
+    tracing::subscriber::with_default(subscriber, || {
+        // Create a new span and execute the function inside it
+        tracing::info_span!("my_span").in_scope(opentelemetry_context_fn);
+    });
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {

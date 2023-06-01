@@ -1,5 +1,5 @@
 [package]
-name = "example-exemplars-opentelemetry"
+name = "example-exemplars-tracing-opentelemetry"
 version = "0.0.0"
 publish = false
 edition = "2021"
@@ -8,11 +8,11 @@ edition = "2021"
 autometrics = { path = "../../autometrics", features = [
   "prometheus-client",
   "prometheus-exporter",
-  "exemplars-opentelemetry"
+  "exemplars-tracing-opentelemetry"
   ] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.6", features = ["json"] }
-axum-tracing-opentelemetry = { version = "0.10", features = ["tracing_subscriber_ext", "otlp"] }
+axum-tracing-opentelemetry = "0.10"
 opentelemetry = "0.19"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }

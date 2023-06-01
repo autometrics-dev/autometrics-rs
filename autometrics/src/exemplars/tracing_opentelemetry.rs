@@ -1,9 +1,16 @@
 use super::TraceLabels;
-use opentelemetry_api::{trace::TraceContextExt, Context};
+use opentelemetry_api::trace::TraceContextExt;
 use std::iter::FromIterator;
+use tracing::Span;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub fn get_exemplar() -> Option<TraceLabels> {
-    let context = Context::current();
+    // Get the OpenTelemetry Context from the tracing span
+    let context = Span::current().context();
+
+    // Now get the OpenTelemetry "span" from the Context
+    // (it's confusing because the word "span" is used by both tracing and OpenTelemetry
+    // to mean slightly different things)
     let span = context.span();
     let span_context = span.span_context();
 
