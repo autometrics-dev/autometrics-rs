@@ -18,31 +18,10 @@
 //!
 //! To enable Prometheus to scrape metrics with exemplars you must:
 //! 1. Run Prometheus with the [`--enable-feature=exemplar-storage`](https://prometheus.io/docs/prometheus/latest/feature_flags/#exemplars-storage) flag
-//! 2. Set the `Content-Type` header on the response from the Prometheus metrics endpoint to indicate
-//!    it is using the OpenMetrics exposition format instead of the default Prometheus format.
+//! 2. Export the metrics to Prometheus using [`prometheus_exporter::encode_http_response`] or
+//!   make sure to manually set the `Content-Type` header to indicate it is using the the OpenMetrics format:
 //!   ```http
 //!   Content-Type: application/openmetrics-text; version=1.0.0; charset=utf-8
-//!   ```
-//!
-//!  ```rust
-//!   use http::{header::CONTENT_TYPE, Response};
-//!
-//!   /// Expose the metrics to Prometheus in the OpenMetrics format
-//!   async fn get_metrics() -> Response<String> {
-//!       match autometrics::encode_global_metrics() {
-//!           Ok(metrics) => Response::builder()
-//!               .header(
-//!                   CONTENT_TYPE,
-//!                   "application/openmetrics-text; version=1.0.0; charset=utf-8",
-//!               )
-//!               .body(metrics)
-//!               .unwrap(),
-//!           Err(err) => Response::builder()
-//!               .status(500)
-//!               .body(err.to_string())
-//!               .unwrap(),
-//!       }
-//!   }
 //!   ```
 
 use std::collections::HashMap;
