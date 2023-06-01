@@ -11,13 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Support the official `prometheus-client` crate for producing metrics
+- Exemplar support when using the feature flags `exemplars-tracing` or `exemplars-tracing-opentelemetry`.
+  Autometrics can now extract fields from the current span and attach them as exemplars on the
+  counter and histogram metrics
 - `ResultLabels` derive macro allows to specify on an enum whether variants should
   always be "ok", or "error" for the success rate metrics of functions using them. (#61)
-- Support the official `prometheus-client` crate for producing metrics
-- Exemplar support when using the feature flags `exemplars-tracing` and `prometheus-client`.
-  Autometrics now provides a `tracing_subscriber::Layer` that makes the specific `Span` fields
-  available to the library, and autometrics will automatically attach those fields as exemplars
-  on the counter and histogram metrics
 - The `prometheus_exporter` module contains all functions related to the `prometheus-exporter` feature
 - `prometheus_exporter::encode_http_response` function returns an `http::Response` with the metrics.
   This is especially recommended when using exemplars, because it automatically uses the OpenMetrics
