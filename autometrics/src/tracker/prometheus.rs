@@ -25,9 +25,7 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             OBJECTIVE_PERCENTILE_PROMETHEUS,
         ]
     )
-    .expect(&format!(
-        "Failed to register {COUNTER_NAME_PROMETHEUS} counter"
-    ))
+    .expect("Failed to register function_calls_count_total counter")
 });
 static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
     let opts = histogram_opts!(

@@ -1,8 +1,6 @@
-#![cfg(feature = "prometheus-exporter")]
+#![cfg(all(feature = "prometheus-exporter", feature = "_exemplars"))]
 
 use autometrics::{autometrics, prometheus_exporter};
-use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{prelude::*, Registry};
 
 #[cfg(feature = "exemplars-tracing")]
 #[test]
@@ -55,6 +53,9 @@ fn multiple_fields() {
 #[cfg(feature = "exemplars-tracing-opentelemetry")]
 #[test]
 fn tracing_opentelemetry_context() {
+    use tracing_opentelemetry::OpenTelemetryLayer;
+    use tracing_subscriber::{prelude::*, Registry};
+
     prometheus_exporter::init();
 
     let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline()
