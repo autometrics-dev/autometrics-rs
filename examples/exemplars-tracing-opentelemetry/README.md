@@ -1,6 +1,6 @@
-# OpenTelemetry + Tracing Exemplars Example
+# Tracing + OpenTelemetry Exemplars Example
 
-This example demonstrates how Autometrics can pick up the `trace_id` and `span_id` from the [`opentelemetry::Context`](https://docs.rs/opentelemetry/latest/opentelemetry/struct.Context.html) and attach them to the metrics as [exemplars](https://grafana.com/docs/grafana/latest/fundamentals/exemplars/).
+This example demonstrates how Autometrics can create exemplars with the `trace_id` and `span_id` from the [`opentelemetry::Context`](https://docs.rs/opentelemetry/latest/opentelemetry/struct.Context.html), which is created by the [`tracing_opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.OpenTelemetryLayer.html) and propagated by the `tracing` library.
 
 > **Note**
 >
