@@ -26,6 +26,7 @@ prometheus-exporter = [
   "opentelemetry-prometheus",
   "opentelemetry_sdk",
   "dep:prometheus",
+  "dep:prometheus-client",
   "thiserror"
 ]
 
