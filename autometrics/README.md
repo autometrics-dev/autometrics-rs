@@ -49,7 +49,7 @@ pub async fn main() {
 - [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
 - [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
 - [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
-- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with distributed traces
+- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
 - ⚡ Minimal runtime overhead
 
 See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
@@ -106,11 +106,10 @@ fn main() {
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the Metrics Libraries)
-- `exemplars-tracing` - extract fields from [`tracing::Span`](https://docs.rs/tracing/latest/tracing/struct.Span.html)s and attach them as [exemplars](https://grafana.com/docs/grafana/latest/fundamentals/exemplars/) for the metrics produced by Autometrics. This is currently only supported with the `prometheus-client` feature due to lack of support in the other metrics libraries. Note that Prometheus must be specifically [configured](https://prometheus.io/docs/prometheus/latest/feature_flags/#exemplars-storage) to enable the exemplars feature.
 - `custom-objective-latency` - by default, Autometrics only supports a fixed set of latency thresholds for objectives. Enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
 - `custom-objective-percentile` by default, Autometrics only supports a fixed set of objective percentiles. Enable this to use a custom percentile. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
 
-#### Metrics Libraries
+#### Metrics libraries
 
 **Required:** Configure the crate that autometrics will use to produce metrics by using one of the following feature flags:
 
@@ -122,3 +121,10 @@ fn main() {
 - `metrics` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
 - `prometheus` - use the [prometheus](https://crates.io/crates/prometheus) crate for producing metrics
 - `prometheus-client` - use the official [prometheus-client](https://crates.io/crates/prometheus-client) crate for producing metrics
+
+#### Exemplars (for integrating metrics with traces)
+
+See the crate docs for [exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) for details about these features.
+
+- `exemplars-tracing` - extract arbitrary fields from `tracing::Span`s
+- `exemplars-tracing-opentelemetry` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate

@@ -191,6 +191,7 @@ pub use autometrics_macros::ResultLabels;
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
 )]
+/// Replaced by [`prometheus_exporter::encode_to_string`]
 pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
     prometheus_exporter::encode_to_string()
 }
@@ -199,6 +200,7 @@ pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingEr
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"
 )]
+/// Replaced by [`prometheus_exporter::init`]
 pub fn global_metrics_exporter() -> prometheus_exporter::GlobalPrometheus {
     prometheus_exporter::init();
     prometheus_exporter::GLOBAL_EXPORTER.clone()

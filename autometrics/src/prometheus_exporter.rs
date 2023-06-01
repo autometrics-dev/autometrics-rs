@@ -1,4 +1,4 @@
-//! Helper functions for easily collecting and exporting metrics to Prometheus.
+//! Helper functions for easily collecting and exporting metrics to Prometheus
 //!
 //! You do not need this module if you are already collecting custom metrics and exporting them to Prometheus.
 //!
