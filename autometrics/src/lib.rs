@@ -5,13 +5,13 @@
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 #![doc = include_str!("../README.md")]
 
+pub mod backends;
 mod constants;
-#[cfg(feature = "_exemplars")]
+#[cfg(exemplars)]
 pub mod exemplars;
-pub mod integrations;
 mod labels;
 pub mod objectives;
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(prometheus_exporter)]
 pub mod prometheus_exporter;
 mod task_local;
 mod tracker;
@@ -186,7 +186,7 @@ pub use autometrics_macros::autometrics;
 pub use autometrics_macros::ResultLabels;
 
 // Optional exports
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(prometheus_exporter)]
 #[deprecated(
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
@@ -195,7 +195,7 @@ pub use autometrics_macros::ResultLabels;
 pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
     prometheus_exporter::encode_to_string()
 }
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(prometheus_exporter)]
 #[deprecated(
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"
@@ -208,11 +208,7 @@ pub fn global_metrics_exporter() -> prometheus_exporter::GlobalPrometheus {
 
 /// We use the histogram buckets recommended by the OpenTelemetry specification
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
-#[cfg(any(
-    feature = "prometheus",
-    feature = "prometheus-client",
-    feature = "prometheus-exporter"
-))]
+#[cfg(any(prometheus, prometheus_client, prometheus_exporter))]
 pub(crate) const HISTOGRAM_BUCKETS: [f64; 14] = [
     0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0,
 ];

@@ -72,36 +72,24 @@
 
 use std::collections::HashMap;
 
-#[cfg(feature = "exemplars-tracing")]
+#[cfg(exemplars_tracing)]
 pub mod tracing;
-#[cfg(feature = "exemplars-tracing-opentelemetry")]
+#[cfg(exemplars_tracing_opentelemetry)]
 mod tracing_opentelemetry;
 
-#[cfg(all(
-    not(doc),
-    feature = "exemplars-tracing-opentelemetry",
-    feature = "exemplars-tracing"
-))]
+#[cfg(all(not(doc), exemplars_tracing, exemplars_tracing_opentelemetry,))]
 compile_error!("Only one of the exemplars-tracing and exemplars-tracing-opentelemetry features can be enabled at a time");
 
-#[cfg(not(any(
-    feature = "exemplars-tracing-opentelemetry",
-    feature = "exemplars-tracing"
-)))]
-compile_error!(
-    "One of the exemplars-tracing-opentelemetry or exemplars-tracing features must be enabled"
-);
-
-#[cfg(not(feature = "prometheus-client"))]
+#[cfg(not(prometheus_client))]
 compile_error!("Exemplars can only be used with the `prometheus-client` metrics library because that is the only one that currently supports producing metrics with exemplars");
 
 pub(crate) type TraceLabels = HashMap<&'static str, String>;
 pub(crate) fn get_exemplar() -> Option<TraceLabels> {
-    #[cfg(feature = "exemplars-tracing-opentelemetry")]
+    #[cfg(exemplars_tracing_opentelemetry)]
     {
         tracing_opentelemetry::get_exemplar()
     }
-    #[cfg(feature = "exemplars-tracing")]
+    #[cfg(exemplars_tracing)]
     {
         tracing::get_exemplar()
     }

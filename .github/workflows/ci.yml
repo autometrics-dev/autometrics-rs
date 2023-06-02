@@ -25,6 +25,7 @@ jobs:
       - run: cargo clippy --features=opentelemetry
 
       # Run the tests with each of the different metrics libraries
+      - run: cargo test --features=prometheus-exporter
       - run: cargo test --features=prometheus-exporter,metrics
       - run: cargo test --features=prometheus-exporter,prometheus
       - run: cargo test --features=prometheus-exporter,prometheus-client,exemplars-tracing
@@ -43,3 +44,6 @@ jobs:
       - run: cargo build --package example-custom-metrics
       - run: cargo build --package example-full-api
       - run: cargo build --package example-exemplars-tracing
+
+      # Make sure the docs can be built
+      - run: cargo doc --all-features

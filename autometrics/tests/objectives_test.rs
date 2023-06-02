@@ -1,4 +1,4 @@
-#![cfg(feature = "prometheus-exporter")]
+#![cfg(prometheus_exporter)]
 use autometrics::{autometrics, objectives::*, prometheus_exporter};
 
 #[test]
@@ -26,7 +26,7 @@ fn success_rate() {
             && line.ends_with("} 2")));
 }
 
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(prometheus_exporter)]
 #[test]
 fn latency() {
     prometheus_exporter::init();
@@ -53,7 +53,7 @@ fn latency() {
     }));
 }
 
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(prometheus_exporter)]
 #[test]
 fn combined_objective() {
     prometheus_exporter::init();

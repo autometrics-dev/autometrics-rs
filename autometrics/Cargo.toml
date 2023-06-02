@@ -13,28 +13,34 @@ categories = { workspace = true }
 readme = "README.md"
 
 [features]
+# Metrics backends
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api/metrics"]
 prometheus = ["dep:prometheus"]
 prometheus-client = ["dep:prometheus-client"]
+
+# Misc
 prometheus-exporter = [
   "http",
   "metrics-exporter-prometheus",
   "opentelemetry-prometheus",
   "opentelemetry_sdk",
   "dep:prometheus",
+  "dep:prometheus-client",
   "thiserror"
 ]
-exemplars-tracing = ["tracing", "tracing-subscriber", "_exemplars"]
+
+# Exemplars
+exemplars-tracing = ["tracing", "tracing-subscriber"]
 exemplars-tracing-opentelemetry = [
   "opentelemetry_api/trace",
   "tracing",
-  "tracing-opentelemetry",
-  "_exemplars"
+  "tracing-opentelemetry"
 ]
+
+# Custom objectives
 custom-objective-percentile = []
 custom-objective-latency = []
-_exemplars = []
 
 [dependencies]
 autometrics-macros = { workspace = true }
@@ -76,6 +82,9 @@ tracing-subscriber = "0.3"
 trybuild = "1.0"
 uuid = { version = "1", features = ["v4"] }
 vergen = { version = "8.1", features = ["git", "gitcl"] }
+
+[build-dependencies]
+cfg_aliases = "0.1"
 
 [package.metadata.docs.rs]
 all-features = true

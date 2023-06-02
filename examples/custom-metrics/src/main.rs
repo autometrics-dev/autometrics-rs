@@ -7,7 +7,7 @@ pub fn get_index_handler() -> Result<String, ()> {
 }
 
 // Run the example with `--features=metrics` to use the `metrics` crate to define additional metrics.
-#[cfg(feature = "metrics")]
+#[cfg(metrics)]
 pub fn function_with_custom_metrics_metric() {
     use metrics::counter;
 
@@ -15,7 +15,7 @@ pub fn function_with_custom_metrics_metric() {
 }
 
 // Run the example with `--features=opentelemetry` to use the `opentelemetry` crate to define additional metrics.
-#[cfg(feature = "opentelemetry")]
+#[cfg(opentelemetry)]
 pub fn function_with_custom_opentelemetry_metric() {
     use once_cell::sync::Lazy;
     use opentelemetry::{global, metrics::Counter, Context, KeyValue};
@@ -29,7 +29,7 @@ pub fn function_with_custom_opentelemetry_metric() {
 }
 
 // Run the example with `--features=prometheus` to use the `prometheus` crate to define additional metrics.
-#[cfg(feature = "prometheus")]
+#[cfg(prometheus)]
 pub fn function_with_custom_prometheus_metric() {
     use once_cell::sync::Lazy;
     use prometheus::{register_int_counter_vec, IntCounterVec};
@@ -54,11 +54,11 @@ pub fn main() {
     for _i in 0..5 {
         get_index_handler().unwrap();
 
-        #[cfg(feature = "metrics")]
+        #[cfg(metrics)]
         function_with_custom_metrics_metric();
-        #[cfg(feature = "opentelemetry")]
+        #[cfg(opentelemetry)]
         function_with_custom_opentelemetry_metric();
-        #[cfg(feature = "prometheus")]
+        #[cfg(prometheus)]
         function_with_custom_prometheus_metric();
     }
 
