@@ -15,7 +15,7 @@ Autometrics provides a macro that makes it easy to instrument any function with 
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [🔍 Identify commits](#build_info-metric-labels) that introduced errors or increased latency
 - [🚨 Define alerts](objectives) using SLO best practices directly in your source code
-- [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
+- [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work out of the box to visualize the performance of instrumented functions & SLOs
 - [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
 - [📍 Attach exemplars](exemplars) to connect metrics with traces
 - ⚡ Minimal runtime overhead
@@ -70,7 +70,7 @@ For the function call counter, Autometrics attaches these additional labels:
 
 ### `build_info` metric labels
 
-The `build_info` metric makes it easy to correlate production issues with the commit or version that may have introduced bugs or latency.
+The `build_info` metric makes it easy to correlate production issues with the commit or version that may have introduced bugs or latency (see [this blog post](https://fiberplane.com/blog/autometrics-rs-0-4-spot-commits-that-introduce-errors-or-slow-down-your-application) for details).
 
 By default, it attaches the `version` label, but you can also set up your project so that it attaches Git-related labels as well:
 
