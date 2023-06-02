@@ -24,7 +24,7 @@
 //! }
 //! ```
 
-#[cfg(feature = "prometheus-client")]
+#[cfg(prometheus_client)]
 use prometheus_client::encoding::{EncodeLabelValue, LabelValueEncoder};
 
 /// A Service-Level Objective (SLO) for a function or group of functions.
