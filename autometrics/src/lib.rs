@@ -3,7 +3,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![cfg_attr(docsrs, feature(doc_cfg_hide))]
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("README.md")]
 
 pub mod backends;
 mod constants;
@@ -41,22 +41,6 @@ mod tracker;
 ///    }
 /// }
 /// ```
-///
-/// ## Generated Metrics
-///
-/// Autometrics uses the following metrics:
-/// - `function.calls.count` to track the request and error rate
-/// - `function.calls.duration` to track the latency
-/// - (optionally) `function.calls.concurrent` to track the number of [concurrent calls](#track_concurrency)
-/// - `build_info` tracks your application's version and commit to help spot when bugs or latency were introduced
-///
-/// For each of the generated metrics, Autometrics attaches the following labels:
-/// - `function` - the name of the function
-/// - `module` - the module path of the function
-///
-/// For the function call counter, Autometrics attaches these additional labels:
-/// - `result` - if the function returns a `Result`, this will either be `ok` or `error`
-/// - `caller` - the name of the (Autometrics-instrumented) function that called the current function
 ///
 /// ## Optional Parameters
 ///

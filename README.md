@@ -4,11 +4,23 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics is an observability micro-framework built for developers.
+Autometrics provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. It then uses the instrumented function names to generate Prometheus queries to help you identify and debug issues in production.
 
-The Rust library provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. Autometrics uses instrumented function names to generate Prometheus queries so you don’t need to hand-write complicated PromQL.
+## Features
 
-To make it easy for you to spot and debug issues in production, Autometrics inserts links to live charts directly into each function’s doc comments and provides dashboards that work out of the box. It also enables you to create powerful alerts based on Service-Level Objectives (SLOs) directly in your source code. Lastly, Autometrics writes queries that correlate your software’s version info with anomalies in the metrics to help you quickly identify commits that introduced bugs or latency.
+- ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the [most useful metrics](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html#generated-metrics)
+- 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
+- 🔗 Injects links to live Prometheus charts directly into each function's doc comments
+- [🔍 Identify commits](https://docs.rs/autometrics/latest/autometrics/#build_info-metric-labels) that introduced errors or increased latency
+- [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
+- [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work out of the box to visualize the performance of instrumented functions & SLOs
+- [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-backends) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
+- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
+- ⚡ Minimal runtime overhead
+
+See [autometrics.dev](https://docs.autometrics.dev/) for more details on the ideas behind autometrics.
+
+# Example + Demo
 
 ```rust
 use autometrics::autometrics;
@@ -49,20 +61,6 @@ pub async fn create_user() {
 Here is a demo of jumping from function docs to live Prometheus charts:
 
 https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-45f3-a607-64797d5f0233
-
-## Features
-
-- ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the [most useful metrics](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html#generated-metrics)
-- 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
-- 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- [🔍 Identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-commits-that-introduced-problems) that introduced errors or increased latency
-- [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
-- [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
-- [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
-- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
-- ⚡ Minimal runtime overhead
-
-See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
 
 ## Quickstart
 
