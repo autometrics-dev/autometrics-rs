@@ -1,4 +1,4 @@
-//! # Create alerts using Service-Level Objectives (SLOs)
+//! # Create alerts from your function-level metrics using Service-Level Objective (SLO) best practices.
 //!
 //! Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 //!
@@ -27,7 +27,7 @@
 #[cfg(prometheus_client)]
 use prometheus_client::encoding::{EncodeLabelValue, LabelValueEncoder};
 
-/// A Service-Level Objective (SLO) for a function or group of functions
+/// A Service-Level Objective (SLO) for a function or group of functions.
 ///
 /// The objective should be given a descriptive name and can represent
 /// a success rate and/or latency objective.

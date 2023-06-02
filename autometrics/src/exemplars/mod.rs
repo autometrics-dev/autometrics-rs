@@ -1,4 +1,4 @@
-//! Connect metrics to traces using exemplars
+//! Connect metrics to traces using exemplars.
 //!
 //! Exemplars are a newer Prometheus / OpenMetrics / OpenTelemetry feature that allows you to associate
 //! specific traces or samples with a given metric. This enables you to investigate what caused metrics
