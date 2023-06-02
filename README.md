@@ -18,7 +18,7 @@ Autometrics provides a macro that makes it easy to instrument any function with 
 - [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
 - ⚡ Minimal runtime overhead
 
-See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
+See [autometrics.dev](https://docs.autometrics.dev/) for more details on the ideas behind autometrics.
 
 # Example + Demo
 
