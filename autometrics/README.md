@@ -4,11 +4,19 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics is an observability micro-framework built for developers.
+Autometrics provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. It then uses the instrumented function names to generate Prometheus queries to help you identify and debug issues in production.
 
-The Rust library provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. Autometrics uses instrumented function names to generate Prometheus queries so you don’t need to hand-write complicated PromQL.
+## Features
 
-To make it easy for you to spot and debug issues in production, Autometrics inserts links to live charts directly into each function’s doc comments and provides dashboards that work out of the box. It also enables you to create powerful alerts based on Service-Level Objectives (SLOs) directly in your source code. Lastly, Autometrics writes queries that correlate your software’s version info with anomalies in the metrics to help you quickly identify commits that introduced bugs or latency.
+- ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the [most useful metrics](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html#generated-metrics)
+- 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
+- 🔗 Injects links to live Prometheus charts directly into each function's doc comments
+- [🔍 Identify commits](#identifying-commits-that-introduced-problems) that introduced errors or increased latency
+- [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
+- [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
+- [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
+- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
+- ⚡ Minimal runtime overhead
 
 ## Example Axum App
 
@@ -40,18 +48,6 @@ pub async fn main() {
 }
 ```
 
-## Features
-
-- ✨ [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to track the [most useful metrics](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html#generated-metrics)
-- 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
-- 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- [🔍 Identify commits](#identifying-commits-that-introduced-problems) that introduced errors or increased latency
-- [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
-- [📊 Grafana dashboards](https://github.com/autometrics-dev#5-configuring-prometheus) work out of the box to visualize the performance of instrumented functions & SLOs
-- [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
-- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
-- ⚡ Minimal runtime overhead
-
 See [Why Autometrics?](https://github.com/autometrics-dev#4-why-autometrics) for more details on the ideas behind autometrics.
 
 ## Identifying commits that introduced problems
@@ -66,18 +62,18 @@ It produces a `build_info` metric and uses the following labels to expose the ve
 | `commit` | `AUTOMETRICS_COMMIT` or `VERGEN_GIT_COMMIT` | `""` |
 | `branch` | `AUTOMETRICS_BRANCH` or `VERGEN_GIT_BRANCH` | `""` |
 
-### (Optional) Using [`vergen`](https://crates.io/crates/vergen) to set the Git details
+### (Optional) Using `vergen` to set the Git details
 
-```toml
-# Cargo.toml
+You can use the [`vergen`](https://crates.io/crates/vergen) crate to expose the Git information to Autometrics, which will then attach the labels to the `build_info` metric.
 
-[build-dependencies]
-vergen = { version = "8.1", features = ["git", "gitcl"] }
+```sh
+cargo add vergen --features git,gitcl
 ```
 
 ```rust
 // build.rs
-fn main() {
+
+pub fn main() {
   vergen::EmitBuilder::builder()
       .git_sha(true)
       .git_branch()
@@ -85,7 +81,6 @@ fn main() {
       .expect("Unable to generate build info");
 }
 ```
-
 
 ## Configuring Autometrics
 
@@ -96,7 +91,7 @@ Autometrics inserts Prometheus query links into function documentation. By defau
 ```rust
 // build.rs
 
-fn main() {
+pub fn main() {
   // Reload Rust analyzer after changing the Prometheus URL to regenerate the links
   let prometheus_url = "https://your-prometheus-url.example";
   println!("cargo:rustc-env=PROMETHEUS_URL={prometheus_url}");
@@ -105,13 +100,9 @@ fn main() {
 
 ### Feature flags
 
-- `prometheus-exporter` - exports a Prometheus metrics collector and exporter (compatible with any of the [Metrics backends](#metrics-backends))
-- `custom-objective-latency` - by default, Autometrics only supports a fixed set of latency thresholds for objectives. Enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
-- `custom-objective-percentile` by default, Autometrics only supports a fixed set of objective percentiles. Enable this to use a custom percentile. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
+- `prometheus-exporter` - exports a Prometheus metrics collector and exporter. This is compatible with any of the [Metrics backends](#metrics-backends) and uses `prometheus-client` by default if none are explicitly selected
 
 #### Metrics backends
-
-**Required:** Configure which library autometrics will use to produce metrics by using one of the following feature flags:
 
 > **Note**
 >
@@ -128,3 +119,10 @@ See the [exemplars module docs](https://docs.rs/autometrics/latest/autometrics/e
 
 - `exemplars-tracing` - extract arbitrary fields from `tracing::Span`s
 - `exemplars-tracing-opentelemetry` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate
+
+#### Custom objective values
+
+By default, Autometrics supports a fixed set of percentiles and latency thresholds for objectives. Use these features to enable custom values:
+
+- `custom-objective-latency` - enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
+- `custom-objective-percentile` - enable this to use custom objective percentiles. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
