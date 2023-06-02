@@ -73,6 +73,7 @@ tracing-opentelemetry = { version = "0.19", default-features = false, optional =
 
 [dev-dependencies]
 axum = { version = "0.6", features = ["tokio"] }
+criterion = "0.5"
 http = "0.2"
 opentelemetry_sdk = "0.19"
 tokio = { version = "1", features = ["full"] }
@@ -89,3 +90,7 @@ cfg_aliases = "0.1"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[[bench]]
+name = "basic_benchmark"
+harness = false
