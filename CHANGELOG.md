@@ -11,6 +11,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+-
+
+### Changed
+
+-
+
+### Deprecated
+
+-
+
+### Removed
+
+-
+
+### Fixed
+
+-
+
+### Security
+
+-
+
+---
+
+## [0.5.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-06-02
+
+### Added
+
 - Support the official `prometheus-client` crate for producing metrics
 - Support exemplars when using the feature flags `exemplars-tracing` or `exemplars-tracing-opentelemetry`.
   Autometrics can now extract fields from the current span and attach them as exemplars on the
@@ -55,11 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `#[autometrics]` now works on functions that use type inference in their return statement
   (#74, #61)
-
-### Security
--
-
----
 
 ## [0.4.1](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.4.1) - 2023-05-05
 
