@@ -16,7 +16,7 @@ pub mod prometheus_exporter;
 mod task_local;
 mod tracker;
 
-/// A macro that makes it easy to instrument functions with the most useful metrics.
+/// A macro that makes it easy to instrument functions with the most useful metrics
 ///
 /// ## Example
 /// ```
@@ -36,7 +36,7 @@ mod tracker;
 ///        Self
 ///     }
 ///
-///     fn my_function(&self) {
+///     fn my_method(&self) {
 ///        // This method has metrics too!
 ///    }
 /// }
