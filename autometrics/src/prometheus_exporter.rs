@@ -1,4 +1,4 @@
-//! Helper functions for easily collecting and exporting metrics to Prometheus
+//! Helper functions for easily collecting and exporting metrics to Prometheus.
 //!
 //! This module is compatible with any of the metrics backends. It uses
 //! the `prometheus-client` by default if you do not specifically enable another backend.

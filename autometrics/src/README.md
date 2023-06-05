@@ -6,14 +6,14 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. It then uses the instrumented function names to generate Prometheus queries to help you identify and debug issues in production.
+Autometrics provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. It then uses the instrumented function names to generate powerful Prometheus queries to help you identify and debug issues in production.
 
 ## Features
 
-- ✨ [`#[autometrics]`](autometrics) macro instruments any function or `impl` block to track the [most useful metrics](#generated-metrics)
+- ✨ [`#[autometrics]`](autometrics) macro instruments any function or `impl` block to track the [most useful metrics](https://github.com/autometrics-dev/autometrics-shared/blob/main/SPEC.md#metrics)
 - 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- [🔍 Identify commits](#build_info-metric-labels) that introduced errors or increased latency
+- [🔍 Identify commits](#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or increased latency
 - [🚨 Define alerts](objectives) using SLO best practices directly in your source code
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work out of the box to visualize the performance of instrumented functions & SLOs
 - [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
@@ -52,23 +52,7 @@ pub async fn main() {
 }
 ```
 
-## Generated Metrics
-
-Autometrics uses the following metrics:
-- `function.calls.count` to track the request and error rate
-- `function.calls.duration` to track the latency
-- (optionally) `function.calls.concurrent` to track the number of [concurrent calls](#track_concurrency)
-- `build_info` tracks your application's version and commit to help spot when bugs or latency were introduced
-
-For each of the `function.` metrics, Autometrics attaches the following labels:
-- `function` - the name of the function
-- `module` - the module path of the function
-
-For the function call counter, Autometrics attaches these additional labels:
-- `result` - if the function returns a `Result`, this will either be `ok` or `error`
-- `caller` - the name of the (Autometrics-instrumented) function that called the current function
-
-### `build_info` metric labels
+## Identifying faulty commits with the `build_info` metric
 
 The `build_info` metric makes it easy to correlate production issues with the commit or version that may have introduced bugs or latency (see [this blog post](https://fiberplane.com/blog/autometrics-rs-0-4-spot-commits-that-introduce-errors-or-slow-down-your-application) for details).
 
@@ -80,7 +64,7 @@ By default, it attaches the `version` label, but you can also set up your projec
 | `commit` | `AUTOMETRICS_COMMIT` or `VERGEN_GIT_COMMIT` | `""` |
 | `branch` | `AUTOMETRICS_BRANCH` or `VERGEN_GIT_BRANCH` | `""` |
 
-#### (Optional) Using `vergen` to set the Git details
+### (Optional) Using `vergen` to set the Git details
 
 You can use the [`vergen`](https://crates.io/crates/vergen) crate to expose the Git information to Autometrics, which will then attach the labels to the `build_info` metric.
 

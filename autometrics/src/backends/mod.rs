@@ -1,4 +1,4 @@
-//! Functionality specific to one of the metrics libraries
+//! Functionality specific to one of the libraries used to produce metrics.
 
 /// Access the [`Registry`] used to collect metrics when the `prometheus-client` feature is enabled
 ///

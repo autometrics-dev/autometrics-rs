@@ -1,4 +1,4 @@
-//! Connect metrics to traces using exemplars
+//! Connect metrics to traces using exemplars.
 //!
 //! Exemplars are a newer Prometheus / OpenMetrics / OpenTelemetry feature that allows you to associate
 //! specific traces or samples with a given metric. This enables you to investigate what caused metrics
@@ -77,7 +77,7 @@ pub mod tracing;
 #[cfg(exemplars_tracing_opentelemetry)]
 mod tracing_opentelemetry;
 
-#[cfg(all(not(doc), exemplars_tracing, exemplars_tracing_opentelemetry,))]
+#[cfg(all(not(doc), exemplars_tracing, exemplars_tracing_opentelemetry))]
 compile_error!("Only one of the exemplars-tracing and exemplars-tracing-opentelemetry features can be enabled at a time");
 
 #[cfg(not(prometheus_client))]
