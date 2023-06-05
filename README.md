@@ -199,6 +199,21 @@ To see autometrics in action:
 3. Hover over the [function names](./examples/full-api/src/routes.rs#L13) to see the generated query links
    (like in the image above) and view the Prometheus charts
 
+## Benchmarks
+
+Using each of the following metrics libraries, tracking metrics with the `autometrics` macro adds approximately:
+- `prometheus`: 140-150 nanoseconds
+- `prometheus-client`: 150-250 nanoseconds
+- `metrics`: 550-650 nanoseconds
+- `opentelemetry`: 550-750 nanoseconds
+
+These were calculated on a 2021 MacBook Pro with the M1 Max chip and 64 GB of RAM.
+
+To run the benchmarks yourself, run the following command, replacing `BACKEND` with the metrics library of your choice:
+```sh
+cargo bench --features prometheus-exporter,BACKEND
+```
+
 ## Contributing
 
 Issues, feature suggestions, and pull requests are very welcome!
