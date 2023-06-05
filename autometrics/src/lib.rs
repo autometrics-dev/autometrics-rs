@@ -7,11 +7,14 @@
 
 pub mod backends;
 mod constants;
-#[cfg(exemplars)]
+#[cfg(any(
+    feature = "exemplars-tracing",
+    feature = "exemplars-tracing-opentelemetry"
+))]
 pub mod exemplars;
 mod labels;
 pub mod objectives;
-#[cfg(prometheus_exporter)]
+#[cfg(feature = "prometheus-exporter")]
 pub mod prometheus_exporter;
 mod task_local;
 mod tracker;
@@ -169,7 +172,7 @@ pub use autometrics_macros::autometrics;
 pub use autometrics_macros::ResultLabels;
 
 // Optional exports
-#[cfg(prometheus_exporter)]
+#[cfg(feature = "prometheus-exporter")]
 #[deprecated(
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
@@ -178,7 +181,7 @@ pub use autometrics_macros::ResultLabels;
 pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
     prometheus_exporter::encode_to_string()
 }
-#[cfg(prometheus_exporter)]
+#[cfg(feature = "prometheus-exporter")]
 #[deprecated(
     since = "0.5.0",
     note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"

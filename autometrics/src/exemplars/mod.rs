@@ -77,7 +77,7 @@ pub mod tracing;
 #[cfg(exemplars_tracing_opentelemetry)]
 mod tracing_opentelemetry;
 
-#[cfg(all(not(doc), exemplars_tracing, exemplars_tracing_opentelemetry,))]
+#[cfg(all(not(doc), exemplars_tracing, exemplars_tracing_opentelemetry))]
 compile_error!("Only one of the exemplars-tracing and exemplars-tracing-opentelemetry features can be enabled at a time");
 
 #[cfg(not(prometheus_client))]

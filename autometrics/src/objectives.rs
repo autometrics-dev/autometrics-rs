@@ -139,7 +139,7 @@ pub enum ObjectivePercentile {
     /// 1. generate a custom Sloth file using the [autometrics-cli](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli) that includes this objective
     /// 2. use [Sloth](https://sloth.dev) to generate the Prometheus recording and alerting rules
     /// 3. configure your Prometheus instance to use the generated rules
-    #[cfg(custom_objective_percentile)]
+    #[cfg(feature = "custom-objective-percentile")]
     Custom(&'static str),
 }
 
@@ -150,7 +150,7 @@ impl ObjectivePercentile {
             ObjectivePercentile::P95 => "95",
             ObjectivePercentile::P99 => "99",
             ObjectivePercentile::P99_9 => "99.9",
-            #[cfg(custom_objective_percentile)]
+            #[cfg(feature = "custom-objective-percentile")]
             ObjectivePercentile::Custom(custom) => custom,
         }
     }
@@ -206,13 +206,13 @@ pub enum ObjectiveLatency {
     /// If it is not, the alerting rules will not work.
     /// This is because the recording rules compare this to the value
     /// of the `le` label on the histogram buckets.
-    #[cfg(custom_objective_latency)]
+    #[cfg(feature = "custom-objective-latency")]
     Custom(&'static str),
 }
 
-#[cfg(all(not(doc), custom_objective_latency, prometheus))]
-compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus` feature because \
-the autometrics API does not provide a way to configure the histogram buckets passed to the prometheus crate's metrics functions. \
+#[cfg(all(not(doc), custom_objective_latency, any(prometheus, prometheus_client)))]
+compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus` and `prometheus-client` backends because \
+the autometrics API does not provide a way to configure the histogram buckets passed to the crate's metrics functions. \
 Please open an issue on GitHub if you would like to see this feature added.");
 
 #[cfg(all(not(doc), custom_objective_latency, prometheus_exporter))]
@@ -237,7 +237,7 @@ impl ObjectiveLatency {
             ObjectiveLatency::Ms5000 => "5",
             ObjectiveLatency::Ms7500 => "7.5",
             ObjectiveLatency::Ms10000 => "10",
-            #[cfg(custom_objective_latency)]
+            #[cfg(feature = "custom-objective-latency")]
             ObjectiveLatency::Custom(custom) => custom,
         }
     }
