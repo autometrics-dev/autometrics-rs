@@ -1,4 +1,4 @@
-//! # Create alerts using Service-Level Objectives (SLOs)
+//! # Create alerts from your function-level metrics using Service-Level Objective (SLO) best practices.
 //!
 //! Autometrics makes it easy to add Prometheus alerts using Service-Level Objectives (SLOs) to a function or group of functions.
 //!
