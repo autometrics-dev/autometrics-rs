@@ -15,8 +15,8 @@ It is a thin layer on top of existing Prometheus and OpenTelemetry libraries tha
 - [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to add useful metrics, without you having to think about what is worth tracking
 - 💡 Writes Prometheus queries so you can understand your metrics without being a PromQL expert
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- [🔍 Identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or increased latency
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
+- 🔍 Correlates your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
 - ⚖️ Function-level metrics are granular without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
 - 📏 Standardizing metrics across services and teams improves debugging
 - [⚡ Minimal runtime overhead](#benchmarks)
