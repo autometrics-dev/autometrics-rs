@@ -6,14 +6,12 @@
 
 Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency.
 
-Autometrics then uses your function details to generate powerful Prometheus queries that help you identify and debug issues in production.
-
-It is a thin layer on top of existing Prometheus and OpenTelemetry libraries that produces standardized metrics and uses this standardization to give lots of benefits out of the box:
+It is a thin layer on top of popular Prometheus and OpenTelemetry libraries that produces standardized metrics and uses this standardization to give you powerful debugging capabilities out of the box:
 
 ## Benefits
 
 - [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to add useful metrics, without you having to think about what is worth tracking
-- 💡 Writes Prometheus queries so you can understand your metrics without being a PromQL expert
+- 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
 - 🔍 Correlates your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
