@@ -1,0 +1,12 @@
+[package]
+name = "example-otlp-push-controller"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+autometrics = { path = "../../autometrics", features = ["opentelemetry"] }
+opentelemetry = { version = "0.19", features = ["metrics", "rt-tokio"] }
+opentelemetry-otlp = { version = "0.12", features = ["tonic", "metrics"] }
+opentelemetry-semantic-conventions = { version = "0.11" }
+tokio = { version = "1", features = ["full"] }
