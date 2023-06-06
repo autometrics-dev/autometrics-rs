@@ -24,7 +24,7 @@ It is a thin layer on top of existing Prometheus and OpenTelemetry libraries tha
 ## Advanced Features
 
 - [🚨 Define alerts](https://docs.rs/autometrics/latest/autometrics/objectives/index.html) using SLO best practices directly in your source code
-- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) to connect metrics with traces
+- [📍 Attach exemplars](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) automatically to connect metrics with traces
 - [⚙️ Configurable](https://docs.rs/autometrics/latest/autometrics/#metrics-backends) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
 
 See [autometrics.dev](https://docs.autometrics.dev/) for more details on the ideas behind autometrics.
