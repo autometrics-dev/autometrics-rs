@@ -10,7 +10,7 @@ It is a thin layer on top of popular Prometheus and OpenTelemetry libraries that
 
 ## Benefits
 
-- [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro instruments any function or `impl` block to add useful metrics, without you having to think about what is worth tracking
+- [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro adds useful metrics to any function or `impl` block, without you having to think about what is worth tracking
 - 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
