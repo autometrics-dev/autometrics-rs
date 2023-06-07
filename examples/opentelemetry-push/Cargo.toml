@@ -1,5 +1,5 @@
 [package]
-name = "example-otlp-push-controller"
+name = "example-opentelemetry-push"
 version = "0.0.0"
 publish = false
 edition = "2021"

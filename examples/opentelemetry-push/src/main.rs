@@ -28,13 +28,18 @@ fn init_metrics() -> metrics::Result<BasicController> {
         .build()
 }
 
+#[autometrics]
+fn do_stuff() {
+    println!("Doing stuff...");
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     let meter_provider = init_metrics()?;
     let cx = Context::current();
 
-    for numb in 0..10 {
-        do_stuff(numb).await;
+    for _ in 0..10 {
+        do_stuff();
     }
 
     println!("Waiting so that we could see metrics being pushed via OTLP every 10 seconds...");
@@ -42,10 +47,4 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     meter_provider.stop(&cx)?;
 
     Ok(())
-}
-
-#[autometrics]
-async fn do_stuff(numb: u64) {
-    println!("Doing stuff for {} seconds...", numb);
-    sleep(Duration::from_secs(numb)).await;
 }
