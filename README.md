@@ -4,9 +4,9 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency.
+Metrics are a powerful tool for understanding the health and performance of your code in production. However, it is difficult to decide what metrics to track and even harder to query the data and make sense of it.
 
-It is a thin layer on top of popular Prometheus and OpenTelemetry libraries that produces standardized metrics and uses this standardization to give you powerful debugging capabilities out of the box:
+Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency. It standardizes these metrics and then generates powerful Prometheus queries based on your function details to help you quickly identify and debug issues in production.
 
 ## Benefits
 
@@ -16,7 +16,7 @@ It is a thin layer on top of popular Prometheus and OpenTelemetry libraries that
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
 - 🔍 Tracks your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
 - ⚖️ Function-level metrics provide useful granularity without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
-- 📏 Standardizing metrics across services and teams improves debugging
+- 📏 Standardizes metrics across services and teams to improve debugging
 - [⚡ Minimal runtime overhead](#benchmarks)
 
 ## Advanced Features
