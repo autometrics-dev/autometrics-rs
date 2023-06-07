@@ -14,8 +14,8 @@ It is a thin layer on top of popular Prometheus and OpenTelemetry libraries that
 - 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
-- 🔍 Correlates your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
-- ⚖️ Function-level metrics are granular without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
+- 🔍 Tracks your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
+- ⚖️ Function-level metrics provide useful granularity without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
 - 📏 Standardizing metrics across services and teams improves debugging
 - [⚡ Minimal runtime overhead](#benchmarks)
 
