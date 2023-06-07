@@ -4,17 +4,17 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Metrics are a powerful tool for understanding the health and performance of your code in production. However, it is difficult to decide what metrics to track and even harder to query the data and make sense of it.
+Metrics are a powerful tool for understanding the health and performance of your code in production. However, it is difficult to decide what metrics to track and even harder to query the data to understand it.
 
 Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency. It standardizes these metrics and then generates powerful Prometheus queries based on your function details to help you quickly identify and debug issues in production.
 
 ## Benefits
 
-- [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro adds useful metrics to any function or `impl` block, without you having to think about what is worth tracking
+- [✨ `#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro adds useful metrics to any function or `impl` block, without you thinking about what metrics to collect
 - 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
-- 🔍 Tracks your code's version to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
+- 🔍 Correlates your code's version with metrics to [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
 - ⚖️ Function-level metrics provide useful granularity without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
 - 📏 Standardizes metrics across services and teams to improve debugging
 - [⚡ Minimal runtime overhead](#benchmarks)
