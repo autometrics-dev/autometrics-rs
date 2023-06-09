@@ -50,23 +50,26 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
     ```
 2. Instrument your functions with the [`#[autometrics]`](https://docs.rs/autometrics/latest/autometrics/attr.autometrics.html) macro
 
-```rust
-use autometrics::autometrics;
+    ```rust
+    use autometrics::autometrics;
 
-#[autometrics]
-pub async fn my_function() {
-  // Now this function produces metrics!
-}
+    // Just add the autometrics annotation to your functions
+    #[autometrics]
+    pub async fn my_function() {
+      // Now this function produces metrics!
+    }
 
-struct MyStruct;
+    struct MyStruct;
 
-#[autometrics]
-impl MyStruct {
-  pub fn my_method() {
-    // This method produces metrics too!
-  }
-}
-```
+    // You can also instrument whole impl blocks
+    #[autometrics]
+    impl MyStruct {
+      pub fn my_method() {
+        // This method produces metrics too!
+      }
+    }
+    ```
+
 
     <details>
 
