@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Metrics are a powerful tool for understanding the health and performance of your code in production. However, it is difficult to decide what metrics to track and even harder to query the data to understand it.
+Metrics are a powerful and cost-efficient tool for understanding the health and performance of your code in production. But it's hard to decide what metrics to track and even harder to write queries to understand the data.
 
 Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency. It standardizes these metrics and then generates powerful Prometheus queries based on your function details to help you quickly identify and debug issues in production.
 
@@ -14,7 +14,7 @@ Autometrics provides a macro that makes it trivial to instrument any function wi
 - 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
-- 🔍 Correlates your code's version with metrics to [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
+- 🔍 Correlates your code's version with metrics to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
 - ⚖️ Function-level metrics provide useful granularity without [exploding cardinality](https://blog.cloudflare.com/how-cloudflare-runs-prometheus-at-scale/#metrics-cardinality)
 - 📏 Standardizes metrics across services and teams to improve debugging
 - [⚡ Minimal runtime overhead](#benchmarks)
