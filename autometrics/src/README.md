@@ -6,19 +6,26 @@
 [![Crates.io](https://img.shields.io/crates/v/autometrics.svg)](https://crates.io/crates/autometrics)
 [![Discord Shield](https://discordapp.com/api/guilds/950489382626951178/widget.png?style=shield)](https://discord.gg/kHtwcH8As9)
 
-Autometrics provides a macro that makes it easy to instrument any function with the most useful metrics: request rate, error rate, and latency. It then uses the instrumented function names to generate powerful Prometheus queries to help you identify and debug issues in production.
+Metrics are a powerful and cost-efficient tool for understanding the health and performance of your code in production. But it's hard to decide what metrics to track and even harder to write queries to understand the data.
 
-## Features
+Autometrics provides a macro that makes it trivial to instrument any function with the most useful metrics: request rate, error rate, and latency. It standardizes these metrics and then generates powerful Prometheus queries based on your function details to help you quickly identify and debug issues in production.
 
-- ✨ [`#[autometrics]`](autometrics) macro instruments any function or `impl` block to track the [most useful metrics](https://github.com/autometrics-dev/autometrics-shared/blob/main/SPEC.md#metrics)
-- 💡 Writes Prometheus queries so you can understand the data generated without knowing PromQL
+## Benefits
+
+- [✨ `#[autometrics]`](autometrics) macro adds useful metrics to any function or `impl` block, without you thinking about what metrics to collect
+- 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
-- [🔍 Identify commits](#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or increased latency
+- [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](objectives)
+- 🔍 Correlates your code's version with metrics to help [identify commits](#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
+- 📏 Standardizes metrics across services and teams to improve debugging
+- ⚖️ Function-level metrics provide useful granularity without exploding cardinality
+- [⚡ Minimal runtime overhead](https://github.com/autometrics-dev/autometrics-rs#benchmarks)
+
+## Advanced Features
+
 - [🚨 Define alerts](objectives) using SLO best practices directly in your source code
-- [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work out of the box to visualize the performance of instrumented functions & SLOs
-- [⚙️ Configurable](#metrics-libraries) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
-- [📍 Attach exemplars](exemplars) to connect metrics with traces
-- ⚡ Minimal runtime overhead
+- [📍 Attach exemplars](exemplars) automatically to connect metrics with traces
+- [⚙️ Configurable](#metrics-backends) metric collection library ([`opentelemetry`](https://crates.io/crates/opentelemetry), [`prometheus`](https://crates.io/crates/prometheus), [`prometheus-client`](https://crates.io/crates/prometheus-client) or [`metrics`](https://crates.io/crates/metrics))
 
 See [autometrics.dev](https://docs.autometrics.dev/) for more details on the ideas behind autometrics.
 
