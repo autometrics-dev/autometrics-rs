@@ -1,12 +1,12 @@
 # Autometrics + OTLP push controller
 
-This example demonstrates how you can push autometrics via OTLP gRPC protocol to an OTEL-Collector or another compatible solution.
+This example demonstrates how you can push autometrics via OTLP gRPC protocol to the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) or another OTel-compatible solution.
 
 ## Running the example
 
 ### Start a basic OTEL-Collector
 
-You can use the [`otel-collector-config.yml`](./otel-collector-config.yml) file to start an otel-collector container that listen on 0.0.0.0:4317 for incoming otlp-gRPC traffic, and export received metrics to standard output.
+You can use the [`otel-collector-config.yml`](./otel-collector-config.yml) file to start an otel-collector container that listens on 0.0.0.0:4317 for incoming otlp-gRPC traffic, and exports the metrics it receives to stdout.
 
 Run the following command in a second terminal to start a container in interactive mode:
 
