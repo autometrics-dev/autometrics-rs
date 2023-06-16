@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 autometrics = { path = "../../autometrics", features = ["opentelemetry"] }
+autometrics-example-util = { path = "../util" }
 # Note that the version of the opentelemetry crate MUST match
 # the version used by autometrics
 opentelemetry = { version = "0.19", features = ["metrics", "rt-tokio"] }
