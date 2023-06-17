@@ -6,4 +6,5 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8"
+sysinfo = "0.29.2"
 tokio = { version = "1", features = ["time"] }

@@ -16,3 +16,12 @@ cargo run --package example-{name of example}
 ## Full Example
 
 Look at the [full-api](./full-api) example to see autometrics in use in an example API server built with `axum`, `thiserror`, and `tokio`.
+
+## Prometheus
+
+If Prometheus is installed locally example may start it as needed. You can also start Prometheus before running examples with Docker like this:
+
+```
+# from this directory
+docker run  -v $(pwd)/util/prometheus.yml:/prometheus/prometheus.yml --network host prom/prometheus --enable-feature=exemplar-storage
+```

@@ -1,22 +1,31 @@
 use rand::{thread_rng, Rng};
 use std::process::{Child, Command, Stdio};
 use std::{io::ErrorKind, time::Duration};
+use sysinfo::{System, SystemExt};
 use tokio::time::sleep;
 
 const PROMETHEUS_CONFIG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/prometheus.yml");
 
-pub struct ChildGuard(Child);
+pub struct ChildGuard(Option<Child>);
 
 impl Drop for ChildGuard {
     fn drop(&mut self) {
-        match self.0.kill() {
-            Ok(_) => eprintln!("Stopped Prometheus server"),
-            Err(_) => eprintln!("Failed to stop Prometheus server"),
+        if let Some(child) = self.0.as_mut() {
+            match child.kill() {
+                Ok(_) => eprintln!("Stopped Prometheus server"),
+                Err(_) => eprintln!("Failed to stop Prometheus server"),
+            }
         }
     }
 }
 
 pub fn run_prometheus(enable_exemplars: bool) -> ChildGuard {
+    let system = System::new_all();
+
+    if system.processes_by_exact_name("prometheus").any(|_| true) {
+        return ChildGuard(None);
+    }
+
     let mut args = vec!["--config.file", PROMETHEUS_CONFIG_PATH];
     if enable_exemplars {
         args.push("--enable-feature=exemplar-storage");
@@ -43,7 +52,7 @@ pub fn run_prometheus(enable_exemplars: bool) -> ChildGuard {
                     "Exemplars are enabled (using the flag: --enable-feature=exemplar-storage)"
                 );
             }
-            ChildGuard(child)
+            ChildGuard(Some(child))
         }
     }
 }
