@@ -6,24 +6,22 @@ use tokio::time::sleep;
 
 const PROMETHEUS_CONFIG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/prometheus.yml");
 
-pub struct ChildGuard(Option<Child>);
+pub struct ChildGuard(Child);
 
 impl Drop for ChildGuard {
     fn drop(&mut self) {
-        if let Some(child) = self.0.as_mut() {
-            match child.kill() {
-                Ok(_) => eprintln!("Stopped Prometheus server"),
-                Err(_) => eprintln!("Failed to stop Prometheus server"),
-            }
+        match self.0.kill() {
+            Ok(_) => eprintln!("Stopped Prometheus server"),
+            Err(_) => eprintln!("Failed to stop Prometheus server"),
         }
     }
 }
 
-pub fn run_prometheus(enable_exemplars: bool) -> ChildGuard {
+pub fn run_prometheus(enable_exemplars: bool) -> Option<ChildGuard> {
     let system = System::new_all();
 
     if system.processes_by_exact_name("prometheus").any(|_| true) {
-        return ChildGuard(None);
+        return None;
     }
 
     let mut args = vec!["--config.file", PROMETHEUS_CONFIG_PATH];
@@ -52,7 +50,7 @@ pub fn run_prometheus(enable_exemplars: bool) -> ChildGuard {
                     "Exemplars are enabled (using the flag: --enable-feature=exemplar-storage)"
                 );
             }
-            ChildGuard(Some(child))
+            Some(ChildGuard(child))
         }
     }
 }
