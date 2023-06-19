@@ -20,7 +20,7 @@ Look at the [full-api](./full-api) example to see autometrics in use in an examp
 
 ## Prometheus
 
-If Prometheus is installed locally example may start it as needed. You can also start Prometheus before running examples with Docker like this:
+If Prometheus is installed locally, the examples may start it and configure it to scrape the example servers. You can also start Prometheus before running the examples with Docker like this:
 
 ```
 # from this directory
