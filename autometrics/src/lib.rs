@@ -236,6 +236,9 @@ pub mod __private {
     /// - `OTEL_SERVICE_NAME`
     /// Or, fall back to the name of the cargo package defined in the `Cargo.toml` file.
     pub fn service_name(cargo_pkg_name: &'static str) -> &'static str {
+        // Note that we are using a OnceCell here because we want the label value to
+        // be available as a &'static str. This allows us to load the value from the
+        // environment variables once at startup while still accessing it as a &'static str
         static SERVICE_NAME: OnceCell<String> = OnceCell::new();
         SERVICE_NAME.get_or_init(|| {
             std::env::var("AUTOMETRICS_SERVICE_NAME")
