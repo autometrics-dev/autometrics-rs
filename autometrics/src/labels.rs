@@ -194,7 +194,11 @@ impl HistogramLabels {
     }
 
     pub fn to_vec(&self) -> Vec<Label> {
-        let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
+        let mut labels = vec![
+            (FUNCTION_KEY, self.function),
+            (MODULE_KEY, self.module),
+            (SERVICE_NAME_KEY, self.service_name),
+        ];
 
         if let Some(objective_name) = self.objective_name {
             labels.push((OBJECTIVE_NAME, objective_name));
