@@ -112,6 +112,10 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! { None }
     };
 
+    let service_name = quote! {
+        autometrics::__private::service_name(env!("CARGO_PKG_NAME"))
+    };
+
     let counter_labels = if args.ok_if.is_some() || args.error_if.is_some() {
         // Apply the predicate to determine whether to consider the result as "ok" or "error"
         let result_label = if let Some(ok_if) = &args.ok_if {
@@ -129,8 +133,9 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 let value_type = (&result).__autometrics_static_str();
                 CounterLabels::new(
                     #function_name,
-                     module_path!(),
-                     CALLER.get(),
+                    module_path!(),
+                    #service_name,
+                    CALLER.get(),
                     Some((result_label, value_type)),
                     #objective,
                 )
@@ -144,6 +149,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
+                    #service_name,
                     CALLER.get(),
                     result_labels,
                     #objective,
@@ -153,7 +159,14 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     };
 
     let gauge_labels = if args.track_concurrency {
-        quote! { Some(&autometrics::__private::GaugeLabels { function: #function_name, module: module_path!() }) }
+        quote! { {
+            use autometrics::__private::{GaugeLabels, service_name};
+            Some(&GaugeLabels {
+                function: #function_name,
+                module: module_path!(),
+                service_name: #service_name,
+            }) }
+        }
     } else {
         quote! { None }
     };
@@ -171,6 +184,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                     option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_BRANCH").or(option_env!("VERGEN_GIT_BRANCH")).unwrap_or_default(),
+                    #service_name,
                 ));
                 AutometricsTracker::start(#gauge_labels)
             };
@@ -183,6 +197,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 let histogram_labels = HistogramLabels::new(
                     #function_name,
                      module_path!(),
+                     #service_name,
                      #objective,
                 );
                 __autometrics_tracker.finish(&counter_labels, &histogram_labels);

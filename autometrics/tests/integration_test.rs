@@ -19,6 +19,7 @@ fn single_function() {
             || line.starts_with("function_calls_count_total{"))
             && line.contains(r#"function="hello_world""#)
             && line.contains(r#"module="integration_test""#)
+            && line.contains(r#"service_name="autometrics""#)
             && line.ends_with("} 2")
     }));
     assert!(metrics
@@ -26,6 +27,7 @@ fn single_function() {
         .any(|line| line.starts_with("function_calls_duration_bucket{")
             && line.contains(r#"function="hello_world""#)
             && line.contains(r#"module="integration_test""#)
+            && line.contains(r#"service_name="autometrics""#)
             && line.ends_with("} 2")));
 }
 
@@ -190,5 +192,6 @@ fn build_info() {
         && line.contains(r#"branch="""#)
         && line.contains(r#"commit="""#)
         && line.contains(&format!("version=\"{}\"", env!("CARGO_PKG_VERSION")))
+        && line.contains(r#"service_name="autometrics""#)
         && line.ends_with("} 1")));
 }

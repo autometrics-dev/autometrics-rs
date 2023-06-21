@@ -210,11 +210,13 @@ pub(crate) const HISTOGRAM_BUCKETS: [f64; 14] = [
 #[doc(hidden)]
 pub mod __private {
     use crate::task_local::LocalKey;
+    use once_cell::sync::OnceCell;
     use std::{cell::RefCell, thread_local};
 
     pub use crate::constants::*;
     pub use crate::labels::*;
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
+    pub use spez::spez;
 
     /// Task-local value used for tracking which function called the current function
     pub static CALLER: LocalKey<&'static str> = {
@@ -229,5 +231,16 @@ pub mod __private {
         LocalKey { inner: CALLER_KEY }
     };
 
-    pub use spez::spez;
+    /// Load the service name from one of the following runtime environment variables:
+    /// - `AUTOMETRICS_SERVICE_NAME`
+    /// - `OTEL_SERVICE_NAME`
+    /// Or, fall back to the name of the cargo package defined in the `Cargo.toml` file.
+    pub fn service_name(cargo_pkg_name: &'static str) -> &'static str {
+        static SERVICE_NAME: OnceCell<String> = OnceCell::new();
+        SERVICE_NAME.get_or_init(|| {
+            std::env::var("AUTOMETRICS_SERVICE_NAME")
+                .or_else(|_| std::env::var("OTEL_SERVICE_NAME"))
+                .unwrap_or(cargo_pkg_name.to_string())
+        })
+    }
 }

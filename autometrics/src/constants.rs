@@ -32,3 +32,5 @@ pub const OBJECTIVE_LATENCY_THRESHOLD_PROMETHEUS: &str = "objective_latency_thre
 pub const VERSION_KEY: &str = "version";
 pub const COMMIT_KEY: &str = "commit";
 pub const BRANCH_KEY: &str = "branch";
+pub const SERVICE_NAME_KEY: &str = "service.name";
+pub const SERVICE_NAME_KEY_PROMETHEUS: &str = "service_name";
