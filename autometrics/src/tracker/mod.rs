@@ -1,3 +1,5 @@
+#[cfg(debug_assertions)]
+use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 
 #[cfg(metrics)]
@@ -32,6 +34,8 @@ pub trait TrackMetrics {
     fn set_build_info(build_info_labels: &BuildInfoLabels);
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self;
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels);
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]);
 }
 
 pub struct AutometricsTracker {
@@ -86,5 +90,17 @@ impl TrackMetrics for AutometricsTracker {
         #[cfg(prometheus_client)]
         self.prometheus_client_tracker
             .finish(counter_labels, histogram_labels);
+    }
+
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
+        #[cfg(metrics)]
+        MetricsTracker::intitialize_metrics(function_descriptions);
+        #[cfg(opentelemetry)]
+        OpenTelemetryTracker::intitialize_metrics(function_descriptions);
+        #[cfg(prometheus)]
+        PrometheusTracker::intitialize_metrics(function_descriptions);
+        #[cfg(prometheus_client)]
+        PrometheusClientTracker::intitialize_metrics(function_descriptions);
     }
 }

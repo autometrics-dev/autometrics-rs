@@ -122,7 +122,8 @@ impl Objective {
 }
 
 /// The percentage of requests that must meet the given criteria (success rate or latency).
-#[cfg_attr(prometheus_client, derive(Clone, Debug, PartialEq, Eq, Hash))]
+#[cfg_attr(any(prometheus_client, debug_assertions), derive(Clone, Copy))]
+#[cfg_attr(prometheus_client, derive(Debug, PartialEq, Eq, Hash))]
 #[non_exhaustive]
 pub enum ObjectivePercentile {
     /// 90%

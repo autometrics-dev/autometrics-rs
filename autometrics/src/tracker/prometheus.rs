@@ -1,3 +1,5 @@
+#[cfg(debug_assertions)]
+use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, ResultLabel};
 use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;
@@ -90,29 +92,8 @@ impl TrackMetrics for PrometheusTracker {
     fn finish(self, counter_labels: &CounterLabels, histogram_labels: &HistogramLabels) {
         let duration = self.start.elapsed().as_secs_f64();
 
-        COUNTER
-            .with_label_values(
-                // Put the label values in the same order as the keys in the counter definition
-                &[
-                    counter_labels.function,
-                    counter_labels.module,
-                    counter_labels.caller,
-                    match counter_labels.result {
-                        Some(ResultLabel::Ok) => OK_KEY,
-                        Some(ResultLabel::Error) => ERROR_KEY,
-                        None => "",
-                    },
-                    counter_labels.ok.unwrap_or_default(),
-                    counter_labels.error.unwrap_or_default(),
-                    counter_labels.objective_name.unwrap_or_default(),
-                    counter_labels
-                        .objective_percentile
-                        .as_ref()
-                        .map(|p| p.as_str())
-                        .unwrap_or_default(),
-                ],
-            )
-            .inc();
+        let counter_labels = counter_labels_to_prometheus_vec(counter_labels);
+        COUNTER.with_label_values(&counter_labels).inc();
 
         HISTOGRAM
             .with_label_values(&[
@@ -148,4 +129,34 @@ impl TrackMetrics for PrometheusTracker {
                 .set(1);
         });
     }
+
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
+        for function in function_descriptions {
+            let labels = counter_labels_to_prometheus_vec(&CounterLabels::from(function));
+            COUNTER.with_label_values(&labels).inc_by(0);
+        }
+    }
+}
+
+/// Put the label values in the same order as the keys in the counter definition
+fn counter_labels_to_prometheus_vec(counter_labels: &CounterLabels) -> [&'static str; 8] {
+    [
+        counter_labels.function,
+        counter_labels.module,
+        counter_labels.caller,
+        match counter_labels.result {
+            Some(ResultLabel::Ok) => OK_KEY,
+            Some(ResultLabel::Error) => ERROR_KEY,
+            None => "",
+        },
+        counter_labels.ok.unwrap_or_default(),
+        counter_labels.error.unwrap_or_default(),
+        counter_labels.objective_name.unwrap_or_default(),
+        counter_labels
+            .objective_percentile
+            .as_ref()
+            .map(|p| p.as_str())
+            .unwrap_or_default(),
+    ]
 }

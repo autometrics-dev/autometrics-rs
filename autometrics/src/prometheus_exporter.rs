@@ -20,6 +20,7 @@
 //! }
 //! ```
 
+use crate::__private::{AutometricsTracker, TrackMetrics, FUNCTION_DESCRIPTIONS};
 use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
@@ -53,23 +54,31 @@ pub enum EncodingError {
     Format(#[from] std::fmt::Error),
 }
 
-pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| GlobalPrometheus {
-    #[cfg(metrics)]
-    metrics_exporter: PrometheusBuilder::new()
-        .set_buckets(&crate::HISTOGRAM_BUCKETS)
-        .expect("Failed to set histogram buckets")
-        .install_recorder()
-        .expect("Failed to install recorder"),
+pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
+    let prometheus = GlobalPrometheus {
+        #[cfg(metrics)]
+        metrics_exporter: PrometheusBuilder::new()
+            .set_buckets(&crate::HISTOGRAM_BUCKETS)
+            .expect("Failed to set histogram buckets")
+            .install_recorder()
+            .expect("Failed to install recorder"),
 
-    #[cfg(opentelemetry)]
-    opentelemetry_exporter: exporter(
-        controllers::basic(processors::factory(
-            selectors::simple::histogram(crate::HISTOGRAM_BUCKETS),
-            aggregation::cumulative_temporality_selector(),
-        ))
-        .build(),
-    )
-    .init(),
+        #[cfg(opentelemetry)]
+        opentelemetry_exporter: exporter(
+            controllers::basic(processors::factory(
+                selectors::simple::histogram(crate::HISTOGRAM_BUCKETS),
+                aggregation::cumulative_temporality_selector(),
+            ))
+            .build(),
+        )
+        .init(),
+    };
+
+    // Set all of the function counters to zero
+    #[cfg(debug_assertions)]
+    AutometricsTracker::intitialize_metrics(&FUNCTION_DESCRIPTIONS);
+
+    prometheus
 });
 
 #[derive(Clone)]
@@ -134,6 +143,10 @@ impl GlobalPrometheus {
 ///     autometrics::prometheus_exporter::init();
 /// # }
 /// ```
+///
+/// In debug builds, this will also set the function call counters to zero.
+/// This exposes the names of instrumented functions to Prometheus without
+/// affecting the metric values.
 pub fn init() {
     // This will cause the Lazy to be initialized
     let _ = GLOBAL_EXPORTER.clone();

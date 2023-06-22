@@ -1,3 +1,5 @@
+#[cfg(debug_assertions)]
+use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
@@ -78,6 +80,14 @@ impl TrackMetrics for OpenTelemetryTracker {
                 .init();
             build_info.add(&Context::current(), 1.0, &build_info_labels);
         });
+    }
+
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
+        for function in function_descriptions {
+            let labels = &to_key_values(CounterLabels::from(function).to_vec());
+            COUNTER.add(&Context::current(), 0, labels);
+        }
     }
 }
 

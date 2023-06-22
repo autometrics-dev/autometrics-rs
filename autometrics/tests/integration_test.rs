@@ -192,3 +192,19 @@ fn build_info() {
         && line.contains(&format!("version=\"{}\"", env!("CARGO_PKG_VERSION")))
         && line.ends_with("} 1")));
 }
+
+#[cfg(debug_assertions)]
+#[test]
+fn zero_metrics() {
+    prometheus_exporter::init();
+
+    #[autometrics]
+    fn zero_metrics_fn() {}
+
+    // Note that we are not calling the function, but it should still be registered
+
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
+    assert!(metrics
+        .lines()
+        .any(|line| line.contains(r#"function="zero_metrics_fn""#) && line.ends_with("} 0")));
+}
