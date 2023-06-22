@@ -1,7 +1,7 @@
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
-use opentelemetry_api::metrics::{Counter, Histogram, UpDownCounter};
+use opentelemetry_api::metrics::{Counter, Histogram, Unit, UpDownCounter};
 use opentelemetry_api::{global, Context, KeyValue};
 use std::{sync::Once, time::Instant};
 
@@ -15,6 +15,7 @@ static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
 static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
     global::meter("")
         .f64_histogram(HISTOGRAM_NAME)
+        .with_unit(Unit::new(HISTOGRAM_UNIT))
         .with_description(HISTOGRAM_DESCRIPTION)
         .init()
 });
