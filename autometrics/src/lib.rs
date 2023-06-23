@@ -252,7 +252,7 @@ pub mod __private {
         pub name: &'static str,
         pub module: &'static str,
         pub objective: Option<Objective>,
-        pub service_name: &'static str,
+        pub cargo_pkg_name: &'static str,
     }
 
     #[cfg(debug_assertions)]
@@ -269,7 +269,7 @@ pub mod __private {
             CounterLabels {
                 function: function.name,
                 module: function.module,
-                service_name: function.service_name,
+                service_name: service_name(function.cargo_pkg_name),
                 caller: "",
                 result: Some(ResultLabel::Ok),
                 ok: None,

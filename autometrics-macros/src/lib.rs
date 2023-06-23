@@ -185,7 +185,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                     name: #function_name,
                     module: module_path!(),
                     objective: #objective,
-                    service_name: #service_name,
+                    cargo_pkg_name: env!("CARGO_PKG_NAME"),
                 };
             }
         }
