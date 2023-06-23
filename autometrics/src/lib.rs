@@ -243,7 +243,7 @@ pub mod __private {
         SERVICE_NAME.get_or_init(|| {
             std::env::var("AUTOMETRICS_SERVICE_NAME")
                 .or_else(|_| std::env::var("OTEL_SERVICE_NAME"))
-                .unwrap_or(cargo_pkg_name.to_string())
+                .unwrap_or_else(|| cargo_pkg_name.to_string())
         })
     }
 }
