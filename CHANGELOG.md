@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Basic benchmarking
+- Function counters are initialized to zero in debug builds. This exposes details of
+  instrumented functions to Prometheus and visualization tools built on top of it,
+  before the functions have been called.
 
 ### Changed
 
