@@ -17,10 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed the `function.calls.count` metric to `function.calls` (which is exported
   to Prometheus as `function_calls_total`) to be in line with OpenTelemetry and
-  OpenMetrics naming conventions
+  OpenMetrics naming conventions. **Dashboards and alerting rules must be updated.**
 - When the `function.calls.duration` histogram is exported to Prometheus, it now
   includes the units (`function_calls_duration_seconds`) to be in line with
-  Prometheus/OpenMetrics naming conventions
+  Prometheus/OpenMetrics naming conventions. **Dashboards and alerting rules must be updated.**
 
 ### Deprecated
 
