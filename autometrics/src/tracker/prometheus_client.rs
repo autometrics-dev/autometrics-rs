@@ -7,7 +7,7 @@ use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels
 use crate::{constants::*, HISTOGRAM_BUCKETS};
 use once_cell::sync::Lazy;
 use prometheus_client::metrics::{family::Family, gauge::Gauge};
-use prometheus_client::registry::Registry;
+use prometheus_client::registry::{Registry, Unit};
 use std::time::Instant;
 
 #[cfg(exemplars)]
@@ -27,7 +27,9 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
 
     let counter = Family::<CounterLabels, CounterType>::default();
     registry.register(
-        COUNTER_NAME_PROMETHEUS,
+        // Remove the _total suffix from the counter name
+        // because the library adds it automatically
+        COUNTER_NAME_PROMETHEUS.replace("_total", ""),
         COUNTER_DESCRIPTION,
         counter.clone(),
     );
@@ -35,9 +37,11 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
     let histogram = Family::<HistogramLabels, HistogramType>::new_with_constructor(|| {
         HistogramType::new(HISTOGRAM_BUCKETS.into_iter())
     });
-    registry.register(
-        HISTOGRAM_NAME_PROMETHEUS,
+    registry.register_with_unit(
+        // This also adds the _seconds suffix to the histogram name automatically
+        HISTOGRAM_NAME_PROMETHEUS.replace("_seconds", ""),
         HISTOGRAM_DESCRIPTION,
+        Unit::Seconds,
         histogram.clone(),
     );
 

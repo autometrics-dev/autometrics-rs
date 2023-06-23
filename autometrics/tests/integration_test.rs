@@ -14,19 +14,20 @@ fn single_function() {
     hello_world();
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
+    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        (line.starts_with("function_calls_total{"))
             && line.contains(r#"function="hello_world""#)
             && line.contains(r#"module="integration_test""#)
+            && line.contains(r#"service_name="autometrics""#)
             && line.ends_with("} 2")
     }));
-    assert!(metrics
-        .lines()
-        .any(|line| line.starts_with("function_calls_duration_bucket{")
-            && line.contains(r#"function="hello_world""#)
-            && line.contains(r#"module="integration_test""#)
-            && line.ends_with("} 2")));
+    assert!(metrics.lines().any(|line| line
+        .starts_with("function_calls_duration_seconds_bucket{")
+        && line.contains(r#"function="hello_world""#)
+        && line.contains(r#"module="integration_test""#)
+        && line.contains(r#"service_name="autometrics""#)
+        && line.ends_with("} 2")));
 }
 
 #[test]
@@ -51,28 +52,24 @@ fn impl_block() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="test_fn""#)
             && line.ends_with("} 1")
     }));
-    assert!(metrics
-        .lines()
-        .any(|line| line.starts_with("function_calls_duration_bucket{")
-            && line.contains(r#"function="test_fn""#)
-            && line.ends_with("} 1")));
+    assert!(metrics.lines().any(|line| line
+        .starts_with("function_calls_duration_seconds_bucket{")
+        && line.contains(r#"function="test_fn""#)
+        && line.ends_with("} 1")));
 
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="test_method""#)
             && line.ends_with("} 1")
     }));
-    assert!(metrics
-        .lines()
-        .any(|line| line.starts_with("function_calls_duration_bucket{")
-            && line.contains(r#"function="test_method""#)
-            && line.ends_with("} 1")));
+    assert!(metrics.lines().any(|line| line
+        .starts_with("function_calls_duration_seconds_bucket{")
+        && line.contains(r#"function="test_method""#)
+        && line.ends_with("} 1")));
 }
 
 #[test]
@@ -95,15 +92,13 @@ fn result() {
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics
         .lines()
-        .any(|line| (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        .any(|line| line.starts_with("function_calls_total{")
             && line.contains(r#"function="result_fn""#)
             && line.contains(r#"result="error""#)
             && line.ends_with("} 2")));
     assert!(metrics
         .lines()
-        .any(|line| (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        .any(|line| line.starts_with("function_calls_total{")
             && line.contains(r#"function="result_fn""#)
             && line.contains(r#"result="ok""#)
             && line.ends_with("} 1")));
@@ -122,8 +117,7 @@ fn ok_if() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="ok_if_fn""#)
             && line.contains(r#"result="error""#)
             && line.ends_with("} 1")
@@ -143,8 +137,7 @@ fn error_if() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="error_if_fn""#)
             && line.contains(r#"result="error""#)
             && line.ends_with("} 1")
@@ -167,8 +160,7 @@ fn caller_label() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"caller="function_1""#)
             && line.contains(r#"function="function_2""#)
             && line.ends_with("} 1")
@@ -190,6 +182,7 @@ fn build_info() {
         && line.contains(r#"branch="""#)
         && line.contains(r#"commit="""#)
         && line.contains(&format!("version=\"{}\"", env!("CARGO_PKG_VERSION")))
+        && line.contains(r#"service_name="autometrics""#)
         && line.ends_with("} 1")));
 }
 

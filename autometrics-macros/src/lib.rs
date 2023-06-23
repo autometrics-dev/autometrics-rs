@@ -112,6 +112,10 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! { None }
     };
 
+    let service_name = quote! {
+        autometrics::__private::service_name(env!("CARGO_PKG_NAME"))
+    };
+
     let counter_labels = if args.ok_if.is_some() || args.error_if.is_some() {
         // Apply the predicate to determine whether to consider the result as "ok" or "error"
         let result_label = if let Some(ok_if) = &args.ok_if {
@@ -129,8 +133,9 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 let value_type = (&result).__autometrics_static_str();
                 CounterLabels::new(
                     #function_name,
-                     module_path!(),
-                     CALLER.get(),
+                    module_path!(),
+                    #service_name,
+                    CALLER.get(),
                     Some((result_label, value_type)),
                     #objective,
                 )
@@ -144,6 +149,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
+                    #service_name,
                     CALLER.get(),
                     result_labels,
                     #objective,
@@ -153,7 +159,14 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     };
 
     let gauge_labels = if args.track_concurrency {
-        quote! { Some(&autometrics::__private::GaugeLabels { function: #function_name, module: module_path!() }) }
+        quote! { {
+            use autometrics::__private::{GaugeLabels, service_name};
+            Some(&GaugeLabels {
+                function: #function_name,
+                module: module_path!(),
+                service_name: #service_name,
+            }) }
+        }
     } else {
         quote! { None }
     };
@@ -172,6 +185,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                     name: #function_name,
                     module: module_path!(),
                     objective: #objective,
+                    service_name: #service_name,
                 };
             }
         }
@@ -194,6 +208,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                     option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_BRANCH").or(option_env!("VERGEN_GIT_BRANCH")).unwrap_or_default(),
+                    #service_name,
                 ));
                 AutometricsTracker::start(#gauge_labels)
             };
@@ -206,6 +221,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                 let histogram_labels = HistogramLabels::new(
                     #function_name,
                      module_path!(),
+                     #service_name,
                      #objective,
                 );
                 __autometrics_tracker.finish(&counter_labels, &histogram_labels);
@@ -327,19 +343,19 @@ fn make_prometheus_url(url: &str, query: &str, comment: &str) -> String {
 }
 
 fn request_rate_query(label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
+    format!("sum by (function, module, service_name, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
 }
 
 fn error_ratio_query(label_key: &str, label_value: &str) -> String {
     let request_rate = request_rate_query(label_key, label_value);
-    format!("(sum by (function, module, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
+    format!("(sum by (function, module, service_name, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
 /
 ({request_rate})",)
 }
 
 fn latency_query(label_key: &str, label_value: &str) -> String {
     let latency = format!(
-        "sum by (le, function, module, commit, version) (rate(function_calls_duration_bucket{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
+        "sum by (le, function, module, service_name, commit, version) (rate({{__name__=~\"function_calls_duration(_seconds)?_bucket\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
     );
     format!(
         "label_replace(histogram_quantile(0.99, {latency}), \"percentile_latency\", \"99\", \"\", \"\")
@@ -349,5 +365,5 @@ label_replace(histogram_quantile(0.95, {latency}), \"percentile_latency\", \"95\
 }
 
 fn concurrent_calls_query(label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module, commit, version) (function_calls_concurrent{{{label_key}=\"{label_value}\"}} {ADD_BUILD_INFO_LABELS})")
+    format!("sum by (function, module, service_name, commit, version) (function_calls_concurrent{{{label_key}=\"{label_value}\"}} {ADD_BUILD_INFO_LABELS})")
 }
