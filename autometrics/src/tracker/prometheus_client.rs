@@ -1,4 +1,6 @@
 use super::TrackMetrics;
+#[cfg(debug_assertions)]
+use crate::__private::FunctionDescription;
 #[cfg(exemplars)]
 use crate::exemplars::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
@@ -108,6 +110,20 @@ impl TrackMetrics for PrometheusClientTracker {
 
         if let Some(gauge_labels) = &self.gauge_labels {
             METRICS.gauge.get_or_create(gauge_labels).dec();
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
+        for function in function_descriptions {
+            METRICS
+                .counter
+                .get_or_create(&CounterLabels::from(function))
+                .inc_by(
+                    0,
+                    #[cfg(exemplars)]
+                    None,
+                );
         }
     }
 }

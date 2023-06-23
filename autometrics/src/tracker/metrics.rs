@@ -1,3 +1,5 @@
+#[cfg(debug_assertions)]
+use crate::__private::FunctionDescription;
 use crate::constants::*;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
 use crate::tracker::TrackMetrics;
@@ -59,5 +61,13 @@ impl TrackMetrics for MetricsTracker {
         SET_BUILD_INFO.call_once(|| {
             register_gauge!(BUILD_INFO_NAME, &build_info_labels.to_vec()).set(1.0);
         });
+    }
+
+    #[cfg(debug_assertions)]
+    fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
+        for function in function_descriptions {
+            let labels = &CounterLabels::from(function).to_vec();
+            register_counter!(COUNTER_NAME, labels).increment(0);
+        }
     }
 }

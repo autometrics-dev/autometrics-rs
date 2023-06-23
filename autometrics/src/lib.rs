@@ -209,6 +209,8 @@ pub(crate) const HISTOGRAM_BUCKETS: [f64; 14] = [
 // so you don't get any autocompletion or type checking.
 #[doc(hidden)]
 pub mod __private {
+    #[cfg(debug_assertions)]
+    use crate::objectives::Objective;
     use crate::task_local::LocalKey;
     use once_cell::sync::OnceCell;
     use std::{cell::RefCell, thread_local};
@@ -230,6 +232,53 @@ pub mod __private {
 
         LocalKey { inner: CALLER_KEY }
     };
+
+    // Re-export linkme so that it can be used by the macro-generated code
+    #[cfg(debug_assertions)]
+    pub mod linkme {
+        pub use linkme::*;
+    }
+
+    /// In debug mode, we use linkme to collect all the function descriptions
+    /// so that we can initialize the counters to zero.
+    /// This exposes the details of instrumented functions to Prometheus
+    /// before they are called for the first time.
+    #[cfg(debug_assertions)]
+    #[linkme::distributed_slice]
+    pub static FUNCTION_DESCRIPTIONS: [FunctionDescription] = [..];
+
+    #[cfg(debug_assertions)]
+    pub struct FunctionDescription {
+        pub name: &'static str,
+        pub module: &'static str,
+        pub objective: Option<Objective>,
+        pub cargo_pkg_name: &'static str,
+    }
+
+    #[cfg(debug_assertions)]
+    impl From<&FunctionDescription> for CounterLabels {
+        fn from(function: &FunctionDescription) -> Self {
+            let (objective_name, objective_percentile) = match &function.objective {
+                Some(Objective {
+                    name,
+                    success_rate: Some(percentile),
+                    ..
+                }) => (Some(*name), Some(*percentile)),
+                _ => (None, None),
+            };
+            CounterLabels {
+                function: function.name,
+                module: function.module,
+                service_name: service_name(function.cargo_pkg_name),
+                caller: "",
+                result: Some(ResultLabel::Ok),
+                ok: None,
+                error: None,
+                objective_name,
+                objective_percentile,
+            }
+        }
+    }
 
     /// Load the service name from one of the following runtime environment variables:
     /// - `AUTOMETRICS_SERVICE_NAME`

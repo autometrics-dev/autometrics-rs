@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Basic benchmarking
 - All metrics now have a `service.name` label attached. This is set via runtime environment
   variable (`AUTOMETRICS_SERVICE_NAME` or `OTEL_SERVICE_NAME`), or falls back to the crate
   name defined in the `Cargo.toml`
+- Function counters are initialized to zero in debug builds. This exposes details of
+  instrumented functions to Prometheus and visualization tools built on top of it,
+  before the functions have been called.
+- Basic benchmarking
 
 ### Changed
 

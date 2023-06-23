@@ -171,6 +171,28 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! { None }
     };
 
+    // This is a little nuts.
+    // In debug mode, we're using the `linkme` crate to collect all the function descriptions into a static slice.
+    // We're then using that to start all the function counters at zero, even before the function is called.
+    let collect_function_descriptions = if cfg!(debug_assertions) {
+        quote! {
+            {
+                use autometrics::__private::{linkme::distributed_slice, FUNCTION_DESCRIPTIONS, FunctionDescription};
+                #[distributed_slice(FUNCTION_DESCRIPTIONS)]
+                // Point the distributed_slice macro to the linkme crate re-exported from autometrics
+                #[linkme(crate = autometrics::__private::linkme)]
+                static FUNCTION_DESCRIPTION: FunctionDescription = FunctionDescription {
+                    name: #function_name,
+                    module: module_path!(),
+                    objective: #objective,
+                    cargo_pkg_name: env!("CARGO_PKG_NAME"),
+                };
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     Ok(quote! {
         #(#attrs)*
 
@@ -178,6 +200,8 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         #[doc=#metrics_docs]
 
         #vis #sig {
+            #collect_function_descriptions
+
             let __autometrics_tracker = {
                 use autometrics::__private::{AutometricsTracker, BuildInfoLabels, TrackMetrics};
                 AutometricsTracker::set_build_info(&BuildInfoLabels::new(
