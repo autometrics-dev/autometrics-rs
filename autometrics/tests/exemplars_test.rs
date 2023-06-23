@@ -71,7 +71,7 @@ fn tracing_opentelemetry_context() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        line.starts_with("function_calls_count_total{")
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="opentelemetry_context_fn""#)
             && (line.contains(r#"trace_id=""#) || line.contains(r#"span_id=""#))
     }))
