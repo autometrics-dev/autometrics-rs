@@ -75,14 +75,14 @@ fn generate_success_rate_slo(objective_percentile: &str, min_calls_per_second: f
     description: Common SLO based on function success rates
     sli:
       events:
-        error_query: sum by (objective_name, objective_percentile) (rate({{__name__=~\"function_calls(_count)?(_total)?\",objective_percentile=\"{objective_percentile}\",result=\"error\"}}[{{{{.window}}}}]))
-        total_query: sum by (objective_name, objective_percentile) (rate({{__name__=~\"function_calls(_count)?(_total)?\",objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
+        error_query: sum by (objective_name, objective_percentile, service_name) (rate({{__name__=~\"function_calls(_count)?(_total)?\",objective_percentile=\"{objective_percentile}\",result=\"error\"}}[{{{{.window}}}}]))
+        total_query: sum by (objective_name, objective_percentile, service_name) (rate({{__name__=~\"function_calls(_count)?(_total)?\",objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
     alerting:
       name: High Error Rate SLO - {objective_percentile}%
       labels:
         category: success-rate
       annotations:
-        summary: \"High error rate on SLO: {{{{$labels.objective_name}}}}\"
+        summary: \"High error rate on the `{{{{$labels.objective_name}}}}` SLO for the `{{{{$labels.service_name}}}}` service\"
       page_alert:
         labels:
           severity: page
@@ -101,20 +101,20 @@ fn generate_latency_slo(objective_percentile: &str, min_calls_per_second: f64) -
     sli:
       events:
         error_query: >
-          sum by (objective_name, objective_percentile) (rate(function_calls_duration_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
+          sum by (objective_name, objective_percentile, service_name) (rate(function_calls_duration_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
           -
-          (sum by (objective_name, objective_percentile) (
+          (sum by (objective_name, objective_percentile, service_name) (
             label_join(rate({{__name__=~\"function_calls_duration(_seconds)?_bucket\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"objective_latency_threshold\")
             and
             label_join(rate({{__name__=~\"function_calls_duration(_seconds)?_bucket\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"le\")
           ))
-        total_query: sum by (objective_name, objective_percentile) (rate({{__name__=~\"function_calls_duration(_seconds)?_count\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
+        total_query: sum by (objective_name, objective_percentile, service_name) (rate({{__name__=~\"function_calls_duration(_seconds)?_count\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}])) >= {min_calls_per_second}
     alerting:
       name: High Latency SLO - {objective_percentile}%
       labels:
         category: latency
       annotations:
-        summary: \"High latency on SLO: {{{{$labels.objective_name}}}}\"
+        summary: \"High latency on the `{{{{$labels.objective_name}}}}` SLO for the `{{{{$labels.service_name}}}}` service\"
       page_alert:
         labels:
           severity: page

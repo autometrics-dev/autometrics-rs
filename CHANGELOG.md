@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Basic benchmarking
+- All metrics now have a `service.name` label attached. This is set via runtime environment
+  variable (`AUTOMETRICS_SERVICE_NAME` or `OTEL_SERVICE_NAME`), or falls back to the crate
+  name defined in the `Cargo.toml`
 
 ### Changed
 

@@ -319,19 +319,19 @@ fn make_prometheus_url(url: &str, query: &str, comment: &str) -> String {
 }
 
 fn request_rate_query(label_key: &str, label_value: &str) -> String {
-    format!("sum by (function, module, service_name, commit, version) (rate(function_calls_total{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
+    format!("sum by (function, module, service_name, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})")
 }
 
 fn error_ratio_query(label_key: &str, label_value: &str) -> String {
     let request_rate = request_rate_query(label_key, label_value);
-    format!("(sum by (function, module, service_name, commit, version) (rate(function_calls_total{{{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
+    format!("(sum by (function, module, service_name, commit, version) (rate({{__name__=~\"function_calls(_count)?(_total)?\",{label_key}=\"{label_value}\",result=\"error\"}}[5m]) {ADD_BUILD_INFO_LABELS}))
 /
 ({request_rate})",)
 }
 
 fn latency_query(label_key: &str, label_value: &str) -> String {
     let latency = format!(
-        "sum by (le, function, module, service_name, commit, version) (rate(function_calls_duration_seconds_bucket{{{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
+        "sum by (le, function, module, service_name, commit, version) (rate({{__name__=~\"function_calls_duration(_seconds)?_bucket\",{label_key}=\"{label_value}\"}}[5m]) {ADD_BUILD_INFO_LABELS})"
     );
     format!(
         "label_replace(histogram_quantile(0.99, {latency}), \"percentile_latency\", \"99\", \"\", \"\")
