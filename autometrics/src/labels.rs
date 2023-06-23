@@ -42,7 +42,7 @@ impl BuildInfoLabels {
     }
 }
 
-/// These are the labels used for the `function.calls.count` metric.
+/// These are the labels used for the `function.calls` metric.
 #[cfg_attr(
     prometheus_client,
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
