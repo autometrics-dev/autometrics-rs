@@ -51,7 +51,7 @@ use prometheus_client::encoding::{EncodeLabelValue, LabelValueEncoder};
 ///
 /// When an objective is added to a function, Autometrics attaches additional labels to the generated metrics.
 ///
-/// Specifically, [`success_rate`] objectives will add objective-related labels to the `function.calls.count` metric
+/// Specifically, [`success_rate`] objectives will add objective-related labels to the `function.calls` metric
 /// and [`latency`] objectives will add labels to the `function.calls.duration` metric.
 ///
 /// Autometrics comes with a set of Prometheus [recording rules](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/)
@@ -89,7 +89,7 @@ impl Objective {
     ///
     /// ## Metric Labels
     ///
-    /// When a success rate objective is added to a function, the `function.calls.count` metric
+    /// When a success rate objective is added to a function, the `function.calls` metric
     /// will have these labels added:
     /// - `objective.name` - the value of the name passed to the [`Objective::new`] function
     /// - `objective.percentile` - the percentile provided here

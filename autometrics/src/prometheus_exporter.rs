@@ -93,7 +93,14 @@ impl GlobalPrometheus {
 
         #[cfg(opentelemetry)]
         {
-            let metric_families = self.opentelemetry_exporter.registry().gather();
+            let mut metric_families = self.opentelemetry_exporter.registry().gather();
+            // This exporter doesn't currently append the units to the metric name so
+            // we do it ourselves
+            for metric in metric_families.iter_mut() {
+                if metric.get_name() == "function_calls_duration" {
+                    metric.set_name("function_calls_duration_seconds".to_string());
+                }
+            }
             let encoder = TextEncoder::new();
             encoder.encode_utf8(&metric_families, &mut output)?;
             output.push('\n');

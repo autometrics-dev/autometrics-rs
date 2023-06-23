@@ -18,8 +18,7 @@ fn success_rate() {
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics
         .lines()
-        .any(|line| (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        .any(|line| line.starts_with("function_calls_total{")
             && line.contains(r#"function="success_rate_fn""#)
             && line.contains(r#"objective_name="test""#)
             && line.contains(r#"objective_percentile="99""#)
@@ -44,7 +43,7 @@ fn latency() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        line.starts_with("function_calls_duration_bucket{")
+        line.starts_with("function_calls_duration_seconds_bucket{")
             && line.contains(r#"function="latency_fn""#)
             && line.contains(r#"objective_latency_threshold="0.1""#)
             && line.contains(r#"objective_name="test""#)
@@ -72,15 +71,14 @@ fn combined_objective() {
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
-        (line.starts_with("function_calls_count{")
-            || line.starts_with("function_calls_count_total{"))
+        line.starts_with("function_calls_total{")
             && line.contains(r#"function="combined_objective_fn""#)
             && line.contains(r#"objective_name="test""#)
             && line.contains(r#"objective_percentile="99""#)
             && line.ends_with("} 2")
     }));
     assert!(metrics.lines().any(|line| {
-        line.starts_with("function_calls_duration_bucket{")
+        line.starts_with("function_calls_duration_seconds_bucket{")
             && line.contains(r#"function="combined_objective_fn""#)
             && line.contains(r#"objective_latency_threshold="0.1""#)
             && line.contains(r#"objective_name="test""#)

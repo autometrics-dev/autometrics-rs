@@ -41,9 +41,9 @@ On the stdout of the terminal where you started the opentelemetry-collector cont
 ...
 Metric #0
 Descriptor:
-     -> Name: function.calls.count
+     -> Name: function.calls
      -> Description: Autometrics counter for tracking function calls
-     -> Unit: 
+     -> Unit:
      -> DataType: Sum
      -> IsMonotonic: true
      -> AggregationTemporality: Cumulative
@@ -59,7 +59,7 @@ Metric #1
 Descriptor:
      -> Name: build_info
      -> Description: Autometrics info metric for tracking software version and build details
-     -> Unit: 
+     -> Unit:
      -> DataType: Sum
      -> IsMonotonic: false
      -> AggregationTemporality: Cumulative
@@ -75,7 +75,7 @@ Metric #2
 Descriptor:
      -> Name: function.calls.duration
      -> Description: Autometrics histogram for tracking function call duration
-     -> Unit: 
+     -> Unit:
      -> DataType: Sum
      -> IsMonotonic: false
      -> AggregationTemporality: Cumulative
