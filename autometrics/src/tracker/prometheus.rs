@@ -17,6 +17,7 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
         &[
             FUNCTION_KEY,
             MODULE_KEY,
+            SERVICE_NAME_KEY_PROMETHEUS,
             CALLER_KEY,
             RESULT_KEY,
             OK_KEY,
@@ -42,6 +43,7 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
         &[
             FUNCTION_KEY,
             MODULE_KEY,
+            SERVICE_NAME_KEY_PROMETHEUS,
             OBJECTIVE_NAME_PROMETHEUS,
             OBJECTIVE_PERCENTILE_PROMETHEUS,
             OBJECTIVE_LATENCY_THRESHOLD_PROMETHEUS
@@ -53,7 +55,7 @@ static GAUGE: Lazy<IntGaugeVec> = Lazy::new(|| {
     register_int_gauge_vec!(
         GAUGE_NAME_PROMETHEUS,
         GAUGE_DESCRIPTION,
-        &[FUNCTION_KEY, MODULE_KEY]
+        &[FUNCTION_KEY, MODULE_KEY, SERVICE_NAME_KEY_PROMETHEUS]
     )
     .expect("Failed to register function_calls_concurrent gauge")
 });
@@ -61,7 +63,12 @@ static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
     register_int_gauge_vec!(
         BUILD_INFO_NAME,
         BUILD_INFO_DESCRIPTION,
-        &[COMMIT_KEY, VERSION_KEY, BRANCH_KEY]
+        &[
+            COMMIT_KEY,
+            VERSION_KEY,
+            BRANCH_KEY,
+            SERVICE_NAME_KEY_PROMETHEUS
+        ]
     )
     .expect("Failed to register build_info counter")
 });
@@ -74,7 +81,11 @@ pub struct PrometheusTracker {
 impl TrackMetrics for PrometheusTracker {
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self {
         let gauge = if let Some(gauge_labels) = gauge_labels {
-            let gauge = GAUGE.with_label_values(&[gauge_labels.function, gauge_labels.module]);
+            let gauge = GAUGE.with_label_values(&[
+                gauge_labels.function,
+                gauge_labels.module,
+                gauge_labels.service_name,
+            ]);
             gauge.inc();
             Some(gauge)
         } else {
@@ -96,6 +107,7 @@ impl TrackMetrics for PrometheusTracker {
                 &[
                     counter_labels.function,
                     counter_labels.module,
+                    counter_labels.service_name,
                     counter_labels.caller,
                     match counter_labels.result {
                         Some(ResultLabel::Ok) => OK_KEY,
@@ -118,6 +130,7 @@ impl TrackMetrics for PrometheusTracker {
             .with_label_values(&[
                 histogram_labels.function,
                 histogram_labels.module,
+                histogram_labels.service_name,
                 histogram_labels.objective_name.unwrap_or_default(),
                 histogram_labels
                     .objective_percentile
@@ -144,6 +157,7 @@ impl TrackMetrics for PrometheusTracker {
                     build_info_labels.commit,
                     build_info_labels.version,
                     build_info_labels.branch,
+                    build_info_labels.service_name,
                 ])
                 .set(1);
         });

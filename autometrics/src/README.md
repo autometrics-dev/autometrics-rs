@@ -107,6 +107,17 @@ pub fn main() {
 }
 ```
 
+### Service name
+
+All metrics produced by Autometrics have a label called `service.name` (or `service_name` when exported to Prometheus) attached to identify the logical service they are part of.
+
+You may want to override the default service name, for example if you are running multiple instances of the same code base as separate services and want to differentiate between the metrics produced by each one.
+
+The service name is loaded from the following environment variables, in this order:
+1. `AUTOMETRICS_SERVICE_NAME` (at runtime)
+2. `OTEL_SERVICE_NAME` (at runtime)
+3. `CARGO_PKG_NAME` (at compile time)
+
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter. This is compatible with any of the [Metrics backends](#metrics-backends) and uses `prometheus-client` by default if none are explicitly selected

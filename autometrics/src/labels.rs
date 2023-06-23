@@ -1,7 +1,6 @@
 use crate::{constants::*, objectives::*};
 #[cfg(prometheus_client)]
 use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue, LabelValueEncoder};
-use std::ops::Deref;
 
 pub(crate) type Label = (&'static str, &'static str);
 pub type ResultAndReturnTypeLabels = (&'static str, Option<&'static str>);
@@ -15,14 +14,21 @@ pub struct BuildInfoLabels {
     pub(crate) branch: &'static str,
     pub(crate) commit: &'static str,
     pub(crate) version: &'static str,
+    pub(crate) service_name: &'static str,
 }
 
 impl BuildInfoLabels {
-    pub fn new(version: &'static str, commit: &'static str, branch: &'static str) -> Self {
+    pub fn new(
+        version: &'static str,
+        commit: &'static str,
+        branch: &'static str,
+        service_name: &'static str,
+    ) -> Self {
         Self {
             version,
             commit,
             branch,
+            service_name,
         }
     }
 
@@ -31,6 +37,7 @@ impl BuildInfoLabels {
             (COMMIT_KEY, self.commit),
             (VERSION_KEY, self.version),
             (BRANCH_KEY, self.branch),
+            (SERVICE_NAME_KEY, self.service_name),
         ]
     }
 }
@@ -43,6 +50,7 @@ impl BuildInfoLabels {
 pub struct CounterLabels {
     pub(crate) function: &'static str,
     pub(crate) module: &'static str,
+    pub(crate) service_name: &'static str,
     pub(crate) caller: &'static str,
     pub(crate) result: Option<ResultLabel>,
     pub(crate) ok: Option<&'static str>,
@@ -80,6 +88,7 @@ impl CounterLabels {
     pub fn new(
         function: &'static str,
         module: &'static str,
+        service_name: &'static str,
         caller: &'static str,
         result: Option<ResultAndReturnTypeLabels>,
         objective: Option<Objective>,
@@ -105,6 +114,7 @@ impl CounterLabels {
         Self {
             function,
             module,
+            service_name,
             caller,
             objective_name,
             objective_percentile,
@@ -118,6 +128,7 @@ impl CounterLabels {
         let mut labels = vec![
             (FUNCTION_KEY, self.function),
             (MODULE_KEY, self.module),
+            (SERVICE_NAME_KEY, self.service_name),
             (CALLER_KEY, self.caller),
         ];
         if let Some(result) = &self.result {
@@ -148,13 +159,19 @@ impl CounterLabels {
 pub struct HistogramLabels {
     pub function: &'static str,
     pub module: &'static str,
+    pub service_name: &'static str,
     pub objective_name: Option<&'static str>,
     pub objective_percentile: Option<ObjectivePercentile>,
     pub objective_latency_threshold: Option<ObjectiveLatency>,
 }
 
 impl HistogramLabels {
-    pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
+    pub fn new(
+        function: &'static str,
+        module: &'static str,
+        service_name: &'static str,
+        objective: Option<Objective>,
+    ) -> Self {
         let (objective_name, objective_percentile, objective_latency_threshold) =
             if let Some(objective) = objective {
                 if let Some((latency, percentile)) = objective.latency {
@@ -169,6 +186,7 @@ impl HistogramLabels {
         Self {
             function,
             module,
+            service_name,
             objective_name,
             objective_percentile,
             objective_latency_threshold,
@@ -176,7 +194,11 @@ impl HistogramLabels {
     }
 
     pub fn to_vec(&self) -> Vec<Label> {
-        let mut labels = vec![(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)];
+        let mut labels = vec![
+            (FUNCTION_KEY, self.function),
+            (MODULE_KEY, self.module),
+            (SERVICE_NAME_KEY, self.service_name),
+        ];
 
         if let Some(objective_name) = self.objective_name {
             labels.push((OBJECTIVE_NAME, objective_name));
@@ -203,11 +225,16 @@ impl HistogramLabels {
 pub struct GaugeLabels {
     pub function: &'static str,
     pub module: &'static str,
+    pub service_name: &'static str,
 }
 
 impl GaugeLabels {
-    pub fn to_array(&self) -> [Label; 2] {
-        [(FUNCTION_KEY, self.function), (MODULE_KEY, self.module)]
+    pub fn to_array(&self) -> Vec<Label> {
+        vec![
+            (FUNCTION_KEY, self.function),
+            (MODULE_KEY, self.module),
+            (SERVICE_NAME_KEY, self.service_name),
+        ]
     }
 }
 
@@ -222,24 +249,6 @@ impl GaugeLabels {
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/5
 // and this answer explains why it works:
 // https://users.rust-lang.org/t/how-to-check-types-within-macro/33803/8
-
-pub enum LabelArray {
-    Three([Label; 3]),
-    Four([Label; 4]),
-    Five([Label; 5]),
-}
-
-impl Deref for LabelArray {
-    type Target = [Label];
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            LabelArray::Three(l) => l,
-            LabelArray::Four(l) => l,
-            LabelArray::Five(l) => l,
-        }
-    }
-}
 
 /// A trait to override the inferred label for the "result" of a function call.
 pub trait GetLabels {
