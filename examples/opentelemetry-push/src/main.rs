@@ -6,9 +6,9 @@ use opentelemetry::sdk::metrics::controllers::BasicController;
 use opentelemetry::sdk::metrics::selectors;
 use opentelemetry::metrics;
 use opentelemetry_otlp::{ExportConfig, WithExportConfig};
+use tokio::time::sleep;
 use std::error::Error;
 use std::time::Duration;
-use tokio::time::sleep;
 
 fn init_metrics() -> metrics::Result<BasicController> {
     let export_config = ExportConfig {
