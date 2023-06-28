@@ -1,10 +1,10 @@
 use autometrics::autometrics;
 use autometrics_example_util::sleep_random_duration;
-use opentelemetry::metrics;
+use opentelemetry::{runtime, Context};
 use opentelemetry::sdk::export::metrics::aggregation::cumulative_temporality_selector;
 use opentelemetry::sdk::metrics::controllers::BasicController;
 use opentelemetry::sdk::metrics::selectors;
-use opentelemetry::{runtime, Context};
+use opentelemetry::metrics;
 use opentelemetry_otlp::{ExportConfig, WithExportConfig};
 use std::error::Error;
 use std::time::Duration;
