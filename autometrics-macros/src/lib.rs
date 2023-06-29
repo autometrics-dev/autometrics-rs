@@ -118,10 +118,11 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
                             for args in &brackets.args {
                                 ts.push(match args {
-                                    GenericArgument::Type(ty) => match ty {
-                                        Type::ImplTrait(_) => quote! { _ },
-                                        ty => quote! { #ty },
-                                    },
+                                    GenericArgument::Type(ty)
+                                        if matches!(ty, Type::ImplTrait(_)) =>
+                                    {
+                                        quote! { _ }
+                                    }
                                     generic_arg => quote! { #generic_arg },
                                 });
                             }
