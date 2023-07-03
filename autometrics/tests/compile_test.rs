@@ -28,7 +28,11 @@ fn issue_121_c() -> ::http::Result<impl ToString> {
 // Result where both `Ok` and `Error` are `impl` types
 #[autometrics]
 fn issue_121_d() -> Result<impl ToString, impl std::error::Error> {
-    Ok("d")
+    if true {
+        Ok("d")
+    } else {
+        Err(io::Error::new(io::ErrorKind::Other, "issue 121d"))
+    }
 }
 
 #[test]
