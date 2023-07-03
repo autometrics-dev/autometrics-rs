@@ -94,6 +94,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
             Type::ImplTrait(_) => quote! {},
             Type::Path(path) => {
                 let mut ts = vec![];
+                let mut first = true;
 
                 for segment in &path.path.segments {
                     let ident = &segment.ident;
@@ -127,10 +128,19 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                                 });
                             }
 
-                            quote! { <#(#ts),*> }
+                            quote! { ::<#(#ts),*> }
                         }
                         _ => quote! {},
                     };
+
+                    // primitive way to check whenever this is the first iteration or not
+                    // as on the first iteration, we don't want to prepend `::`,
+                    // as types may be local and/or imported and then couldn't be found
+                    if !first {
+                        ts.push(quote! { :: });
+                    } else {
+                        first = false;
+                    }
 
                     ts.push(quote! { #ident });
                     ts.push(quote! { #suffix });
@@ -244,7 +254,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! {}
     };
 
-    let a = quote! {
+    Ok(quote! {
         #(#attrs)*
 
         // Append the metrics documentation to the end of the function's documentation
@@ -280,10 +290,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
             result
         }
-    };
-
-    //panic!("{}", a);
-    Ok(a)
+    })
 }
 
 /// Add autometrics instrumentation to an entire impl block
