@@ -4,3 +4,6 @@ data
 
 # Trybuild compilation error outputs in development phase
 wip
+
+# jetbrains ide config files
+.idea
