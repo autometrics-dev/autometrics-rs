@@ -3,7 +3,10 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::env;
-use syn::{parse_macro_input, ImplItem, ItemFn, ItemImpl, Result, ReturnType, Type};
+use syn::{
+    parse_macro_input, GenericArgument, ImplItem, ItemFn, ItemImpl, PathArguments, Result,
+    ReturnType, Type,
+};
 
 mod parse;
 mod result_labels;
@@ -87,8 +90,66 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
     // `GetLabels` implementor.
     let return_type = match sig.output {
         ReturnType::Default => quote! { : () },
-        ReturnType::Type(_, ref t) if matches!(t.as_ref(), &Type::ImplTrait(_)) => quote! {},
-        ReturnType::Type(_, ref t) => quote! { : #t },
+        ReturnType::Type(_, ref t) => match t.as_ref() {
+            Type::ImplTrait(_) => quote! {},
+            Type::Path(path) => {
+                let mut ts = vec![];
+                let mut first = true;
+
+                for segment in &path.path.segments {
+                    let ident = &segment.ident;
+                    let args = &segment.arguments;
+
+                    // special handling in case the type is angle bracket with a `impl` trait
+                    // in such a case, we would run into the following error
+                    //
+                    // ```
+                    // error[E0562]: `impl Trait` only allowed in function and inherent method return types, not in variable bindings
+                    //   --> src/main.rs:11:28
+                    //    |
+                    // 11 | async fn hello() -> Result<impl ToString, std::io::Error> {
+                    //    |                            ^^^^^^^^^^^^^
+                    // ```
+                    //
+                    // this whole block just re-creates the angle bracketed `<impl ToString, std::io::Error>`
+                    // manually but the trait `impl` replaced with an infer `_`, which fixes this issue
+                    let suffix = match args {
+                        PathArguments::AngleBracketed(brackets) => {
+                            let mut ts = vec![];
+
+                            for args in &brackets.args {
+                                ts.push(match args {
+                                    GenericArgument::Type(ty)
+                                        if matches!(ty, Type::ImplTrait(_)) =>
+                                    {
+                                        quote! { _ }
+                                    }
+                                    generic_arg => quote! { #generic_arg },
+                                });
+                            }
+
+                            quote! { ::<#(#ts),*> }
+                        }
+                        _ => quote! {},
+                    };
+
+                    // primitive way to check whenever this is the first iteration or not
+                    // as on the first iteration, we don't want to prepend `::`,
+                    // as types may be local and/or imported and then couldn't be found
+                    if !first {
+                        ts.push(quote! { :: });
+                    } else {
+                        first = false;
+                    }
+
+                    ts.push(quote! { #ident });
+                    ts.push(quote! { #suffix });
+                }
+
+                quote! { : #(#ts)* }
+            }
+            _ => quote! { : #t },
+        },
     };
 
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async

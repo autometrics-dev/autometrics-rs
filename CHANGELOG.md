@@ -38,7 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--
+- Return types on functions annotated with `#[autometrics]` containing generic 
+  `impl` types in their type arguments (`fn() -> Result<impl ToString, impl std::error::Error>`)
+  no longer fail to compile.
 
 ### Security
 
