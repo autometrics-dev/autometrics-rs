@@ -40,6 +40,7 @@ jobs:
       - run: cargo build --features=metrics,custom-objective-percentile,custom-objective-latency
 
       # Compile the examples
+      - run: cargo build --package example-actix-web
       - run: cargo build --package example-axum
       - run: cargo build --package example-custom-metrics
       - run: cargo build --package example-full-api
