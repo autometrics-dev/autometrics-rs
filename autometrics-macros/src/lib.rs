@@ -127,7 +127,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
                                 });
                             }
 
-                            quote! { <#(#ts,)*> }
+                            quote! { <#(#ts),*> }
                         }
                         _ => quote! {},
                     };
@@ -244,7 +244,7 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
         quote! {}
     };
 
-    Ok(quote! {
+    let a = quote! {
         #(#attrs)*
 
         // Append the metrics documentation to the end of the function's documentation
@@ -280,7 +280,10 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
             result
         }
-    })
+    };
+
+    //panic!("{}", a);
+    Ok(a)
 }
 
 /// Add autometrics instrumentation to an entire impl block
