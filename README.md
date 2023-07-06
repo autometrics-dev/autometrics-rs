@@ -179,7 +179,7 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
 
       </details>
 
-  4. [Configure Prometheus](https://github.com/autometrics-dev#5-configuring-prometheus) to scrape your metrics endpoint
+  4. Run Prometheus locally with [Autometrics CLI]() or [configure it manually](https://github.com/autometrics-dev#5-configuring-prometheus) to scrape your metrics endpoint
   5. (Optional) If you have Grafana, import the [Autometrics dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) for an overview and detailed view of the function metrics
 
 ## [API Docs](https://docs.rs/autometrics)
@@ -190,7 +190,7 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
 
 To see autometrics in action:
 
-1. Install [prometheus](https://prometheus.io/download/) locally
+1. Install [prometheus](https://prometheus.io/download/) locally or download [Autometrics CLI](https://docs.autometrics.dev/local-development#getting-started-with-am) which will install and configure Prometheus for you locally.
 2. Run the [complete example](./examples/full-api):
 
     ```shell
