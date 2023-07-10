@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When the `function.calls.duration` histogram is exported to Prometheus, it now
   includes the units (`function_calls_duration_seconds`) to be in line with
   Prometheus/OpenMetrics naming conventions. **Dashboards and alerting rules must be updated.**
+- Struct methods now have the struct name as part of the `function` label on the metrics
+  (for example, `MyStruct::my_method`)
 
 ### Deprecated
 
@@ -38,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Return types on functions annotated with `#[autometrics]` containing generic 
+- Return types on functions annotated with `#[autometrics]` containing generic
   `impl` types in their type arguments (`fn() -> Result<impl ToString, impl std::error::Error>`)
   no longer fail to compile.
 
