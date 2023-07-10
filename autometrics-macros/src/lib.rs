@@ -1,7 +1,7 @@
 use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use std::env;
 use syn::{
     parse_macro_input, GenericArgument, ImplItem, ItemFn, ItemImpl, PathArguments, Result,
@@ -25,7 +25,7 @@ pub fn autometrics(
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
-        Item::Function(item) => instrument_function(&args, item),
+        Item::Function(item) => instrument_function(&args, item, &None),
         Item::Impl(item) => instrument_impl_block(&args, item),
     };
 
@@ -46,12 +46,21 @@ pub fn result_labels(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
 }
 
 /// Add autometrics instrumentation to a single function
-fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStream> {
+fn instrument_function(
+    args: &AutometricsArgs,
+    item: ItemFn,
+    struct_name: &Option<String>,
+) -> Result<TokenStream> {
     let sig = item.sig;
     let block = item.block;
     let vis = item.vis;
     let attrs = item.attrs;
-    let function_name = sig.ident.to_string();
+
+    // Methods are identified as Struct::method
+    let function_name = match struct_name {
+        Some(struct_name) => format!("{}::{}", struct_name, sig.ident.to_string()),
+        None => sig.ident.to_string(),
+    };
 
     // The PROMETHEUS_URL can be configured by passing the environment variable during build time
     let prometheus_url =
@@ -295,6 +304,8 @@ fn instrument_function(args: &AutometricsArgs, item: ItemFn) -> Result<TokenStre
 
 /// Add autometrics instrumentation to an entire impl block
 fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<TokenStream> {
+    let struct_name = Some(item.self_ty.to_token_stream().to_string());
+
     // Replace all of the method items in place
     item.items = item
         .items
@@ -319,7 +330,7 @@ fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<T
                     sig: method.sig,
                     block: Box::new(method.block),
                 };
-                let tokens = match instrument_function(args, item_fn) {
+                let tokens = match instrument_function(args, item_fn, &struct_name) {
                     Ok(tokens) => tokens,
                     Err(err) => err.to_compile_error(),
                 };
