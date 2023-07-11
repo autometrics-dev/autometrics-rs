@@ -53,22 +53,22 @@ fn impl_block() {
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
-            && line.contains(r#"function="test_fn""#)
+            && line.contains(r#"function="Foo::test_fn""#)
             && line.ends_with("} 1")
     }));
     assert!(metrics.lines().any(|line| line
         .starts_with("function_calls_duration_seconds_bucket{")
-        && line.contains(r#"function="test_fn""#)
+        && line.contains(r#"function="Foo::test_fn""#)
         && line.ends_with("} 1")));
 
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
-            && line.contains(r#"function="test_method""#)
+            && line.contains(r#"function="Foo::test_method""#)
             && line.ends_with("} 1")
     }));
     assert!(metrics.lines().any(|line| line
         .starts_with("function_calls_duration_seconds_bucket{")
-        && line.contains(r#"function="test_method""#)
+        && line.contains(r#"function="Foo::test_method""#)
         && line.ends_with("} 1")));
 }
 
