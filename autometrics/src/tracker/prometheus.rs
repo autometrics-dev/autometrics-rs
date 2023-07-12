@@ -20,7 +20,8 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             FUNCTION_KEY,
             MODULE_KEY,
             SERVICE_NAME_KEY_PROMETHEUS,
-            CALLER_KEY,
+            CALLER_FUNCTION_PROMETHEUS,
+            CALLER_MODULE_PROMETHEUS,
             RESULT_KEY,
             OK_KEY,
             ERROR_KEY,
@@ -153,12 +154,13 @@ impl TrackMetrics for PrometheusTracker {
 }
 
 /// Put the label values in the same order as the keys in the counter definition
-fn counter_labels_to_prometheus_vec(counter_labels: &CounterLabels) -> [&'static str; 9] {
+fn counter_labels_to_prometheus_vec(counter_labels: &CounterLabels) -> [&'static str; 10] {
     [
         counter_labels.function,
         counter_labels.module,
         counter_labels.service_name,
-        counter_labels.caller,
+        counter_labels.caller_function,
+        counter_labels.caller_module,
         match counter_labels.result {
             Some(ResultLabel::Ok) => OK_KEY,
             Some(ResultLabel::Error) => ERROR_KEY,

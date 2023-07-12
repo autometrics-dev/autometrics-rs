@@ -19,7 +19,10 @@ pub const BUILD_INFO_DESCRIPTION: &str =
 // Labels
 pub const FUNCTION_KEY: &str = "function";
 pub const MODULE_KEY: &str = "module";
-pub const CALLER_KEY: &str = "caller";
+pub const CALLER_FUNCTION_KEY: &str = "caller.function";
+pub const CALLER_FUNCTION_PROMETHEUS: &str = "caller_function";
+pub const CALLER_MODULE_KEY: &str = "caller.module";
+pub const CALLER_MODULE_PROMETHEUS: &str = "caller_module";
 pub const RESULT_KEY: &str = "result";
 pub const OK_KEY: &str = "ok";
 pub const ERROR_KEY: &str = "error";

@@ -220,14 +220,24 @@ pub mod __private {
     pub use crate::tracker::{AutometricsTracker, TrackMetrics};
     pub use spez::spez;
 
+    /// Track the current function's name and module
+    #[derive(Clone, Copy)]
+    pub struct CallerInfo {
+        pub caller_function: &'static str,
+        pub caller_module: &'static str,
+    }
+
     /// Task-local value used for tracking which function called the current function
-    pub static CALLER: LocalKey<&'static str> = {
+    pub static CALLER: LocalKey<CallerInfo> = {
         // This does the same thing as the tokio::thread_local macro with the exception that
-        // it initializes the value with the empty string.
+        // it initializes the value with empty strings.
         // The tokio macro does not allow you to get the value before setting it.
-        // However, in our case, we want it to simply return the empty string rather than panicking.
+        // However, in our case, we want it to simply return empty strings rather than panicking.
         thread_local! {
-            static CALLER_KEY: RefCell<Option<&'static str>> = const { RefCell::new(Some("")) };
+            static CALLER_KEY: RefCell<Option<CallerInfo>> = const { RefCell::new(Some(CallerInfo {
+                caller_function: "",
+                caller_module: "",
+            })) };
         }
 
         LocalKey { inner: CALLER_KEY }
@@ -270,7 +280,8 @@ pub mod __private {
                 function: function.name,
                 module: function.module,
                 service_name: service_name(function.cargo_pkg_name),
-                caller: "",
+                caller_function: "",
+                caller_module: "",
                 result: Some(ResultLabel::Ok),
                 ok: None,
                 error: None,
