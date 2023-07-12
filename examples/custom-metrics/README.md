@@ -4,20 +4,20 @@ This example demonstrates how you can collect custom metrics in addition to the 
 
 ## Running the example
 
-### Using the `opentelemetry` crate (default)
+### Using the `opentelemetry` crate
 
 ```shell
-cargo run -p example-custom-metrics --features=opentelemetry
+cargo run -p example-custom-metrics --features=opentelemetry-0_19
 ```
 
 ### Using the `metrics` crate
 
 ```shell
-cargo run -p example-custom-metrics --features=metrics
+cargo run -p example-custom-metrics --features=metrics-0_21
 ```
 
 ### Using the `prometheus` crate
 
 ```shell
-cargo run -p example-custom-metrics --features=prometheus
+cargo run -p example-custom-metrics --features=prometheus-0_13
 ```

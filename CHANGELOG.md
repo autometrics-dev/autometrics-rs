@@ -34,7 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
--
+- `metrics` feature flag (replaced with `metrics-0_21`)
+- `opentelemetry` feature flag (replaced with `opentelemetry-0_19`)
+- `prometheus` feature flag (replaced with `prometheus-0_13`)
+- `prometheus-client` feature flag (replaced with `prometheus-client-0_21`)
 
 ### Removed
 
