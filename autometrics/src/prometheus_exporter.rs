@@ -54,7 +54,7 @@ pub enum EncodingError {
     Format(#[from] std::fmt::Error),
 }
 
-pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
+static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
     let prometheus = GlobalPrometheus {
         #[cfg(metrics)]
         metrics_exporter: PrometheusBuilder::new()
@@ -83,7 +83,7 @@ pub(crate) static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
 
 #[derive(Clone)]
 #[doc(hidden)]
-pub struct GlobalPrometheus {
+struct GlobalPrometheus {
     #[cfg(opentelemetry)]
     opentelemetry_exporter: PrometheusExporter,
     #[cfg(metrics)]
