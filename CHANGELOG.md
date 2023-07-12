@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Prometheus/OpenMetrics naming conventions. **Dashboards and alerting rules must be updated.**
 - Struct methods now have the struct name as part of the `function` label on the metrics
   (for example, `MyStruct::my_method`)
+- The `caller` label on the `function.calls` metric was replaced with `caller.function`
+  and `caller.module`
 
 ### Deprecated
 

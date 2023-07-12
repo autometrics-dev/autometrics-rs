@@ -145,24 +145,31 @@ fn error_if() {
 }
 
 #[test]
-fn caller_label() {
+fn caller_labels() {
     prometheus_exporter::init();
 
-    #[autometrics]
-    fn function_1() {
-        function_2()
+    mod module_1 {
+        #[autometrics::autometrics]
+        pub fn function_1() {
+            module_2::function_2()
+        }
+
+        mod module_2 {
+            #[autometrics::autometrics]
+            pub fn function_2() {}
+        }
     }
 
-    #[autometrics]
-    fn function_2() {}
-
-    function_1();
+    module_1::function_1();
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
+    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
-            && line.contains(r#"caller="function_1""#)
+            && line.contains(r#"caller_function="function_1""#)
+            && line.contains(r#"caller_module="integration_test::module_1""#)
             && line.contains(r#"function="function_2""#)
+            && line.contains(r#"module="integration_test::module_1::module_2""#)
             && line.ends_with("} 1")
     }));
 }

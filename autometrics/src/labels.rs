@@ -51,7 +51,8 @@ pub struct CounterLabels {
     pub(crate) function: &'static str,
     pub(crate) module: &'static str,
     pub(crate) service_name: &'static str,
-    pub(crate) caller: &'static str,
+    pub(crate) caller_function: &'static str,
+    pub(crate) caller_module: &'static str,
     pub(crate) result: Option<ResultLabel>,
     pub(crate) ok: Option<&'static str>,
     pub(crate) error: Option<&'static str>,
@@ -89,7 +90,8 @@ impl CounterLabels {
         function: &'static str,
         module: &'static str,
         service_name: &'static str,
-        caller: &'static str,
+        caller_function: &'static str,
+        caller_module: &'static str,
         result: Option<ResultAndReturnTypeLabels>,
         objective: Option<Objective>,
     ) -> Self {
@@ -115,7 +117,8 @@ impl CounterLabels {
             function,
             module,
             service_name,
-            caller,
+            caller_function,
+            caller_module,
             objective_name,
             objective_percentile,
             result,
@@ -129,7 +132,8 @@ impl CounterLabels {
             (FUNCTION_KEY, self.function),
             (MODULE_KEY, self.module),
             (SERVICE_NAME_KEY, self.service_name),
-            (CALLER_KEY, self.caller),
+            (CALLER_FUNCTION_KEY, self.caller_function),
+            (CALLER_MODULE_KEY, self.caller_module),
         ];
         if let Some(result) = &self.result {
             labels.push((RESULT_KEY, result.as_str()));

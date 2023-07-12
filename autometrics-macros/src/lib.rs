@@ -161,18 +161,34 @@ fn instrument_function(
         },
     };
 
+    // Track the name and module of the current function as a task-local variable
+    // so that any functions it calls know which function they were called by
+    let caller_info = quote! {
+        use autometrics::__private::{CALLER, CallerInfo};
+        let caller = CallerInfo {
+            caller_function: #function_name,
+            caller_module: module_path!(),
+        };
+    };
+
     // Wrap the body of the original function, using a slightly different approach based on whether the function is async
     let call_function = if sig.asyncness.is_some() {
         quote! {
-            autometrics::__private::CALLER.scope(#function_name, async move {
-                #block
-            }).await
+            {
+                #caller_info
+                CALLER.scope(caller, async move {
+                    #block
+                }).await
+            }
         }
     } else {
         quote! {
-            autometrics::__private::CALLER.sync_scope(#function_name, move || {
-                #block
-            })
+            {
+                #caller_info
+                CALLER.sync_scope(caller, move || {
+                    #block
+                })
+            }
         }
     };
 
@@ -201,11 +217,13 @@ fn instrument_function(
                 let result_label = #result_label;
                 // If the return type implements Into<&'static str>, attach that as a label
                 let value_type = (&result).__autometrics_static_str();
+                let caller = CALLER.get();
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
                     #service_name,
-                    CALLER.get(),
+                    caller.caller_function,
+                    caller.caller_module,
                     Some((result_label, value_type)),
                     #objective,
                 )
@@ -216,11 +234,13 @@ fn instrument_function(
             {
                 use autometrics::__private::{CALLER, CounterLabels, GetLabels};
                 let result_labels = autometrics::get_result_labels_for_value!(&result);
+                let caller = CALLER.get();
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
                     #service_name,
-                    CALLER.get(),
+                    caller.caller_function,
+                    caller.caller_module,
                     result_labels,
                     #objective,
                 )
@@ -354,12 +374,12 @@ fn create_metrics_docs(prometheus_url: &str, function: &str, track_concurrency: 
             "Rate of calls to the `{function}` function per second, averaged over 5 minute windows"
         ),
     );
-    let callee_request_rate = request_rate_query("caller", function);
+    let callee_request_rate = request_rate_query("caller_function", function);
     let callee_request_rate_url = make_prometheus_url(prometheus_url, &callee_request_rate, &format!("Rate of calls to functions called by `{function}` per second, averaged over 5 minute windows"));
 
     let error_ratio = &error_ratio_query("function", function);
     let error_ratio_url = make_prometheus_url(prometheus_url, error_ratio, &format!("Percentage of calls to the `{function}` function that return errors, averaged over 5 minute windows"));
-    let callee_error_ratio = &error_ratio_query("caller", function);
+    let callee_error_ratio = &error_ratio_query("caller_function", function);
     let callee_error_ratio_url = make_prometheus_url(prometheus_url, callee_error_ratio, &format!("Percentage of calls to functions called by `{function}` that return errors, averaged over 5 minute windows"));
 
     let latency = latency_query("function", function);
