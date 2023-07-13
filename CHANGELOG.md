@@ -41,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
--
+- `encode_global_metrics` (replaced by `prometheus_exporter::encode_to_string`)
+- `global_metrics_exporter` (replaced by `prometheus_exporter::init`)
 
 ### Fixed
 

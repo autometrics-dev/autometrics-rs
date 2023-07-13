@@ -171,27 +171,6 @@ pub use autometrics_macros::autometrics;
 /// directives have priority over the ResultLabels annotations.
 pub use autometrics_macros::ResultLabels;
 
-// Optional exports
-#[cfg(feature = "prometheus-exporter")]
-#[deprecated(
-    since = "0.5.0",
-    note = "Use autometrics::prometheus_exporter::encode_to_string instead. This will be removed in v0.6"
-)]
-/// Replaced by [`prometheus_exporter::encode_to_string`].
-pub fn encode_global_metrics() -> Result<String, prometheus_exporter::EncodingError> {
-    prometheus_exporter::encode_to_string()
-}
-#[cfg(feature = "prometheus-exporter")]
-#[deprecated(
-    since = "0.5.0",
-    note = "Use autometrics::prometheus_exporter::init instead. This will be removed in v0.6"
-)]
-/// Replaced by [`prometheus_exporter::init`].
-pub fn global_metrics_exporter() -> prometheus_exporter::GlobalPrometheus {
-    prometheus_exporter::init();
-    prometheus_exporter::GLOBAL_EXPORTER.clone()
-}
-
 /// We use the histogram buckets recommended by the OpenTelemetry specification
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
 #[cfg(any(prometheus, prometheus_client, prometheus_exporter))]
