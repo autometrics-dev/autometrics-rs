@@ -144,5 +144,5 @@ See the [exemplars module docs](https://docs.rs/autometrics/latest/autometrics/e
 
 By default, Autometrics supports a fixed set of percentiles and latency thresholds for objectives. Use these features to enable custom values:
 
-- `custom-objective-latency` - enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
+- `custom-objective-latency` - enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the queries, recording rules, and alerts will not work.
 - `custom-objective-percentile` - enable this to use custom objective percentiles. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).
