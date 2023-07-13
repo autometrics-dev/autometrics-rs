@@ -1,7 +1,7 @@
 #[cfg(debug_assertions)]
 use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, ResultLabel};
-use crate::{constants::*, tracker::TrackMetrics, HISTOGRAM_BUCKETS};
+use crate::{constants::*, settings::get_settings, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
 use prometheus::core::{AtomicI64, GenericGauge};
 use prometheus::{
@@ -39,7 +39,7 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
         // (and these are configured when creating a histogram rather than
         // when configuring the registry or exporter, like in the other crates)
         // so we need to pass these in here
-        HISTOGRAM_BUCKETS.to_vec()
+        get_settings().histogram_buckets.clone()
     );
     register_histogram_vec!(
         opts,

@@ -4,7 +4,7 @@ use crate::__private::FunctionDescription;
 #[cfg(exemplars)]
 use crate::exemplars::get_exemplar;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels};
-use crate::{constants::*, HISTOGRAM_BUCKETS};
+use crate::{constants::*, settings::get_settings};
 use once_cell::sync::Lazy;
 use prometheus_client::metrics::{family::Family, gauge::Gauge};
 use prometheus_client::registry::{Registry, Unit};
@@ -35,7 +35,7 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
     );
 
     let histogram = Family::<HistogramLabels, HistogramType>::new_with_constructor(|| {
-        HistogramType::new(HISTOGRAM_BUCKETS.into_iter())
+        HistogramType::new(get_settings().histogram_buckets.iter().copied())
     });
     registry.register_with_unit(
         // This also adds the _seconds suffix to the histogram name automatically

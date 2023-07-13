@@ -16,6 +16,7 @@ mod labels;
 pub mod objectives;
 #[cfg(feature = "prometheus-exporter")]
 pub mod prometheus_exporter;
+pub mod settings;
 mod task_local;
 mod tracker;
 
@@ -170,13 +171,6 @@ pub use autometrics_macros::autometrics;
 /// [autometrics](crate::autometrics) invocation on `function_b`: those
 /// directives have priority over the ResultLabels annotations.
 pub use autometrics_macros::ResultLabels;
-
-/// We use the histogram buckets recommended by the OpenTelemetry specification
-/// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
-#[cfg(any(prometheus, prometheus_client, prometheus_exporter))]
-pub(crate) const HISTOGRAM_BUCKETS: [f64; 14] = [
-    0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0,
-];
 
 /// Non-public API, used by the autometrics macro.
 // Note that this needs to be publicly exported (despite being called private)
