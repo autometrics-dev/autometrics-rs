@@ -21,7 +21,6 @@
 //! ```
 
 use crate::__private::{AutometricsTracker, TrackMetrics, FUNCTION_DESCRIPTIONS};
-use crate::settings::get_settings;
 use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
@@ -59,7 +58,7 @@ static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
     let prometheus = GlobalPrometheus {
         #[cfg(metrics)]
         metrics_exporter: PrometheusBuilder::new()
-            .set_buckets(&get_settings().histogram_buckets)
+            .set_buckets(&crate::settings::get_settings().histogram_buckets)
             .expect("Failed to set histogram buckets")
             .install_recorder()
             .expect("Failed to install recorder"),
@@ -67,7 +66,9 @@ static GLOBAL_EXPORTER: Lazy<GlobalPrometheus> = Lazy::new(|| {
         #[cfg(opentelemetry)]
         opentelemetry_exporter: exporter(
             controllers::basic(processors::factory(
-                selectors::simple::histogram(get_settings().histogram_buckets.clone()),
+                selectors::simple::histogram(
+                    crate::settings::get_settings().histogram_buckets.clone(),
+                ),
                 aggregation::cumulative_temporality_selector(),
             ))
             .build(),
