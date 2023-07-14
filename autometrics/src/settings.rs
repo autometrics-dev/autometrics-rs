@@ -52,14 +52,17 @@ impl AutometricsSettings {
         self
     }
 
-    /// The name of the service. This is mostly useful when the same
-    /// code base is used for multiple services, so that it is easy
-    /// to distinguish the metrics produced by each instance.
+    /// All metrics produced by Autometrics have a label called `service.name`
+    /// (or `service_name` when exported to Prometheus) attached to
+    /// identify the logical service they are part of.
     ///
-    /// If this is not set programmatically, it will fall back first
-    /// to the `AUTOMETRICS_SERVICE_NAME` environment variable,
-    /// then `OTEL_SERVICE_NAME`, and finally the name of the crate
-    /// as defined in the `Cargo.toml` file.
+    /// You can set this here or via environment variables.
+    ///
+    /// The priority for where the service name is loaded from is:
+    /// 1. This method
+    /// 2. `AUTOMETRICS_SERVICE_NAME` (at runtime)
+    /// 3. `OTEL_SERVICE_NAME` (at runtime)
+    /// 4. `CARGO_PKG_NAME` (at compile time), which is the name of the crate defined in the `Cargo.toml` file.
     pub fn service_name(mut self, service_name: impl Into<String>) -> Self {
         self.service_name = service_name.into();
         self

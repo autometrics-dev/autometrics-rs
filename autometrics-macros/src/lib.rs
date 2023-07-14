@@ -244,7 +244,7 @@ fn instrument_function(
 
     let gauge_labels = if args.track_concurrency {
         quote! { {
-            use autometrics::__private::{GaugeLabels, service_name};
+            use autometrics::__private::GaugeLabels;
             Some(&GaugeLabels::new(
                 #function_name,
                 module_path!(),
