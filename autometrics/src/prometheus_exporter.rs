@@ -85,6 +85,11 @@ pub enum ExporterInitializationError {
 /// In debug builds, this will also set the function call counters to zero.
 /// This exposes the names of instrumented functions to Prometheus without
 /// affecting the metric values.
+///
+/// You should not call this function if you initialize the Autometrics
+/// settings via [`AutometricsSettings::try_init`].
+///
+/// [`AutometricsSettings::try_init`]: crate::AutometricsSettings::try_init
 pub fn try_init() -> Result<(), ExporterInitializationError> {
     let prometheus = initialize_prometheus_exporter()?;
 
@@ -116,6 +121,11 @@ pub fn try_init() -> Result<(), ExporterInitializationError> {
 /// In debug builds, this will also set the function call counters to zero.
 /// This exposes the names of instrumented functions to Prometheus without
 /// affecting the metric values.
+///
+/// You should not call this function if you initialize the Autometrics
+/// settings via [`AutometricsSettings::init`].
+///
+/// [`AutometricsSettings::init`]: crate::AutometricsSettings::init
 ///
 /// # Panics
 ///

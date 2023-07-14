@@ -3,7 +3,7 @@ use autometrics::{autometrics, objectives::*, prometheus_exporter};
 
 #[test]
 fn success_rate() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     const OBJECTIVE: Objective = Objective::new("test").success_rate(ObjectivePercentile::P99);
 
@@ -28,7 +28,7 @@ fn success_rate() {
 #[cfg(prometheus_exporter)]
 #[test]
 fn latency() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     const OBJECTIVE: Objective =
         Objective::new("test").latency(ObjectiveLatency::Ms100, ObjectivePercentile::P99_9);
@@ -55,7 +55,7 @@ fn latency() {
 #[cfg(prometheus_exporter)]
 #[test]
 fn combined_objective() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     const OBJECTIVE: Objective = Objective::new("test")
         .success_rate(ObjectivePercentile::P99)

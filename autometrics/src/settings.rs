@@ -80,7 +80,7 @@ impl AutometricsSettings {
     pub fn try_init(self) -> Result<(), SettingsInitializationError> {
         AUTOMETRICS_SETTINGS
             .set(self)
-            .map_err(|_| SettingsInitializationError::AlreadyInitialized);
+            .map_err(|_| SettingsInitializationError::AlreadyInitialized)?;
 
         #[cfg(prometheus_exporter)]
         prometheus_exporter::try_init()?;

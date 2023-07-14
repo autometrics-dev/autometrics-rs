@@ -3,7 +3,7 @@ use autometrics::{autometrics, prometheus_exporter};
 
 #[test]
 fn single_function() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     fn hello_world() -> &'static str {
@@ -32,7 +32,7 @@ fn single_function() {
 
 #[test]
 fn impl_block() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     struct Foo;
 
@@ -74,7 +74,7 @@ fn impl_block() {
 
 #[test]
 fn result() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     fn result_fn(should_error: bool) -> Result<(), ()> {
@@ -106,7 +106,7 @@ fn result() {
 
 #[test]
 fn ok_if() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics(ok_if = Option::is_some)]
     fn ok_if_fn() -> Option<()> {
@@ -126,7 +126,7 @@ fn ok_if() {
 
 #[test]
 fn error_if() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics(error_if = Option::is_none)]
     fn error_if_fn() -> Option<()> {
@@ -146,7 +146,7 @@ fn error_if() {
 
 #[test]
 fn caller_labels() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     mod module_1 {
         #[autometrics::autometrics]
@@ -176,7 +176,7 @@ fn caller_labels() {
 
 #[test]
 fn build_info() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     fn function_just_to_initialize_build_info() {}
@@ -196,7 +196,7 @@ fn build_info() {
 #[cfg(debug_assertions)]
 #[test]
 fn zero_metrics() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     fn zero_metrics_fn() {}

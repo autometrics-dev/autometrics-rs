@@ -6,7 +6,7 @@ use tracing_subscriber::prelude::*;
 #[cfg(exemplars_tracing)]
 #[test]
 fn single_field() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     #[tracing::instrument(fields(trace_id = "test_trace_id"))]
@@ -28,7 +28,7 @@ fn single_field() {
 #[cfg(exemplars_tracing)]
 #[test]
 fn multiple_fields() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     #[autometrics]
     #[tracing::instrument(fields(trace_id = "test_trace_id", foo = 99))]
@@ -54,7 +54,7 @@ fn multiple_fields() {
 #[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
-    prometheus_exporter::init();
+    prometheus_exporter::try_init().ok();
 
     let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline()
         .with_writer(std::io::sink())

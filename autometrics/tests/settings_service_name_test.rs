@@ -12,7 +12,6 @@ fn set_service_name() {
     AutometricsSettings::new()
         .service_name("test_service")
         .init();
-    prometheus_exporter::init();
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
     assert!(metrics
