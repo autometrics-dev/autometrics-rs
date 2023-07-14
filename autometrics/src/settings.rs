@@ -23,7 +23,7 @@ pub(crate) fn get_settings() -> &'static AutometricsSettings {
 
 #[derive(Debug)]
 pub struct AutometricsSettings {
-    #[allow(dead_code)]
+    #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Vec<f64>,
     pub(crate) service_name: String,
 }
@@ -37,6 +37,7 @@ impl Default for AutometricsSettings {
 impl AutometricsSettings {
     pub fn new() -> Self {
         Self {
+            #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
             histogram_buckets: DEFAULT_HISTOGRAM_BUCKETS.to_vec(),
             service_name: env::var("AUTOMETRICS_SERVICE_NAME")
                 .or_else(|_| env::var("OTEL_SERVICE_NAME"))
@@ -49,6 +50,7 @@ impl AutometricsSettings {
     /// If this is not set, the buckets recommended by the [OpenTelemetry specification] are used.
     ///
     /// [OpenTelemetry specification]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
+    #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub fn histogram_buckets(mut self, histogram_buckets: impl Into<Vec<f64>>) -> Self {
         self.histogram_buckets = histogram_buckets.into();
         self
