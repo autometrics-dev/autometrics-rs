@@ -184,8 +184,8 @@ pub use autometrics_macros::ResultLabels;
 pub mod __private {
     #[cfg(debug_assertions)]
     use crate::objectives::Objective;
+    use crate::settings::get_settings;
     use crate::task_local::LocalKey;
-    use once_cell::sync::OnceCell;
     use std::{cell::RefCell, thread_local};
 
     pub use crate::constants::*;
@@ -235,7 +235,6 @@ pub mod __private {
         pub name: &'static str,
         pub module: &'static str,
         pub objective: Option<Objective>,
-        pub cargo_pkg_name: &'static str,
     }
 
     #[cfg(debug_assertions)]
@@ -252,7 +251,7 @@ pub mod __private {
             CounterLabels {
                 function: function.name,
                 module: function.module,
-                service_name: service_name(function.cargo_pkg_name),
+                service_name: &get_settings().service_name,
                 caller_function: "",
                 caller_module: "",
                 result: Some(ResultLabel::Ok),
@@ -262,21 +261,5 @@ pub mod __private {
                 objective_percentile,
             }
         }
-    }
-
-    /// Load the service name from one of the following runtime environment variables:
-    /// - `AUTOMETRICS_SERVICE_NAME`
-    /// - `OTEL_SERVICE_NAME`
-    /// Or, fall back to the name of the cargo package defined in the `Cargo.toml` file.
-    pub fn service_name(cargo_pkg_name: &'static str) -> &'static str {
-        // Note that we are using a OnceCell here because we want the label value to
-        // be available as a &'static str. This allows us to load the value from the
-        // environment variables once at startup while still accessing it as a &'static str
-        static SERVICE_NAME: OnceCell<String> = OnceCell::new();
-        SERVICE_NAME.get_or_init(|| {
-            std::env::var("AUTOMETRICS_SERVICE_NAME")
-                .or_else(|_| std::env::var("OTEL_SERVICE_NAME"))
-                .unwrap_or_else(|_| cargo_pkg_name.to_string())
-        })
     }
 }
