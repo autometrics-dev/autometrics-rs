@@ -2,6 +2,8 @@
 //!
 //! See [`AutometricsSettings`] for more details on the available options.
 
+#[cfg(prometheus_exporter)]
+use crate::prometheus_exporter::{self, ExporterInitializationError};
 use once_cell::sync::OnceCell;
 use std::env;
 use thiserror::Error;
@@ -73,16 +75,25 @@ impl AutometricsSettings {
     ///
     /// Note: this function should only be called once and MUST be called before
     /// the settings are used by any other Autometrics functions.
-    pub fn try_init(self) -> Result<(), AlreadyInitializedError> {
+    ///
+    /// If the Prometheus exporter is enabled, this will also initialize it.
+    pub fn try_init(self) -> Result<(), SettingsInitializationError> {
         AUTOMETRICS_SETTINGS
             .set(self)
-            .map_err(|_| AlreadyInitializedError)
+            .map_err(|_| SettingsInitializationError::AlreadyInitialized);
+
+        #[cfg(prometheus_exporter)]
+        prometheus_exporter::try_init()?;
+
+        Ok(())
     }
 
     /// Set the global settings for Autometrics.
     ///
     /// Note: this function can only be called once and MUST be called before
     /// the settings are used by any other Autometrics functions.
+    ///
+    /// If the Prometheus exporter is enabled, this will also initialize it.
     ///
     /// ## Panics
     ///
@@ -93,5 +104,11 @@ impl AutometricsSettings {
 }
 
 #[derive(Debug, Error)]
-#[error("Autometrics settings have already been initialized")]
-pub struct AlreadyInitializedError;
+pub enum SettingsInitializationError {
+    #[error("Autometrics settings have already been initialized")]
+    AlreadyInitialized,
+
+    #[cfg(prometheus_exporter)]
+    #[error(transparent)]
+    PrometheusExporter(#[from] ExporterInitializationError),
+}

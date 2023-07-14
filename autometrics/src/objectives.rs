@@ -204,7 +204,7 @@ pub enum ObjectiveLatency {
     ///
     /// Second, you must ensure that this value matches
     /// one of the histogram buckets configured in the
-    /// [Autometrics settings](crate::settings::AutometricsSettingsBuilder::histogram_buckets)
+    /// [Autometrics settings](crate::settings::AutometricsSettings::histogram_buckets)
     /// or in your metrics exporter.
     /// If it is not, the alerting rules will not work.
     /// This is because the queries and recording rules compare this to
