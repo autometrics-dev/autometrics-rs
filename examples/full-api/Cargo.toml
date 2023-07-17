@@ -5,7 +5,7 @@ publish = false
 edition = "2021"
 
 [dependencies]
-autometrics = { path = "../../autometrics", features = ["prometheus", "prometheus-exporter"] }
+autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.6", features = ["json"] }
 rand = "0.8"

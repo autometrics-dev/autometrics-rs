@@ -3,12 +3,21 @@ use cfg_aliases::cfg_aliases;
 pub fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
+    #[cfg(feature = "metrics")]
+    println!("cargo:warning=The `metrics` feature is deprecated and will be removed in the next version. Please use `metrics-0_21` instead.");
+    #[cfg(feature = "opentelemetry")]
+    println!("cargo:warning=The `opentelemetry` feature is deprecated and will be removed in the next version. Please use `opentelemetry-0_19` instead.");
+    #[cfg(feature = "prometheus")]
+    println!("cargo:warning=The `prometheus` feature is deprecated and will be removed in the next version. Please use `prometheus-0_13` instead.");
+    #[cfg(feature = "prometheus-client")]
+    println!("cargo:warning=The `prometheus-client` feature is deprecated and will be removed in the next version. Please use `prometheus-client-0_21` instead.");
+
     cfg_aliases! {
       // Backends
-      metrics: { feature = "metrics" },
-      opentelemetry: { feature = "opentelemetry" },
-      prometheus: { feature = "prometheus" },
-      prometheus_client_feature: { feature = "prometheus-client" },
+      metrics: { any(feature = "metrics", feature = "metrics-0_21") },
+      opentelemetry: { any(feature = "opentelemetry", feature = "opentelemetry-0_19") },
+      prometheus: { any(feature = "prometheus", feature = "prometheus-0_13") },
+      prometheus_client_feature: { any(feature = "prometheus-client", feature = "prometheus-client-0_21") },
       default_backend: { all(
         prometheus_exporter,
         not(any(metrics, opentelemetry, prometheus, prometheus_client_feature))

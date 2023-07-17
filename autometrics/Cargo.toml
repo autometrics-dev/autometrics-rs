@@ -14,6 +14,12 @@ readme = "README.md"
 
 [features]
 # Metrics backends
+metrics-0_21 = ["dep:metrics"]
+opentelemetry-0_19 = ["opentelemetry_api/metrics"]
+prometheus-0_13 = ["dep:prometheus"]
+prometheus-client-0_21 = ["dep:prometheus-client"]
+
+# Deprecated feature flag names for metrics backends
 metrics = ["dep:metrics"]
 opentelemetry = ["opentelemetry_api/metrics"]
 prometheus = ["dep:prometheus"]
