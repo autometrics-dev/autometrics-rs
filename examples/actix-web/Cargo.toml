@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 actix-web = "4.3.1"
-autometrics = { path = "../../autometrics", features = ["prometheus", "prometheus-exporter"] }
+autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
 autometrics-example-util = { path = "../util" }
 rand = "0.8.5"
 reqwest = "0.11"

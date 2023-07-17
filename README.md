@@ -157,13 +157,13 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
 
       <br />
 
-      [Configure `autometrics`](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) to use the same underlying metrics library you use with the appropriate feature flag: `opentelemetry`, `prometheus`, `prometheus-client`, or `metrics`.
+      [Configure `autometrics`](https://docs.rs/autometrics/latest/autometrics/#metrics-libraries) to use the same underlying metrics library you use with the feature flag corresponding to the crate and version you are using.
 
       ```toml
       [dependencies]
       autometrics = {
         version = "*",
-        features = ["prometheus"],
+        features = ["opentelemetry-0_19"],
         default-features = false
       }
       ```
@@ -203,10 +203,10 @@ To see autometrics in action:
 ## Benchmarks
 
 Using each of the following metrics libraries, tracking metrics with the `autometrics` macro adds approximately:
-- `prometheus`: 140-150 nanoseconds
-- `prometheus-client`: 150-250 nanoseconds
-- `metrics`: 550-650 nanoseconds
-- `opentelemetry`: 550-750 nanoseconds
+- `prometheus-0_13`: 140-150 nanoseconds
+- `prometheus-client-0_21`: 150-250 nanoseconds
+- `metrics-0_21`: 550-650 nanoseconds
+- `opentelemetry-0_19`: 550-750 nanoseconds
 
 These were calculated on a 2021 MacBook Pro with the M1 Max chip and 64 GB of RAM.
 
