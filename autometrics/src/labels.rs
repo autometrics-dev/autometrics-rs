@@ -1,4 +1,4 @@
-use crate::{constants::*, objectives::*};
+use crate::{constants::*, objectives::*, settings::get_settings};
 #[cfg(prometheus_client)]
 use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue, LabelValueEncoder};
 
@@ -18,17 +18,12 @@ pub struct BuildInfoLabels {
 }
 
 impl BuildInfoLabels {
-    pub fn new(
-        version: &'static str,
-        commit: &'static str,
-        branch: &'static str,
-        service_name: &'static str,
-    ) -> Self {
+    pub fn new(version: &'static str, commit: &'static str, branch: &'static str) -> Self {
         Self {
             version,
             commit,
             branch,
-            service_name,
+            service_name: &get_settings().service_name,
         }
     }
 
@@ -89,7 +84,6 @@ impl CounterLabels {
     pub fn new(
         function: &'static str,
         module: &'static str,
-        service_name: &'static str,
         caller_function: &'static str,
         caller_module: &'static str,
         result: Option<ResultAndReturnTypeLabels>,
@@ -116,7 +110,7 @@ impl CounterLabels {
         Self {
             function,
             module,
-            service_name,
+            service_name: &get_settings().service_name,
             caller_function,
             caller_module,
             objective_name,
@@ -161,21 +155,16 @@ impl CounterLabels {
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct HistogramLabels {
-    pub function: &'static str,
-    pub module: &'static str,
-    pub service_name: &'static str,
-    pub objective_name: Option<&'static str>,
-    pub objective_percentile: Option<ObjectivePercentile>,
-    pub objective_latency_threshold: Option<ObjectiveLatency>,
+    pub(crate) function: &'static str,
+    pub(crate) module: &'static str,
+    pub(crate) service_name: &'static str,
+    pub(crate) objective_name: Option<&'static str>,
+    pub(crate) objective_percentile: Option<ObjectivePercentile>,
+    pub(crate) objective_latency_threshold: Option<ObjectiveLatency>,
 }
 
 impl HistogramLabels {
-    pub fn new(
-        function: &'static str,
-        module: &'static str,
-        service_name: &'static str,
-        objective: Option<Objective>,
-    ) -> Self {
+    pub fn new(function: &'static str, module: &'static str, objective: Option<Objective>) -> Self {
         let (objective_name, objective_percentile, objective_latency_threshold) =
             if let Some(objective) = objective {
                 if let Some((latency, percentile)) = objective.latency {
@@ -190,7 +179,7 @@ impl HistogramLabels {
         Self {
             function,
             module,
-            service_name,
+            service_name: &get_settings().service_name,
             objective_name,
             objective_percentile,
             objective_latency_threshold,
@@ -227,12 +216,20 @@ impl HistogramLabels {
     derive(EncodeLabelSet, Debug, Clone, PartialEq, Eq, Hash)
 )]
 pub struct GaugeLabels {
-    pub function: &'static str,
-    pub module: &'static str,
-    pub service_name: &'static str,
+    pub(crate) function: &'static str,
+    pub(crate) module: &'static str,
+    pub(crate) service_name: &'static str,
 }
 
 impl GaugeLabels {
+    pub fn new(function: &'static str, module: &'static str) -> Self {
+        Self {
+            function,
+            module,
+            service_name: &get_settings().service_name,
+        }
+    }
+
     pub fn to_array(&self) -> Vec<Label> {
         vec![
             (FUNCTION_KEY, self.function),

@@ -198,10 +198,6 @@ fn instrument_function(
         quote! { None }
     };
 
-    let service_name = quote! {
-        autometrics::__private::service_name(env!("CARGO_PKG_NAME"))
-    };
-
     let counter_labels = if args.ok_if.is_some() || args.error_if.is_some() {
         // Apply the predicate to determine whether to consider the result as "ok" or "error"
         let result_label = if let Some(ok_if) = &args.ok_if {
@@ -221,7 +217,6 @@ fn instrument_function(
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
-                    #service_name,
                     caller.caller_function,
                     caller.caller_module,
                     Some((result_label, value_type)),
@@ -238,7 +233,6 @@ fn instrument_function(
                 CounterLabels::new(
                     #function_name,
                     module_path!(),
-                    #service_name,
                     caller.caller_function,
                     caller.caller_module,
                     result_labels,
@@ -250,12 +244,11 @@ fn instrument_function(
 
     let gauge_labels = if args.track_concurrency {
         quote! { {
-            use autometrics::__private::{GaugeLabels, service_name};
-            Some(&GaugeLabels {
-                function: #function_name,
-                module: module_path!(),
-                service_name: #service_name,
-            }) }
+            use autometrics::__private::GaugeLabels;
+            Some(&GaugeLabels::new(
+                #function_name,
+                module_path!(),
+            )) }
         }
     } else {
         quote! { None }
@@ -275,7 +268,6 @@ fn instrument_function(
                     name: #function_name,
                     module: module_path!(),
                     objective: #objective,
-                    cargo_pkg_name: env!("CARGO_PKG_NAME"),
                 };
             }
         }
@@ -298,7 +290,6 @@ fn instrument_function(
                     option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_BRANCH").or(option_env!("VERGEN_GIT_BRANCH")).unwrap_or_default(),
-                    #service_name,
                 ));
                 AutometricsTracker::start(#gauge_labels)
             };
@@ -311,7 +302,6 @@ fn instrument_function(
                 let histogram_labels = HistogramLabels::new(
                     #function_name,
                      module_path!(),
-                     #service_name,
                      #objective,
                 );
                 __autometrics_tracker.finish(&counter_labels, &histogram_labels);

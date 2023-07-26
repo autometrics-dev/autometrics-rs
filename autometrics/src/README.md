@@ -107,17 +107,6 @@ pub fn main() {
 }
 ```
 
-### Service name
-
-All metrics produced by Autometrics have a label called `service.name` (or `service_name` when exported to Prometheus) attached to identify the logical service they are part of.
-
-You may want to override the default service name, for example if you are running multiple instances of the same code base as separate services and want to differentiate between the metrics produced by each one.
-
-The service name is loaded from the following environment variables, in this order:
-1. `AUTOMETRICS_SERVICE_NAME` (at runtime)
-2. `OTEL_SERVICE_NAME` (at runtime)
-3. `CARGO_PKG_NAME` (at compile time)
-
 ### Feature flags
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter. This is compatible with any of the [Metrics backends](#metrics-backends) and uses `prometheus-client` by default if none are explicitly selected
@@ -144,5 +133,5 @@ See the [exemplars module docs](https://docs.rs/autometrics/latest/autometrics/e
 
 By default, Autometrics supports a fixed set of percentiles and latency thresholds for objectives. Use these features to enable custom values:
 
-- `custom-objective-latency` - enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the alerts will not work. This is not currently compatible with the `prometheus` or `prometheus-exporter` feature.
+- `custom-objective-latency` - enable this to use custom latency thresholds. Note, however, that the custom latency **must** match one of the buckets configured for your histogram or the queries, recording rules, and alerts will not work.
 - `custom-objective-percentile` - enable this to use custom objective percentiles. Note, however, that using custom percentiles requires generating a different recording and alerting rules file using the CLI + Sloth (see [here](https://github.com/autometrics-dev/autometrics-rs/tree/main/autometrics-cli)).

@@ -203,23 +203,15 @@ pub enum ObjectiveLatency {
     /// you would specify `ObjectiveLatency::Custom("0.2")`.
     ///
     /// Second, you must ensure that this value matches
-    /// one of the histogram buckets configured in your metrics exporter.
+    /// one of the histogram buckets configured in the
+    /// [Autometrics settings](crate::settings::AutometricsSettings::histogram_buckets)
+    /// or in your metrics exporter.
     /// If it is not, the alerting rules will not work.
-    /// This is because the recording rules compare this to the value
-    /// of the `le` label on the histogram buckets.
+    /// This is because the queries and recording rules compare this to
+    /// the value of the `le` label on the histogram buckets.
     #[cfg(feature = "custom-objective-latency")]
     Custom(&'static str),
 }
-
-#[cfg(all(not(doc), custom_objective_latency, any(prometheus, prometheus_client)))]
-compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus` and `prometheus-client` backends because \
-the autometrics API does not provide a way to configure the histogram buckets passed to the crate's metrics functions. \
-Please open an issue on GitHub if you would like to see this feature added.");
-
-#[cfg(all(not(doc), custom_objective_latency, prometheus_exporter))]
-compile_error!("The `custom-objective-latencies` feature is not currently compatible with the `prometheus-exporter` feature because \
-the autometrics API does not provide a way to configure the histogram buckets used in default exporter. Please create a custom \
-exporter using the metrics library you are using and ensure that the histogram buckets include the custom latency value.");
 
 impl ObjectiveLatency {
     pub(crate) const fn as_str(&self) -> &'static str {

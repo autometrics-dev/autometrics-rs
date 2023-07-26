@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- All metrics now have a `service.name` label attached. This is set via runtime environment
-  variable (`AUTOMETRICS_SERVICE_NAME` or `OTEL_SERVICE_NAME`), or falls back to the crate
-  name defined in the `Cargo.toml`
+- Autometrics settings can now be configured via `settings::AutometricsSettings`
+- All metrics now have a `service.name` label attached. This is set via the settings,
+  via runtime environment variable (`AUTOMETRICS_SERVICE_NAME` or `OTEL_SERVICE_NAME`),
+  or it falls back to the crate name defined in the `Cargo.toml`
 - Function counters are initialized to zero in debug builds. This exposes details of
   instrumented functions to Prometheus and visualization tools built on top of it,
   before the functions have been called.
@@ -31,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (for example, `MyStruct::my_method`)
 - The `caller` label on the `function.calls` metric was replaced with `caller.function`
   and `caller.module`
+- The `custom-objective-latency` feature can now be used with the `prometheus-exporter`, as well
+  as with the `prometheus` and `prometheus-client` crates, because the histogram buckets can now
+  be configured via the settings
 
 ### Deprecated
 
