@@ -59,7 +59,6 @@ impl TrackMetrics for OpenTelemetryTracker {
         let duration = self.start.elapsed().as_secs_f64();
 
         // Track the function calls
-        println!("incrementing counter");
         let counter_labels = to_key_values(counter_labels.to_vec());
         COUNTER.add(&self.context, 1, &counter_labels);
 
