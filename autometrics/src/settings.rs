@@ -9,6 +9,7 @@ use std::env;
 use thiserror::Error;
 
 pub(crate) static AUTOMETRICS_SETTINGS: OnceCell<AutometricsSettings> = OnceCell::new();
+#[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
 const DEFAULT_HISTOGRAM_BUCKETS: [f64; 14] = [
     0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0,
 ];
@@ -21,18 +22,23 @@ pub(crate) fn get_settings() -> &'static AutometricsSettings {
     AUTOMETRICS_SETTINGS.get_or_init(|| AutometricsSettingsBuilder::default().build())
 }
 
-#[derive(Debug)]
 pub struct AutometricsSettings {
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Vec<f64>,
     pub(crate) service_name: String,
+    #[cfg(prometheus_client)]
+    pub prometheus_client_registry: prometheus_client::registry::Registry,
+    #[cfg(prometheus_client)]
+    pub(crate) prometheus_client_metrics: crate::tracker::prometheus_client::Metrics,
 }
 
 #[derive(Debug, Default)]
 pub struct AutometricsSettingsBuilder {
+    pub(crate) service_name: Option<String>,
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Option<Vec<f64>>,
-    pub(crate) service_name: Option<String>,
+    #[cfg(prometheus_client)]
+    pub prometheus_client_registry: Option<prometheus_client::registry::Registry>,
 }
 
 impl AutometricsSettingsBuilder {
@@ -63,6 +69,15 @@ impl AutometricsSettingsBuilder {
         self
     }
 
+    #[cfg(prometheus_client)]
+    pub fn prometheus_client_registry(
+        mut self,
+        registry: prometheus_client::registry::Registry,
+    ) -> Self {
+        self.prometheus_client_registry = Some(registry);
+        self
+    }
+
     /// Set the global settings for Autometrics. This returns an error if the
     /// settings have already been initialized.
     ///
@@ -70,17 +85,17 @@ impl AutometricsSettingsBuilder {
     /// the settings are used by any other Autometrics functions.
     ///
     /// If the Prometheus exporter is enabled, this will also initialize it.
-    pub fn try_init(self) -> Result<(), SettingsInitializationError> {
+    pub fn try_init(self) -> Result<&'static AutometricsSettings, SettingsInitializationError> {
         let settings = self.build();
 
-        AUTOMETRICS_SETTINGS
-            .set(settings)
+        let settings = AUTOMETRICS_SETTINGS
+            .try_insert(settings)
             .map_err(|_| SettingsInitializationError::AlreadyInitialized)?;
 
         #[cfg(prometheus_exporter)]
         prometheus_exporter::try_init()?;
 
-        Ok(())
+        Ok(settings)
     }
 
     /// Set the global settings for Autometrics.
@@ -93,11 +108,18 @@ impl AutometricsSettingsBuilder {
     /// ## Panics
     ///
     /// This function will panic if the settings have already been initialized.
-    pub fn init(self) {
-        self.try_init().unwrap();
+    pub fn init(self) -> &'static AutometricsSettings {
+        self.try_init().unwrap()
     }
 
     fn build(self) -> AutometricsSettings {
+        #[cfg(prometheus_client)]
+        let (prometheus_client_registry, prometheus_client_metrics) =
+            crate::tracker::prometheus_client::initialize_registry(
+                self.prometheus_client_registry
+                    .unwrap_or_else(|| <prometheus_client::registry::Registry>::default()),
+            );
+
         AutometricsSettings {
             #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
             histogram_buckets: self
@@ -108,6 +130,10 @@ impl AutometricsSettingsBuilder {
                 .or_else(|| env::var("AUTOMETRICS_SERVICE_NAME").ok())
                 .or_else(|| env::var("OTEL_SERVICE_NAME").ok())
                 .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string()),
+            #[cfg(prometheus_client)]
+            prometheus_client_registry,
+            #[cfg(prometheus_client)]
+            prometheus_client_metrics,
         }
     }
 }

@@ -224,7 +224,7 @@ impl GlobalPrometheus {
         {
             prometheus_client::encoding::text::encode(
                 &mut output,
-                &crate::tracker::prometheus_client::REGISTRY,
+                &self.settings.prometheus_client_registry,
             )?;
         }
 

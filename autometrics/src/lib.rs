@@ -5,7 +5,6 @@
 #![cfg_attr(docsrs, doc(cfg_hide(doc)))]
 #![doc = include_str!("README.md")]
 
-pub mod backends;
 mod constants;
 #[cfg(any(
     feature = "exemplars-tracing",
