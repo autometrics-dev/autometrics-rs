@@ -26,6 +26,8 @@ pub struct AutometricsSettings {
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Vec<f64>,
     pub(crate) service_name: String,
+    #[cfg(any(prometheus, opentelemetry))]
+    pub(crate) prometheus_registry: prometheus::Registry,
     /// The [`Registry`] where Autometrics metrics are collected.
     ///
     /// You can use this to encode the metrics using the functionality provided by the [`prometheus_client`] crate
@@ -33,7 +35,6 @@ pub struct AutometricsSettings {
     ///
     /// [`Registry`]: prometheus_client::registry::Registry
     /// [`prometheus_exporter`]: crate::prometheus_exporter
-    #[cfg(prometheus_client)]
     #[cfg(prometheus_client)]
     pub prometheus_client_registry: prometheus_client::registry::Registry,
     #[cfg(prometheus_client)]
@@ -45,6 +46,9 @@ pub struct AutometricsSettingsBuilder {
     pub(crate) service_name: Option<String>,
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Option<Vec<f64>>,
+    #[cfg(any(prometheus, opentelemetry))]
+    pub(crate) prometheus_registry: Option<prometheus::Registry>,
+    #[cfg(prometheus_client)]
     pub(crate) prometheus_client_registry: Option<prometheus_client::registry::Registry>,
 }
 
@@ -76,11 +80,27 @@ impl AutometricsSettingsBuilder {
         self
     }
 
-    /// Configure the [`Registry`] that will be used to collect metrics.
+    /// Configure the [`prometheus::Registry`] that will be used to collect metrics when using
+    /// either the `prometheus` or `opentelemetry` backends.
+    ///
+    /// This is mainly useful if you want to add custom metrics to the same registry, or if you want to
+    /// add a custom prefix or custom labels to all of the metrics.
+    ///
+    /// If you are not using the provided [`prometheus_exporter`] to export metrics and want to encode
+    /// the metrics from the `Registry`, you can simply `clone` the `Registry` before passing it in here
+    /// and use the original one for encoding.
+    #[cfg(any(prometheus, opentelemetry))]
+    pub fn prometheus_registry(mut self, registry: prometheus::Registry) -> Self {
+        self.prometheus_registry = Some(registry);
+        self
+    }
+
+    /// Configure the [`prometheus_client::registry::Registry`] that will be used to collect metrics.
     ///
     /// This is mainly useful if you want to add custom metrics to the same registry.
     ///
-    /// [`Registry`]: prometheus_client::registry::Registry
+    /// If you are not using the provided [`prometheus_exporter`] to export metrics and want to access
+    /// the `Registry` again to encode the metrics, you can access it again via [`AutometricsSettings::prometheus_client_registry`].
     #[cfg(prometheus_client)]
     pub fn prometheus_client_registry(
         mut self,
@@ -146,6 +166,10 @@ impl AutometricsSettingsBuilder {
             prometheus_client_registry,
             #[cfg(prometheus_client)]
             prometheus_client_metrics,
+            #[cfg(any(prometheus, opentelemetry))]
+            prometheus_registry: self
+                .prometheus_registry
+                .unwrap_or_else(|| prometheus::default_registry().clone()),
         }
     }
 }

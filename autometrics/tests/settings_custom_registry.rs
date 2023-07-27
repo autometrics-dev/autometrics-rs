@@ -46,3 +46,47 @@ fn custom_prometheus_client_registry() {
     // The output of the prometheus_exporter should be the same
     assert_eq!(metrics, prometheus_exporter::encode_to_string().unwrap());
 }
+
+#[cfg(prometheus)]
+#[test]
+fn custom_prometheus_registry() {
+    use prometheus::{register_counter_vec_with_registry, Registry, TextEncoder};
+    let registry = Registry::new();
+
+    let custom_metric = register_counter_vec_with_registry!(
+        "custom_metric",
+        "My custom metric",
+        &["foo"],
+        registry.clone()
+    )
+    .unwrap();
+
+    AutometricsSettingsBuilder::default()
+        .prometheus_registry(registry.clone())
+        .init();
+
+    #[autometrics]
+    fn hello_world() -> &'static str {
+        "Hello world!"
+    }
+
+    hello_world();
+    custom_metric.with_label_values(&["bar"]).inc();
+
+    let mut metrics = String::new();
+    TextEncoder::new()
+        .encode_utf8(&registry.gather(), &mut metrics)
+        .unwrap();
+
+    // Check that both the autometrics metrics and the custom metrics are present
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("function_calls_total{")
+            && line.contains(r#"function="hello_world""#)));
+    assert!(metrics
+        .lines()
+        .any(|line| line == "custom_metric{foo=\"bar\"} 1"));
+
+    // The output of the prometheus_exporter should be the same
+    assert_eq!(metrics, prometheus_exporter::encode_to_string().unwrap());
+}

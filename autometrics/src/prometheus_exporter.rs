@@ -192,10 +192,7 @@ impl GlobalPrometheus {
         let mut output = String::new();
 
         #[cfg(metrics)]
-        {
-            output.push_str(&self.metrics_exporter.render());
-            output.push('\n');
-        }
+        output.push_str(&self.metrics_exporter.render());
 
         #[cfg(opentelemetry)]
         {
@@ -209,24 +206,20 @@ impl GlobalPrometheus {
             }
             let encoder = TextEncoder::new();
             encoder.encode_utf8(&metric_families, &mut output)?;
-            output.push('\n');
         }
 
         #[cfg(prometheus)]
         {
-            let metric_families = prometheus::default_registry().gather();
+            let metric_families = self.settings.prometheus_registry.gather();
             let encoder = TextEncoder::new();
             encoder.encode_utf8(&metric_families, &mut output)?;
-            output.push('\n');
         }
 
         #[cfg(prometheus_client)]
-        {
-            prometheus_client::encoding::text::encode(
-                &mut output,
-                &self.settings.prometheus_client_registry,
-            )?;
-        }
+        prometheus_client::encoding::text::encode(
+            &mut output,
+            &self.settings.prometheus_client_registry,
+        )?;
 
         Ok(output)
     }
@@ -249,6 +242,7 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
             ))
             .build(),
         )
+        .with_registry(settings.prometheus_registry.clone())
         .try_init()?,
 
         settings,
