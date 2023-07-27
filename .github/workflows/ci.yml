@@ -30,11 +30,10 @@ jobs:
       - run: cargo test --features=prometheus-exporter,prometheus-0_13
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing-opentelemetry
-      # The tests using opentelemetry are currently failing because of this issue:
+      # The tests using opentelemetry need to be run with only one thread because of
       # https://github.com/open-telemetry/opentelemetry-rust/issues/1070
-      # We should remove the continue-on-error once that is fixed
-      - run: cargo test --features=prometheus-exporter,opentelemetry-0_19
-        continue-on-error: true
+      # We should remove the test-threads setting once that is fixed
+      - run: cargo test --features=prometheus-exporter,opentelemetry-0_19 -- --test-threads=1
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics-0_21,custom-objective-percentile,custom-objective-latency

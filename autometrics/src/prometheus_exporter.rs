@@ -29,10 +29,6 @@ use once_cell::sync::OnceCell;
 use opentelemetry_api::metrics::MetricsError;
 #[cfg(opentelemetry)]
 use opentelemetry_prometheus::{exporter, PrometheusExporter};
-#[cfg(opentelemetry)]
-use opentelemetry_sdk::export::metrics::aggregation;
-#[cfg(opentelemetry)]
-use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -237,15 +233,21 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
             .install_recorder()?,
 
         #[cfg(opentelemetry)]
-        opentelemetry_exporter: exporter(
-            controllers::basic(processors::factory(
+        opentelemetry_exporter: {
+            use opentelemetry_sdk::export::metrics::aggregation;
+            use opentelemetry_sdk::metrics::{controllers, processors, selectors};
+
+            let controller = controllers::basic(processors::factory(
                 selectors::simple::histogram(
                     crate::settings::get_settings().histogram_buckets.clone(),
                 ),
                 aggregation::cumulative_temporality_selector(),
-            ))
-            .build(),
-        )
-        .try_init()?,
+            ));
+
+            #[cfg(debug_assertions)]
+            let controller = controller.with_collect_period(std::time::Duration::ZERO);
+
+            exporter(controller.build()).try_init()?
+        },
     })
 }

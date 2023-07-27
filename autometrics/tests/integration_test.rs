@@ -14,7 +14,6 @@ fn single_function() {
     hello_world();
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         (line.starts_with("function_calls_total{"))
             && line.contains(r#"function="hello_world""#)
@@ -163,7 +162,6 @@ fn caller_labels() {
     module_1::function_1();
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
             && line.contains(r#"caller_function="function_1""#)
