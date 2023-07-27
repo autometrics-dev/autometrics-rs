@@ -18,7 +18,7 @@ const DEFAULT_HISTOGRAM_BUCKETS: [f64; 14] = [
 /// Note that attempting to set the settings after this function is called will panic.
 #[allow(dead_code)]
 pub(crate) fn get_settings() -> &'static AutometricsSettings {
-    AUTOMETRICS_SETTINGS.get_or_init(|| AutometricsSettings::default())
+    AUTOMETRICS_SETTINGS.get_or_init(|| AutometricsSettingsBuilder::default().build())
 }
 
 #[derive(Debug)]
@@ -28,23 +28,14 @@ pub struct AutometricsSettings {
     pub(crate) service_name: String,
 }
 
-impl Default for AutometricsSettings {
-    fn default() -> Self {
-        Self::new()
-    }
+#[derive(Debug, Default)]
+pub struct AutometricsSettingsBuilder {
+    #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
+    pub(crate) histogram_buckets: Option<Vec<f64>>,
+    pub(crate) service_name: Option<String>,
 }
 
-impl AutometricsSettings {
-    pub fn new() -> Self {
-        Self {
-            #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
-            histogram_buckets: DEFAULT_HISTOGRAM_BUCKETS.to_vec(),
-            service_name: env::var("AUTOMETRICS_SERVICE_NAME")
-                .or_else(|_| env::var("OTEL_SERVICE_NAME"))
-                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-        }
-    }
-
+impl AutometricsSettingsBuilder {
     /// Set the buckets, represented in seconds, used for the function latency histograms.
     ///
     /// If this is not set, the buckets recommended by the [OpenTelemetry specification] are used.
@@ -52,7 +43,7 @@ impl AutometricsSettings {
     /// [OpenTelemetry specification]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#explicit-bucket-histogram-aggregation
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub fn histogram_buckets(mut self, histogram_buckets: impl Into<Vec<f64>>) -> Self {
-        self.histogram_buckets = histogram_buckets.into();
+        self.histogram_buckets = Some(histogram_buckets.into());
         self
     }
 
@@ -68,7 +59,7 @@ impl AutometricsSettings {
     /// 3. `OTEL_SERVICE_NAME` (at runtime)
     /// 4. `CARGO_PKG_NAME` (at compile time), which is the name of the crate defined in the `Cargo.toml` file.
     pub fn service_name(mut self, service_name: impl Into<String>) -> Self {
-        self.service_name = service_name.into();
+        self.service_name = Some(service_name.into());
         self
     }
 
@@ -80,8 +71,10 @@ impl AutometricsSettings {
     ///
     /// If the Prometheus exporter is enabled, this will also initialize it.
     pub fn try_init(self) -> Result<(), SettingsInitializationError> {
+        let settings = self.build();
+
         AUTOMETRICS_SETTINGS
-            .set(self)
+            .set(settings)
             .map_err(|_| SettingsInitializationError::AlreadyInitialized)?;
 
         #[cfg(prometheus_exporter)]
@@ -102,6 +95,20 @@ impl AutometricsSettings {
     /// This function will panic if the settings have already been initialized.
     pub fn init(self) {
         self.try_init().unwrap();
+    }
+
+    fn build(self) -> AutometricsSettings {
+        AutometricsSettings {
+            #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
+            histogram_buckets: self
+                .histogram_buckets
+                .unwrap_or_else(|| DEFAULT_HISTOGRAM_BUCKETS.to_vec()),
+            service_name: self
+                .service_name
+                .or_else(|| env::var("AUTOMETRICS_SERVICE_NAME").ok())
+                .or_else(|| env::var("OTEL_SERVICE_NAME").ok())
+                .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string()),
+        }
     }
 }
 
