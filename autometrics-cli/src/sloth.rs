@@ -101,7 +101,7 @@ fn generate_latency_slo(objective_percentile: &str, min_calls_per_second: f64) -
     sli:
       events:
         error_query: >
-          sum by (objective_name, objective_percentile, service_name) (rate(function_calls_duration_count{{objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
+          sum by (objective_name, objective_percentile, service_name) (rate({{__name__=~\"function_calls_duration(_seconds)?_count\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]))
           -
           (sum by (objective_name, objective_percentile, service_name) (
             label_join(rate({{__name__=~\"function_calls_duration(_seconds)?_bucket\", objective_percentile=\"{objective_percentile}\"}}[{{{{.window}}}}]), \"autometrics_check_label_equality\", \"\", \"objective_latency_threshold\")
