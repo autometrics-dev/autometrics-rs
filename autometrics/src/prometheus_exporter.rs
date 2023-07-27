@@ -21,6 +21,7 @@
 //! ```
 
 use crate::__private::{AutometricsTracker, TrackMetrics, FUNCTION_DESCRIPTIONS};
+use crate::settings::{get_settings, AutometricsSettings};
 use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
@@ -178,6 +179,8 @@ pub fn encode_http_response() -> PrometheusResponse {
 #[derive(Clone)]
 #[doc(hidden)]
 struct GlobalPrometheus {
+    #[allow(dead_code)]
+    settings: &'static AutometricsSettings,
     #[cfg(opentelemetry)]
     opentelemetry_exporter: PrometheusExporter,
     #[cfg(metrics)]
@@ -230,22 +233,24 @@ impl GlobalPrometheus {
 }
 
 fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitializationError> {
+    let settings = get_settings();
+
     Ok(GlobalPrometheus {
         #[cfg(metrics)]
         metrics_exporter: PrometheusBuilder::new()
-            .set_buckets(&crate::settings::get_settings().histogram_buckets)?
+            .set_buckets(&settings.histogram_buckets)?
             .install_recorder()?,
 
         #[cfg(opentelemetry)]
         opentelemetry_exporter: exporter(
             controllers::basic(processors::factory(
-                selectors::simple::histogram(
-                    crate::settings::get_settings().histogram_buckets.clone(),
-                ),
+                selectors::simple::histogram(settings.histogram_buckets.clone()),
                 aggregation::cumulative_temporality_selector(),
             ))
             .build(),
         )
         .try_init()?,
+
+        settings,
     })
 }
