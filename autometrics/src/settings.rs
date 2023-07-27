@@ -26,6 +26,14 @@ pub struct AutometricsSettings {
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Vec<f64>,
     pub(crate) service_name: String,
+    /// The [`Registry`] where Autometrics metrics are collected.
+    ///
+    /// You can use this to encode the metrics using the functionality provided by the [`prometheus_client`] crate
+    /// if you do not want to use the provided [`prometheus_exporter`].
+    ///
+    /// [`Registry`]: prometheus_client::registry::Registry
+    /// [`prometheus_exporter`]: crate::prometheus_exporter
+    #[cfg(prometheus_client)]
     #[cfg(prometheus_client)]
     pub prometheus_client_registry: prometheus_client::registry::Registry,
     #[cfg(prometheus_client)]
@@ -37,8 +45,7 @@ pub struct AutometricsSettingsBuilder {
     pub(crate) service_name: Option<String>,
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Option<Vec<f64>>,
-    #[cfg(prometheus_client)]
-    pub prometheus_client_registry: Option<prometheus_client::registry::Registry>,
+    pub(crate) prometheus_client_registry: Option<prometheus_client::registry::Registry>,
 }
 
 impl AutometricsSettingsBuilder {
@@ -69,6 +76,11 @@ impl AutometricsSettingsBuilder {
         self
     }
 
+    /// Configure the [`Registry`] that will be used to collect metrics.
+    ///
+    /// This is mainly useful if you want to add custom metrics to the same registry.
+    ///
+    /// [`Registry`]: prometheus_client::registry::Registry
     #[cfg(prometheus_client)]
     pub fn prometheus_client_registry(
         mut self,

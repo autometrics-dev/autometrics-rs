@@ -88,9 +88,9 @@ pub enum ExporterInitializationError {
 /// affecting the metric values.
 ///
 /// You should not call this function if you initialize the Autometrics
-/// settings via [`AutometricsSettings::try_init`].
+/// settings via [`AutometricsSettingsBuilder::try_init`].
 ///
-/// [`AutometricsSettings::try_init`]: crate::AutometricsSettings::try_init
+/// [`AutometricsSettingsBuilder::try_init`]: crate::settings::AutometricsSettingsBuilder::try_init
 pub fn try_init() -> Result<(), ExporterInitializationError> {
     let prometheus = initialize_prometheus_exporter()?;
 
@@ -124,9 +124,9 @@ pub fn try_init() -> Result<(), ExporterInitializationError> {
 /// affecting the metric values.
 ///
 /// You should not call this function if you initialize the Autometrics
-/// settings via [`AutometricsSettings::init`].
+/// settings via [`AutometricsSettingsBuilder::init`].
 ///
-/// [`AutometricsSettings::init`]: crate::AutometricsSettings::init
+/// [`AutometricsSettingsBuilder::init`]: crate::settings::AutometricsSettingsBuilder::init
 ///
 /// # Panics
 ///
