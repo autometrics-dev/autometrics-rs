@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Autometrics settings can now be configured via `settings::AutometricsSettings`
+- A custom `Registry` can be used to collect metrics. This may be used to add
+  custom metrics alongside those produced by Autometrics, as well as to export
+  the metrics without using the provided `prometheus_exporter`
 - All metrics now have a `service.name` label attached. This is set via the settings,
   via runtime environment variable (`AUTOMETRICS_SERVICE_NAME` or `OTEL_SERVICE_NAME`),
   or it falls back to the crate name defined in the `Cargo.toml`
@@ -45,8 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `encode_global_metrics` (replaced by `prometheus_exporter::encode_to_string`)
-- `global_metrics_exporter` (replaced by `prometheus_exporter::init`)
+- `encode_global_metrics` was removed and replaced by `prometheus_exporter::encode_to_string`
+- `global_metrics_exporter` was removed and replaced by `prometheus_exporter::init`
+- `backends::prometheus_client::REGISTRY` was removed. The `Registry` can now be accessed as
+  a property on the `AutometricsSettings` struct
 
 ### Fixed
 
