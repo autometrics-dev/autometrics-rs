@@ -90,3 +90,43 @@ fn custom_prometheus_registry() {
     // The output of the prometheus_exporter should be the same
     assert_eq!(metrics, prometheus_exporter::encode_to_string().unwrap());
 }
+
+#[cfg(opentelemetry)]
+#[test]
+fn custom_opentelemetry_registry() {
+    use opentelemetry_api::{global, Context, KeyValue};
+    use prometheus::{Registry, TextEncoder};
+
+    // OpenTelemetry uses the `prometheus` crate under the hood
+    let registry = Registry::new();
+
+    AutometricsSettingsBuilder::default()
+        .prometheus_registry(registry.clone())
+        .init();
+
+    let custom_metric = global::meter("foo").u64_counter("custom_metric").init();
+
+    #[autometrics]
+    fn hello_world() -> &'static str {
+        "Hello world!"
+    }
+
+    hello_world();
+    custom_metric.add(&Context::current(), 1, &[KeyValue::new("foo", "bar")]);
+
+    let mut metrics = String::new();
+    TextEncoder::new()
+        .encode_utf8(&registry.gather(), &mut metrics)
+        .unwrap();
+
+    // Check that both the autometrics metrics and the custom metrics are present
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("function_calls_total{")
+            && line.contains(r#"function="hello_world""#)));
+    assert!(metrics
+        .lines()
+        .any(|line| line.starts_with("custom_metric_total{")
+            && line.contains("foo=\"bar\"")
+            && line.ends_with("} 1")));
+}
