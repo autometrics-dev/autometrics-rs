@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Autometrics settings can now be configured via `settings::AutometricsSettings`
+- Autometrics settings can now be configured via `settings::AutometricsSettingsBuilder`
 - A custom `Registry` can be used to collect metrics. This may be used to add
   custom metrics alongside those produced by Autometrics, as well as to export
   the metrics without using the provided `prometheus_exporter`
