@@ -94,7 +94,7 @@ fn custom_prometheus_registry() {
 #[cfg(opentelemetry)]
 #[test]
 fn custom_opentelemetry_registry() {
-    use opentelemetry_api::{global, Context, KeyValue};
+    use opentelemetry_api::{global, KeyValue};
     use prometheus::{Registry, TextEncoder};
 
     // OpenTelemetry uses the `prometheus` crate under the hood
@@ -112,7 +112,7 @@ fn custom_opentelemetry_registry() {
     }
 
     hello_world();
-    custom_metric.add(&Context::current(), 1, &[KeyValue::new("foo", "bar")]);
+    custom_metric.add(1, &[KeyValue::new("foo", "bar")]);
 
     let mut metrics = String::new();
     TextEncoder::new()
@@ -129,4 +129,7 @@ fn custom_opentelemetry_registry() {
         .any(|line| line.starts_with("custom_metric_total{")
             && line.contains("foo=\"bar\"")
             && line.ends_with("} 1")));
+
+    // The output of the prometheus_exporter should be the same
+    assert_eq!(metrics, prometheus_exporter::encode_to_string().unwrap());
 }

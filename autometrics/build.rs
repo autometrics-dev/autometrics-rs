@@ -6,7 +6,7 @@ pub fn main() {
     #[cfg(feature = "metrics")]
     println!("cargo:warning=The `metrics` feature is deprecated and will be removed in the next version. Please use `metrics-0_21` instead.");
     #[cfg(feature = "opentelemetry")]
-    println!("cargo:warning=The `opentelemetry` feature is deprecated and will be removed in the next version. Please use `opentelemetry-0_19` instead.");
+    println!("cargo:warning=The `opentelemetry` feature is deprecated and will be removed in the next version. Please use `opentelemetry-0_20` instead.");
     #[cfg(feature = "prometheus")]
     println!("cargo:warning=The `prometheus` feature is deprecated and will be removed in the next version. Please use `prometheus-0_13` instead.");
     #[cfg(feature = "prometheus-client")]

@@ -202,6 +202,7 @@ fn zero_metrics() {
     // Note that we are not calling the function, but it should still be registered
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
+    println!("{}", metrics);
     assert!(metrics
         .lines()
         .any(|line| line.contains(r#"function="zero_metrics_fn""#) && line.ends_with("} 0")));

@@ -28,8 +28,6 @@ use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandl
 use once_cell::sync::OnceCell;
 #[cfg(opentelemetry)]
 use opentelemetry_api::metrics::MetricsError;
-#[cfg(opentelemetry)]
-use opentelemetry_prometheus::{exporter, PrometheusExporter};
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -88,11 +86,16 @@ pub enum ExporterInitializationError {
 ///
 /// [`AutometricsSettingsBuilder::try_init`]: crate::settings::AutometricsSettingsBuilder::try_init
 pub fn try_init() -> Result<(), ExporterInitializationError> {
-    let prometheus = initialize_prometheus_exporter()?;
+    // Initialize the global exporter but only if it hasn't already been initialized
+    let mut newly_initialized = false;
+    GLOBAL_EXPORTER.get_or_try_init(|| {
+        newly_initialized = true;
+        initialize_prometheus_exporter()
+    })?;
 
-    GLOBAL_EXPORTER
-        .set(prometheus)
-        .map_err(|_| ExporterInitializationError::AlreadyInitialized)?;
+    if !newly_initialized {
+        return Err(ExporterInitializationError::AlreadyInitialized);
+    }
 
     // Set all of the function counters to zero
     #[cfg(debug_assertions)]
@@ -177,8 +180,6 @@ pub fn encode_http_response() -> PrometheusResponse {
 struct GlobalPrometheus {
     #[allow(dead_code)]
     settings: &'static AutometricsSettings,
-    #[cfg(opentelemetry)]
-    opentelemetry_exporter: PrometheusExporter,
     #[cfg(metrics)]
     metrics_exporter: PrometheusHandle,
 }
@@ -190,26 +191,8 @@ impl GlobalPrometheus {
         #[cfg(metrics)]
         output.push_str(&self.metrics_exporter.render());
 
-        #[cfg(opentelemetry)]
-        {
-            let mut metric_families = self.opentelemetry_exporter.registry().gather();
-            // This exporter doesn't currently append the units to the metric name so
-            // we do it ourselves
-            for metric in metric_families.iter_mut() {
-                if metric.get_name() == "function_calls_duration" {
-                    metric.set_name("function_calls_duration_seconds".to_string());
-                }
-            }
-            let encoder = TextEncoder::new();
-            encoder.encode_utf8(&metric_families, &mut output)?;
-        }
-
-        #[cfg(prometheus)]
-        {
-            let metric_families = self.settings.prometheus_registry.gather();
-            let encoder = TextEncoder::new();
-            encoder.encode_utf8(&metric_families, &mut output)?;
-        }
+        #[cfg(any(prometheus, opentelemetry))]
+        TextEncoder::new().encode_utf8(&self.settings.prometheus_registry.gather(), &mut output)?;
 
         #[cfg(prometheus_client)]
         prometheus_client::encoding::text::encode(
@@ -224,30 +207,54 @@ impl GlobalPrometheus {
 fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitializationError> {
     let settings = get_settings();
 
+    #[cfg(opentelemetry)]
+    {
+        use opentelemetry_api::global;
+        use opentelemetry_prometheus::exporter;
+        use opentelemetry_sdk::metrics::reader::AggregationSelector;
+        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind, MeterProvider};
+
+        /// A custom aggregation selector that uses the configured histogram buckets,
+        /// along with the other default aggregation settings.
+        struct AggregationSelectorWithHistogramBuckets {
+            histogram_buckets: Vec<f64>,
+        }
+
+        impl AggregationSelector for AggregationSelectorWithHistogramBuckets {
+            fn aggregation(&self, kind: InstrumentKind) -> Aggregation {
+                match kind {
+                    InstrumentKind::Counter
+                    | InstrumentKind::UpDownCounter
+                    | InstrumentKind::ObservableCounter
+                    | InstrumentKind::ObservableUpDownCounter => Aggregation::Sum,
+                    InstrumentKind::ObservableGauge => Aggregation::LastValue,
+                    InstrumentKind::Histogram => Aggregation::ExplicitBucketHistogram {
+                        boundaries: self.histogram_buckets.clone(),
+                        record_min_max: false,
+                    },
+                }
+            }
+        }
+
+        let exporter = exporter()
+            .with_registry(settings.prometheus_registry.clone())
+            .with_aggregation_selector(AggregationSelectorWithHistogramBuckets {
+                histogram_buckets: settings.histogram_buckets.clone(),
+            })
+            .without_scope_info()
+            .without_target_info()
+            .build()?;
+
+        let meter_provider = MeterProvider::builder().with_reader(exporter).build();
+
+        global::set_meter_provider(meter_provider);
+    }
+
     Ok(GlobalPrometheus {
         #[cfg(metrics)]
         metrics_exporter: PrometheusBuilder::new()
             .set_buckets(&settings.histogram_buckets)?
             .install_recorder()?,
-
-        #[cfg(opentelemetry)]
-        opentelemetry_exporter: {
-            use opentelemetry_sdk::export::metrics::aggregation;
-            use opentelemetry_sdk::metrics::{controllers, processors, selectors};
-
-            let controller = controllers::basic(processors::factory(
-                selectors::simple::histogram(settings.histogram_buckets.clone()),
-                aggregation::cumulative_temporality_selector(),
-            ));
-
-            #[cfg(debug_assertions)]
-            let controller = controller.with_collect_period(std::time::Duration::ZERO);
-
-            exporter(controller.build())
-                .with_registry(settings.prometheus_registry.clone())
-                .try_init()?
-        },
-
         settings,
     })
 }
