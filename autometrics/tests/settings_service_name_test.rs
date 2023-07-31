@@ -9,7 +9,7 @@ fn set_service_name() {
         "Hello world!"
     }
 
-    AutometricsSettings::new()
+    AutometricsSettings::builder()
         .service_name("test_service")
         .init();
 

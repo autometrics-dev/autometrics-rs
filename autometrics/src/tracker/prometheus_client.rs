@@ -22,9 +22,9 @@ type HistogramType =
 #[cfg(not(exemplars))]
 type HistogramType = prometheus_client::metrics::histogram::Histogram;
 
-static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
-    let mut registry = <Registry>::default();
+static METRICS: Lazy<&Metrics> = Lazy::new(|| &get_settings().prometheus_client_metrics);
 
+pub(crate) fn initialize_registry(mut registry: Registry) -> (Registry, Metrics) {
     let counter = Family::<CounterLabels, CounterType>::default();
     registry.register(
         // Remove the _total suffix from the counter name
@@ -60,12 +60,9 @@ static REGISTRY_AND_METRICS: Lazy<(Registry, Metrics)> = Lazy::new(|| {
             build_info,
         },
     )
-});
-/// The [`Registry`] used to collect metrics when the `prometheus-client` feature is enabled
-pub static REGISTRY: Lazy<&Registry> = Lazy::new(|| &REGISTRY_AND_METRICS.0);
-static METRICS: Lazy<&Metrics> = Lazy::new(|| &REGISTRY_AND_METRICS.1);
+}
 
-struct Metrics {
+pub(crate) struct Metrics {
     counter: Family<CounterLabels, CounterType>,
     histogram: Family<HistogramLabels, HistogramType>,
     gauge: Family<GaugeLabels, Gauge>,

@@ -21,6 +21,7 @@
 //! ```
 
 use crate::__private::{AutometricsTracker, TrackMetrics, FUNCTION_DESCRIPTIONS};
+use crate::settings::{get_settings, AutometricsSettings};
 use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
@@ -83,9 +84,9 @@ pub enum ExporterInitializationError {
 /// affecting the metric values.
 ///
 /// You should not call this function if you initialize the Autometrics
-/// settings via [`AutometricsSettings::try_init`].
+/// settings via [`AutometricsSettingsBuilder::try_init`].
 ///
-/// [`AutometricsSettings::try_init`]: crate::AutometricsSettings::try_init
+/// [`AutometricsSettingsBuilder::try_init`]: crate::settings::AutometricsSettingsBuilder::try_init
 pub fn try_init() -> Result<(), ExporterInitializationError> {
     let prometheus = initialize_prometheus_exporter()?;
 
@@ -119,9 +120,9 @@ pub fn try_init() -> Result<(), ExporterInitializationError> {
 /// affecting the metric values.
 ///
 /// You should not call this function if you initialize the Autometrics
-/// settings via [`AutometricsSettings::init`].
+/// settings via [`AutometricsSettingsBuilder::init`].
 ///
-/// [`AutometricsSettings::init`]: crate::AutometricsSettings::init
+/// [`AutometricsSettingsBuilder::init`]: crate::settings::AutometricsSettingsBuilder::init
 ///
 /// # Panics
 ///
@@ -174,6 +175,8 @@ pub fn encode_http_response() -> PrometheusResponse {
 #[derive(Clone)]
 #[doc(hidden)]
 struct GlobalPrometheus {
+    #[allow(dead_code)]
+    settings: &'static AutometricsSettings,
     #[cfg(opentelemetry)]
     opentelemetry_exporter: PrometheusExporter,
     #[cfg(metrics)]
@@ -185,10 +188,7 @@ impl GlobalPrometheus {
         let mut output = String::new();
 
         #[cfg(metrics)]
-        {
-            output.push_str(&self.metrics_exporter.render());
-            output.push('\n');
-        }
+        output.push_str(&self.metrics_exporter.render());
 
         #[cfg(opentelemetry)]
         {
@@ -202,34 +202,32 @@ impl GlobalPrometheus {
             }
             let encoder = TextEncoder::new();
             encoder.encode_utf8(&metric_families, &mut output)?;
-            output.push('\n');
         }
 
         #[cfg(prometheus)]
         {
-            let metric_families = prometheus::default_registry().gather();
+            let metric_families = self.settings.prometheus_registry.gather();
             let encoder = TextEncoder::new();
             encoder.encode_utf8(&metric_families, &mut output)?;
-            output.push('\n');
         }
 
         #[cfg(prometheus_client)]
-        {
-            prometheus_client::encoding::text::encode(
-                &mut output,
-                &crate::tracker::prometheus_client::REGISTRY,
-            )?;
-        }
+        prometheus_client::encoding::text::encode(
+            &mut output,
+            &self.settings.prometheus_client_registry,
+        )?;
 
         Ok(output)
     }
 }
 
 fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitializationError> {
+    let settings = get_settings();
+
     Ok(GlobalPrometheus {
         #[cfg(metrics)]
         metrics_exporter: PrometheusBuilder::new()
-            .set_buckets(&crate::settings::get_settings().histogram_buckets)?
+            .set_buckets(&settings.histogram_buckets)?
             .install_recorder()?,
 
         #[cfg(opentelemetry)]
@@ -238,16 +236,18 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
             use opentelemetry_sdk::metrics::{controllers, processors, selectors};
 
             let controller = controllers::basic(processors::factory(
-                selectors::simple::histogram(
-                    crate::settings::get_settings().histogram_buckets.clone(),
-                ),
+                selectors::simple::histogram(settings.histogram_buckets.clone()),
                 aggregation::cumulative_temporality_selector(),
             ));
 
             #[cfg(debug_assertions)]
             let controller = controller.with_collect_period(std::time::Duration::ZERO);
 
-            exporter(controller.build()).try_init()?
+            exporter(controller.build())
+                .with_registry(settings.prometheus_registry.clone())
+                .try_init()?
         },
+
+        settings,
     })
 }
