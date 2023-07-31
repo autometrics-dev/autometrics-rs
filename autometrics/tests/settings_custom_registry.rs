@@ -1,6 +1,6 @@
 #![cfg(prometheus_exporter)]
 
-use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettingsBuilder};
+use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettings};
 
 #[cfg(prometheus_client)]
 #[test]
@@ -22,7 +22,7 @@ fn custom_prometheus_client_registry() {
     let custom_metric = Family::<Vec<(&str, &str)>, Counter>::default();
     registry.register("custom_metric", "My custom metric", custom_metric.clone());
 
-    let settings = AutometricsSettingsBuilder::default()
+    let settings = AutometricsSettings::builder()
         .prometheus_client_registry(registry)
         .init();
 
@@ -61,7 +61,7 @@ fn custom_prometheus_registry() {
     )
     .unwrap();
 
-    AutometricsSettingsBuilder::default()
+    AutometricsSettings::builder()
         .prometheus_registry(registry.clone())
         .init();
 
@@ -100,7 +100,7 @@ fn custom_opentelemetry_registry() {
     // OpenTelemetry uses the `prometheus` crate under the hood
     let registry = Registry::new();
 
-    AutometricsSettingsBuilder::default()
+    AutometricsSettings::builder()
         .prometheus_registry(registry.clone())
         .init();
 

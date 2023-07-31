@@ -77,7 +77,7 @@ pub fn main() {
         registry.register("custom_counter", "Custom counter", custom_counter.clone());
         CUSTOM_COUNTER.set(custom_counter).unwrap();
 
-        AutometricsSettingsBuilder::default()
+        AutometricsSettings::builder()
             .prometheus_client_registry(registry)
             .init();
     }

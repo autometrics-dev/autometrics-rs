@@ -1,6 +1,6 @@
 #![cfg(prometheus_exporter)]
 
-use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettingsBuilder};
+use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettings};
 
 #[test]
 fn set_service_name() {
@@ -9,7 +9,7 @@ fn set_service_name() {
         "Hello world!"
     }
 
-    AutometricsSettingsBuilder::default()
+    AutometricsSettings::builder()
         .service_name("test_service")
         .init();
 

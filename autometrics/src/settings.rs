@@ -1,6 +1,14 @@
 //! Customize the global settings for Autometrics.
 //!
-//! See [`AutometricsSettings`] for more details on the available options.
+//! ```rust
+//! use autometrics::settings::AutometricsSettings;
+//!
+//! AutometricsSettings::builder()
+//!    .service_name("test_service")
+//!   .init();
+//! ```
+//!
+//! See [`AutometricsSettingsBuilder`] for more details on the available options.
 
 #[cfg(prometheus_exporter)]
 use crate::prometheus_exporter::{self, ExporterInitializationError};
@@ -39,6 +47,12 @@ pub struct AutometricsSettings {
     pub prometheus_client_registry: prometheus_client::registry::Registry,
     #[cfg(prometheus_client)]
     pub(crate) prometheus_client_metrics: crate::tracker::prometheus_client::Metrics,
+}
+
+impl AutometricsSettings {
+    pub fn builder() -> AutometricsSettingsBuilder {
+        AutometricsSettingsBuilder::default()
+    }
 }
 
 #[derive(Debug, Default)]

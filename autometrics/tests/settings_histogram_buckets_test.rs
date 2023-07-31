@@ -1,6 +1,6 @@
 #![cfg(prometheus_exporter)]
 
-use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettingsBuilder};
+use autometrics::{autometrics, prometheus_exporter, settings::AutometricsSettings};
 
 #[test]
 fn custom_histogram_buckets() {
@@ -9,7 +9,7 @@ fn custom_histogram_buckets() {
         "Hello world!"
     }
 
-    AutometricsSettingsBuilder::default()
+    AutometricsSettings::builder()
         .histogram_buckets(vec![0.1, 0.2, 0.3, 0.4, 0.5])
         .init();
 
