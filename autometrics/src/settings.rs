@@ -49,6 +49,18 @@ impl AutometricsSettings {
 
     /// Access the [`Registry`] where Autometrics metrics are collected.
     ///
+    /// You can use this to encode the metrics using the functionality provided by the [`prometheus`] crate
+    /// if you do not want to use the provided [`prometheus_exporter`].
+    ///
+    /// [`Registry`]: prometheus::Registry
+    /// [`prometheus_exporter`]: crate::prometheus_exporter
+    #[cfg(any(prometheus, opentelemetry))]
+    pub fn prometheus_registry(&self) -> &prometheus::Registry {
+        &self.prometheus_registry
+    }
+
+    /// Access the [`Registry`] where Autometrics metrics are collected.
+    ///
     /// You can use this to encode the metrics using the functionality provided by the [`prometheus_client`] crate
     /// if you do not want to use the provided [`prometheus_exporter`].
     ///
@@ -100,7 +112,8 @@ impl AutometricsSettingsBuilder {
     }
 
     /// Configure the [`prometheus::Registry`] that will be used to collect metrics when using
-    /// either the `prometheus` or `opentelemetry` backends.
+    /// either the `prometheus` or `opentelemetry` backends. If none is set, it will use
+    /// the [`prometheus::default_registry`].
     ///
     /// This is mainly useful if you want to add custom metrics to the same registry, or if you want to
     /// add a custom prefix or custom labels to all of the metrics.

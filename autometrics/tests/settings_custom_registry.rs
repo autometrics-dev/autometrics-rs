@@ -61,8 +61,8 @@ fn custom_prometheus_registry() {
     )
     .unwrap();
 
-    AutometricsSettings::builder()
-        .prometheus_registry(registry.clone())
+    let settings = AutometricsSettings::builder()
+        .prometheus_registry(registry)
         .init();
 
     #[autometrics]
@@ -75,7 +75,7 @@ fn custom_prometheus_registry() {
 
     let mut metrics = String::new();
     TextEncoder::new()
-        .encode_utf8(&registry.gather(), &mut metrics)
+        .encode_utf8(&settings.prometheus_registry().gather(), &mut metrics)
         .unwrap();
 
     // Check that both the autometrics metrics and the custom metrics are present
@@ -100,8 +100,8 @@ fn custom_opentelemetry_registry() {
     // OpenTelemetry uses the `prometheus` crate under the hood
     let registry = Registry::new();
 
-    AutometricsSettings::builder()
-        .prometheus_registry(registry.clone())
+    let settings = AutometricsSettings::builder()
+        .prometheus_registry(registry)
         .init();
 
     let custom_metric = global::meter("foo").u64_counter("custom_metric").init();
@@ -116,7 +116,7 @@ fn custom_opentelemetry_registry() {
 
     let mut metrics = String::new();
     TextEncoder::new()
-        .encode_utf8(&registry.gather(), &mut metrics)
+        .encode_utf8(&settings.prometheus_registry().gather(), &mut metrics)
         .unwrap();
 
     // Check that both the autometrics metrics and the custom metrics are present
