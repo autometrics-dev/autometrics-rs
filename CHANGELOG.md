@@ -50,8 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `encode_global_metrics` was removed and replaced by `prometheus_exporter::encode_to_string`
 - `global_metrics_exporter` was removed and replaced by `prometheus_exporter::init`
-- `backends::prometheus_client::REGISTRY` was removed. The `Registry` can now be accessed as
-  a property on the `AutometricsSettings` struct
+- `backends::prometheus_client::REGISTRY` was removed. The `Registry` used with the `prometheus-client`
+  backend can now be accessed via `AutometricsSettings::prometheus_client_registry`
 
 ### Fixed
 
