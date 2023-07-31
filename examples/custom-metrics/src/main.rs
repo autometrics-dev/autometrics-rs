@@ -21,14 +21,14 @@ pub fn function_with_custom_metrics_metric() {
 #[cfg(feature = "openetelemetry")]
 pub fn function_with_custom_opentelemetry_metric() {
     use once_cell::sync::Lazy;
-    use opentelemetry::{global, metrics::Counter, Context, KeyValue};
+    use opentelemetry::{global, metrics::Counter, KeyValue};
 
     static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
         global::meter("")
             .u64_counter("custom_opentelemetry_counter")
             .init()
     });
-    COUNTER.add(&Context::current(), 1, &[KeyValue::new("foo", "bar")]);
+    COUNTER.add(1, &[KeyValue::new("foo", "bar")]);
 }
 
 // Run the example with `--features=prometheus` to use the `prometheus` crate to define additional metrics.
