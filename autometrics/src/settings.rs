@@ -36,15 +36,8 @@ pub struct AutometricsSettings {
     pub(crate) service_name: String,
     #[cfg(any(prometheus, opentelemetry))]
     pub(crate) prometheus_registry: prometheus::Registry,
-    /// The [`Registry`] where Autometrics metrics are collected.
-    ///
-    /// You can use this to encode the metrics using the functionality provided by the [`prometheus_client`] crate
-    /// if you do not want to use the provided [`prometheus_exporter`].
-    ///
-    /// [`Registry`]: prometheus_client::registry::Registry
-    /// [`prometheus_exporter`]: crate::prometheus_exporter
     #[cfg(prometheus_client)]
-    pub prometheus_client_registry: prometheus_client::registry::Registry,
+    pub(crate) prometheus_client_registry: prometheus_client::registry::Registry,
     #[cfg(prometheus_client)]
     pub(crate) prometheus_client_metrics: crate::tracker::prometheus_client::Metrics,
 }
@@ -52,6 +45,18 @@ pub struct AutometricsSettings {
 impl AutometricsSettings {
     pub fn builder() -> AutometricsSettingsBuilder {
         AutometricsSettingsBuilder::default()
+    }
+
+    /// Access the [`Registry`] where Autometrics metrics are collected.
+    ///
+    /// You can use this to encode the metrics using the functionality provided by the [`prometheus_client`] crate
+    /// if you do not want to use the provided [`prometheus_exporter`].
+    ///
+    /// [`Registry`]: prometheus_client::registry::Registry
+    /// [`prometheus_exporter`]: crate::prometheus_exporter
+    #[cfg(prometheus_client)]
+    pub fn prometheus_client_registry(&self) -> &prometheus_client::registry::Registry {
+        &self.prometheus_client_registry
     }
 }
 

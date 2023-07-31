@@ -32,7 +32,7 @@ fn custom_prometheus_client_registry() {
     hello_world();
 
     let mut metrics = String::new();
-    encode(&mut metrics, &settings.prometheus_client_registry).unwrap();
+    encode(&mut metrics, settings.prometheus_client_registry()).unwrap();
 
     // Check that both the autometrics metrics and the custom metrics are present
     assert!(metrics
