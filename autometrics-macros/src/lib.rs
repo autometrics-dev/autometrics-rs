@@ -58,7 +58,7 @@ fn instrument_function(
 
     // Methods are identified as Struct::method
     let function_name = match struct_name {
-        Some(struct_name) => format!("{}::{}", struct_name, sig.ident.to_string()),
+        Some(struct_name) => format!("{}::{}", struct_name, sig.ident),
         None => sig.ident.to_string(),
     };
 
