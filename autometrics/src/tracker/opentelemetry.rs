@@ -8,7 +8,7 @@ use opentelemetry_api::{global, KeyValue};
 use std::{sync::Once, time::Instant};
 
 static SET_BUILD_INFO: Once = Once::new();
-static METER_NAME: &str = "autometrics";
+const METER_NAME: &str = "autometrics";
 static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
     global::meter(METER_NAME)
         .u64_counter(COUNTER_NAME)
