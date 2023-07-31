@@ -163,7 +163,7 @@ https://github.com/autometrics-dev/autometrics-rs/assets/3262610/966ed140-1d6c-4
       [dependencies]
       autometrics = {
         version = "*",
-        features = ["opentelemetry-0_19"],
+        features = ["prometheus-0_13"],
         default-features = false
       }
       ```
