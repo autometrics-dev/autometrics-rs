@@ -20,6 +20,7 @@
 //! }
 //! ```
 
+#[cfg(debug_assertions)]
 use crate::__private::{AutometricsTracker, TrackMetrics, FUNCTION_DESCRIPTIONS};
 use crate::settings::{get_settings, AutometricsSettings};
 use http::{header::CONTENT_TYPE, Response};

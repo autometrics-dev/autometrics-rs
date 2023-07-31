@@ -206,7 +206,7 @@ Using each of the following metrics libraries, tracking metrics with the `autome
 - `prometheus-0_13`: 140-150 nanoseconds
 - `prometheus-client-0_21`: 150-250 nanoseconds
 - `metrics-0_21`: 550-650 nanoseconds
-- `opentelemetry-0_19`: 550-750 nanoseconds
+- `opentelemetry-0_20`: 1700-2100 nanoseconds
 
 These were calculated on a 2021 MacBook Pro with the M1 Max chip and 64 GB of RAM.
 
