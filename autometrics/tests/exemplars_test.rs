@@ -54,14 +54,22 @@ fn multiple_fields() {
 #[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
+    use opentelemetry_sdk::trace::TracerProvider;
+    use opentelemetry_stdout::trace::SpanExporter;
+    use tracing_opentelemetry::OpenTelemetryLayer;
+    use tracing_subscriber::Registry;
+
     prometheus_exporter::try_init().ok();
 
-    let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline()
-        .with_writer(std::io::sink())
-        .install_simple();
+    SpanExporter::builder().with_writer(std::io::sink());
+
+    let tracer = TracerProvider::builder()
+        .with_simple_exporter(SpanExporter::default())
+        .build();
+
     // This adds the OpenTelemetry Context to every tracing Span
-    let otel_layer = tracing_opentelemetry::OpenTelemetryLayer::new(tracer);
-    let subscriber = tracing_subscriber::Registry::default().with(otel_layer);
+    let otel_layer = OpenTelemetryLayer::new(tracer);
+    let subscriber = Registry::default().with(otel_layer);
 
     #[autometrics]
     #[tracing::instrument]

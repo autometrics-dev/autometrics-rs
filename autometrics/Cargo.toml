@@ -86,6 +86,7 @@ axum = { version = "0.6", features = ["tokio"] }
 criterion = "0.5"
 http = "0.2"
 opentelemetry_sdk = "0.20"
+opentelemetry-stdout = { version = "0.1", features = ["trace"] }
 prometheus-client = "0.21"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
