@@ -5,15 +5,15 @@ use crate::{constants::*, settings::get_settings, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
 use prometheus::core::{AtomicI64, GenericGauge};
 use prometheus::{
-    histogram_opts, register_histogram_vec, register_int_counter_vec, register_int_gauge_vec,
-    HistogramVec, IntCounterVec, IntGaugeVec,
+    histogram_opts, register_histogram_vec_with_registry, register_int_counter_vec_with_registry,
+    register_int_gauge_vec_with_registry, HistogramVec, IntCounterVec, IntGaugeVec,
 };
 use std::{sync::Once, time::Instant};
 
 static SET_BUILD_INFO: Once = Once::new();
 
 static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
-    register_int_counter_vec!(
+    register_int_counter_vec_with_registry!(
         COUNTER_NAME_PROMETHEUS,
         COUNTER_DESCRIPTION,
         &[
@@ -27,7 +27,8 @@ static COUNTER: Lazy<IntCounterVec> = Lazy::new(|| {
             ERROR_KEY,
             OBJECTIVE_NAME_PROMETHEUS,
             OBJECTIVE_PERCENTILE_PROMETHEUS,
-        ]
+        ],
+        get_settings().prometheus_registry.clone()
     )
     .expect("Failed to register function_calls_count_total counter")
 });
@@ -41,7 +42,7 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
         // so we need to pass these in here
         get_settings().histogram_buckets.clone()
     );
-    register_histogram_vec!(
+    register_histogram_vec_with_registry!(
         opts,
         &[
             FUNCTION_KEY,
@@ -50,20 +51,22 @@ static HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
             OBJECTIVE_NAME_PROMETHEUS,
             OBJECTIVE_PERCENTILE_PROMETHEUS,
             OBJECTIVE_LATENCY_THRESHOLD_PROMETHEUS
-        ]
+        ],
+        get_settings().prometheus_registry.clone()
     )
     .expect("Failed to register function_calls_duration histogram")
 });
 static GAUGE: Lazy<IntGaugeVec> = Lazy::new(|| {
-    register_int_gauge_vec!(
+    register_int_gauge_vec_with_registry!(
         GAUGE_NAME_PROMETHEUS,
         GAUGE_DESCRIPTION,
-        &[FUNCTION_KEY, MODULE_KEY, SERVICE_NAME_KEY_PROMETHEUS]
+        &[FUNCTION_KEY, MODULE_KEY, SERVICE_NAME_KEY_PROMETHEUS],
+        get_settings().prometheus_registry.clone()
     )
     .expect("Failed to register function_calls_concurrent gauge")
 });
 static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
-    register_int_gauge_vec!(
+    register_int_gauge_vec_with_registry!(
         BUILD_INFO_NAME,
         BUILD_INFO_DESCRIPTION,
         &[
@@ -71,7 +74,8 @@ static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
             VERSION_KEY,
             BRANCH_KEY,
             SERVICE_NAME_KEY_PROMETHEUS
-        ]
+        ],
+        get_settings().prometheus_registry.clone()
     )
     .expect("Failed to register build_info counter")
 });

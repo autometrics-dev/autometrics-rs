@@ -93,6 +93,7 @@ impl TrackMetrics for AutometricsTracker {
     }
 
     #[cfg(debug_assertions)]
+    #[allow(unused_variables)]
     fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
         #[cfg(metrics)]
         MetricsTracker::intitialize_metrics(function_descriptions);
