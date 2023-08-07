@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry` feature flag (replaced with `opentelemetry-0_20`)
 - `prometheus` feature flag (replaced with `prometheus-0_13`)
 - `prometheus-client` feature flag (replaced with `prometheus-client-0_21`)
+- `exemplars-tracing-opentelemetry` feature flag (replaced with `exemplars-tracing-opentelemetry-0_20`)
 
 ### Removed
 

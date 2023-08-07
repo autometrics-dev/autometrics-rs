@@ -41,29 +41,7 @@
 //! 3. Spans can be manually created or created for every function using the [`tracing::instrument`] macro
 //! 4. Autometrics extracts the `trace_id` and `span_id` from the `Context` and attaches them as exemplars to the generated metrics
 //!
-//! ### Example
-//!
-//! ```rust
-//! # use autometrics::autometrics;
-//! use tracing_subscriber::prelude::*;
-//! use tracing_opentelemetry::OpenTelemetryLayer;
-//!
-//! let tracer = opentelemetry_sdk::export::trace::stdout::new_pipeline().install_simple();
-//! let otel_layer = OpenTelemetryLayer::new(tracer);
-//!
-//! // Create a tracing subscriber with the OpenTelemetry layer
-//! tracing_subscriber::fmt()
-//!   .finish()
-//!   .with(otel_layer)
-//!   .init();
-//!
-//! #[autometrics]
-//! #[tracing::instrument]
-//! async fn my_function() {
-//!   // This function produces metrics with exemplars
-//!   // that contain a trace_id and span_id
-//! }
-//! ```
+//! See the `exemplars-tracing-opentelemetry` example for usage details.
 //!
 //! [`tracing_opentelemetry::OpenTelemetryLayer`]: https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.OpenTelemetryLayer.html
 //! [`opentelemetry::Context`]: https://docs.rs/opentelemetry/latest/opentelemetry/struct.Context.html

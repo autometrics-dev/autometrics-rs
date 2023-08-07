@@ -1,11 +1,11 @@
 #![cfg(all(prometheus_exporter, exemplars))]
 
 use autometrics::{autometrics, prometheus_exporter};
-use tracing_subscriber::prelude::*;
 
 #[cfg(exemplars_tracing)]
 #[test]
 fn single_field() {
+    use tracing_subscriber::prelude::*;
     prometheus_exporter::try_init().ok();
 
     #[autometrics]
@@ -28,6 +28,7 @@ fn single_field() {
 #[cfg(exemplars_tracing)]
 #[test]
 fn multiple_fields() {
+    use tracing_subscriber::prelude::*;
     prometheus_exporter::try_init().ok();
 
     #[autometrics]
@@ -54,21 +55,22 @@ fn multiple_fields() {
 #[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
+    use opentelemetry_api::trace::TracerProvider as _;
     use opentelemetry_sdk::trace::TracerProvider;
-    use opentelemetry_stdout::trace::SpanExporter;
-    use tracing_opentelemetry::OpenTelemetryLayer;
-    use tracing_subscriber::Registry;
+    use opentelemetry_stdout::SpanExporter;
+    use std::io;
+    use tracing_subscriber::{layer::SubscriberExt, Registry};
 
     prometheus_exporter::try_init().ok();
 
-    SpanExporter::builder().with_writer(std::io::sink());
-
-    let tracer = TracerProvider::builder()
-        .with_simple_exporter(SpanExporter::default())
+    let exporter = SpanExporter::builder().with_writer(io::sink()).build();
+    let provider = TracerProvider::builder()
+        .with_simple_exporter(exporter)
         .build();
+    let tracer = provider.tracer("test");
 
     // This adds the OpenTelemetry Context to every tracing Span
-    let otel_layer = OpenTelemetryLayer::new(tracer);
+    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
     let subscriber = Registry::default().with(otel_layer);
 
     #[autometrics]

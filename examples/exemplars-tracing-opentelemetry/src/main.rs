@@ -1,7 +1,9 @@
 use autometrics::{autometrics, prometheus_exporter};
 use autometrics_example_util::run_prometheus;
 use axum::{routing::get, Router, Server};
-use opentelemetry::sdk::export::trace::stdout;
+use opentelemetry::sdk::trace::TracerProvider;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_stdout::SpanExporter;
 use std::{io, net::SocketAddr, time::Duration};
 use tracing::{instrument, trace};
 use tracing_opentelemetry::OpenTelemetryLayer;
@@ -31,17 +33,20 @@ async fn main() {
     let _prometheus = run_prometheus(true);
     tokio::spawn(generate_random_traffic());
 
-    prometheus_exporter::init();
+    // This exporter will discard the spans but you can use the other to see them
+    let exporter = SpanExporter::builder().with_writer(io::sink()).build();
+    // let exporter = SpanExporter::default();
 
-    // Create an OpenTelemetry tracing pipeline and layer
-    let tracer = stdout::new_pipeline()
-        // Throw away the spans instead of printing them to stdout
-        .with_writer(io::sink())
-        .install_simple();
+    let provider = TracerProvider::builder()
+        .with_simple_exporter(exporter)
+        .build();
+    let tracer = provider.tracer("example");
+
+    // This adds the OpenTelemetry Context to every tracing Span
     let otel_layer = OpenTelemetryLayer::new(tracer);
-
-    // Create a tracing subscriber with the OpenTelemetry layer
     Registry::default().with(otel_layer).init();
+
+    prometheus_exporter::init();
 
     let app = Router::new().route("/", get(outer_function)).route(
         "/metrics",
