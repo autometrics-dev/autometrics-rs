@@ -19,11 +19,12 @@ opentelemetry-0_20 = ["opentelemetry_api/metrics", "dep:prometheus"]
 prometheus-0_13 = ["dep:prometheus"]
 prometheus-client-0_21 = ["dep:prometheus-client"]
 
-# Deprecated feature flag names for metrics backends
+# Deprecated feature flags
 metrics = ["metrics-0_21"]
 opentelemetry = ["opentelemetry-0_20"]
 prometheus = ["prometheus-0_13"]
 prometheus-client = ["prometheus-client-0_21"]
+exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_20"]
 
 # Misc
 prometheus-exporter = [
