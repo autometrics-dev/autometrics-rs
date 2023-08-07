@@ -32,7 +32,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         "opentelemetry"
     } else if cfg!(prometheus) {
         "prometheus"
-    } else if cfg!(prometheus_client) {
+    } else if cfg!(prometheus_client_feature) {
         "prometheus-client"
     } else {
         "unknown"

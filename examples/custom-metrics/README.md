@@ -7,7 +7,7 @@ This example demonstrates how you can collect custom metrics in addition to the 
 ### Using the `opentelemetry` crate
 
 ```shell
-cargo run -p example-custom-metrics --features=opentelemetry-0_19
+cargo run -p example-custom-metrics --features=opentelemetry-0_20
 ```
 
 ### Using the `metrics` crate

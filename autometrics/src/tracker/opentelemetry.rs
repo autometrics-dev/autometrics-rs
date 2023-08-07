@@ -4,25 +4,30 @@ use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
 use opentelemetry_api::metrics::{Counter, Histogram, Unit, UpDownCounter};
-use opentelemetry_api::{global, Context, KeyValue};
+use opentelemetry_api::{global, KeyValue};
 use std::{sync::Once, time::Instant};
 
 static SET_BUILD_INFO: Once = Once::new();
+const METER_NAME: &str = "autometrics";
 static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
-    global::meter("")
+    global::meter(METER_NAME)
         .u64_counter(COUNTER_NAME)
         .with_description(COUNTER_DESCRIPTION)
         .init()
 });
 static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
-    global::meter("")
+    // Note that the unit needs to be written as "s" rather than "seconds"
+    // or it will not be included in the metric name
+    // https://github.com/open-telemetry/opentelemetry-rust/issues/1173
+    let unit = Unit::new("s");
+    global::meter(METER_NAME)
         .f64_histogram(HISTOGRAM_NAME)
-        .with_unit(Unit::new(HISTOGRAM_UNIT))
+        .with_unit(unit)
         .with_description(HISTOGRAM_DESCRIPTION)
         .init()
 });
 static GAUGE: Lazy<UpDownCounter<i64>> = Lazy::new(|| {
-    global::meter("")
+    global::meter(METER_NAME)
         .i64_up_down_counter(GAUGE_NAME)
         .with_description(GAUGE_DESCRIPTION)
         .init()
@@ -32,17 +37,14 @@ static GAUGE: Lazy<UpDownCounter<i64>> = Lazy::new(|| {
 pub struct OpenTelemetryTracker {
     gauge_labels: Option<Vec<KeyValue>>,
     start: Instant,
-    context: Context,
 }
 
 impl TrackMetrics for OpenTelemetryTracker {
     fn start(gauge_labels: Option<&GaugeLabels>) -> Self {
-        let context = Context::current();
-
         let gauge_labels = if let Some(gauge_labels) = gauge_labels {
             let gauge_labels = to_key_values(gauge_labels.to_array());
             // Increase the number of concurrent requests
-            GAUGE.add(&context, 1, &gauge_labels);
+            GAUGE.add(1, &gauge_labels);
             Some(gauge_labels)
         } else {
             None
@@ -51,7 +53,6 @@ impl TrackMetrics for OpenTelemetryTracker {
         Self {
             gauge_labels,
             start: Instant::now(),
-            context,
         }
     }
 
@@ -60,26 +61,26 @@ impl TrackMetrics for OpenTelemetryTracker {
 
         // Track the function calls
         let counter_labels = to_key_values(counter_labels.to_vec());
-        COUNTER.add(&self.context, 1, &counter_labels);
+        COUNTER.add(1, &counter_labels);
 
         // Track the latency
         let histogram_labels = to_key_values(histogram_labels.to_vec());
-        HISTOGRAM.record(&self.context, duration, &histogram_labels);
+        HISTOGRAM.record(duration, &histogram_labels);
 
         // Decrease the number of concurrent requests
         if let Some(gauge_labels) = self.gauge_labels {
-            GAUGE.add(&self.context, -1, &gauge_labels);
+            GAUGE.add(-1, &gauge_labels);
         }
     }
 
     fn set_build_info(build_info_labels: &BuildInfoLabels) {
         SET_BUILD_INFO.call_once(|| {
             let build_info_labels = to_key_values(build_info_labels.to_vec());
-            let build_info = global::meter("")
+            let build_info = global::meter(METER_NAME)
                 .f64_up_down_counter(BUILD_INFO_NAME)
                 .with_description(BUILD_INFO_DESCRIPTION)
                 .init();
-            build_info.add(&Context::current(), 1.0, &build_info_labels);
+            build_info.add(1.0, &build_info_labels);
         });
     }
 
@@ -87,7 +88,7 @@ impl TrackMetrics for OpenTelemetryTracker {
     fn intitialize_metrics(function_descriptions: &[FunctionDescription]) {
         for function in function_descriptions {
             let labels = &to_key_values(CounterLabels::from(function).to_vec());
-            COUNTER.add(&Context::current(), 0, labels);
+            COUNTER.add(0, labels);
         }
     }
 }
