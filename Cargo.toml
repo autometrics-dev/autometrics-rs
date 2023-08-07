@@ -8,7 +8,7 @@ repository = "https://github.com/autometrics-dev/autometrics-rs"
 homepage = "https://autometrics.dev"
 license = "MIT OR Apache-2.0"
 keywords = ["metrics", "prometheus", "opentelemetry"]
-categories = ["development-tools::profiling"]
+categories = ["development-tools::debugging", "development-tools::profiling"]
 
 [workspace]
 default-members = ["autometrics", "autometrics-cli", "autometrics-macros"]
