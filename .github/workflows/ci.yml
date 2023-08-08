@@ -42,7 +42,7 @@ jobs:
       - run: cargo build --package example-exemplars-tracing
       - run: cargo build --package example-exemplars-tracing-opentelemetry
       - run: cargo build --package example-full-api
-      - run: cargo build --package opentelemetry-push
+      - run: cargo build --package example-opentelemetry-push
 
 
       # Make sure the docs can be built
