@@ -39,8 +39,11 @@ jobs:
       - run: cargo build --package example-actix-web
       - run: cargo build --package example-axum
       - run: cargo build --package example-custom-metrics
-      - run: cargo build --package example-full-api
       - run: cargo build --package example-exemplars-tracing
+      - run: cargo build --package example-exemplars-tracing-opentelemetry
+      - run: cargo build --package example-full-api
+      - run: cargo build --package example-opentelemetry-push
+
 
       # Make sure the docs can be built
       - run: cargo doc --all-features

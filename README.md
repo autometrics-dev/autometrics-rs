@@ -14,7 +14,7 @@ Autometrics provides a macro that makes it trivial to instrument any function wi
 - 💡 Generates powerful Prometheus queries to help quickly identify and debug issues in production
 - 🔗 Injects links to live Prometheus charts directly into each function's doc comments
 - [📊 Grafana dashboards](https://github.com/autometrics-dev/autometrics-shared#dashboards) work without configuration to visualize the performance of functions & [SLOs](https://docs.rs/autometrics/latest/autometrics/objectives/index.html)
-- 🔍 Correlates your code's version with metrics to help [identify commits](https://docs.rs/autometrics/latest/autometrics/#identifying-faulty-commits-with-the-build_info-metric) that introduced errors or latency
+- 🔍 Correlates your code's version with metrics to help identify commits that introduced errors or latency
 - 📏 Standardizes metrics across services and teams to improve debugging
 - ⚖️ Function-level metrics provide useful granularity without exploding cardinality
 - [⚡ Minimal runtime overhead](#benchmarks)
