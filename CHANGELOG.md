@@ -11,6 +11,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+-
+
+### Changed
+
+-
+
+### Deprecated
+
+-
+
+### Removed
+
+-
+
+### Fixed
+
+-
+
+### Security
+
+-
+
+---
+
+## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
+
+### Added
+
 - Autometrics settings can now be configured via `settings::AutometricsSettings::builder()`
 - A custom `Registry` can be used to collect metrics. This may be used to add
   custom metrics alongside those produced by Autometrics, as well as to export
@@ -60,12 +88,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Return types on functions annotated with `#[autometrics]` containing generic
   `impl` types in their type arguments (`fn() -> Result<impl ToString, impl std::error::Error>`)
   no longer fail to compile.
-
-### Security
-
--
-
----
 
 ## [0.5.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-06-02
 
