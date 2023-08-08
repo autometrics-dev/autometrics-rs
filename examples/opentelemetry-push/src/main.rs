@@ -1,27 +1,21 @@
 use autometrics::autometrics;
 use autometrics_example_util::sleep_random_duration;
+use opentelemetry::metrics::MetricsError;
+use opentelemetry::sdk::metrics::MeterProvider;
 use opentelemetry::{runtime, Context};
-use opentelemetry::sdk::export::metrics::aggregation::cumulative_temporality_selector;
-use opentelemetry::sdk::metrics::controllers::BasicController;
-use opentelemetry::sdk::metrics::selectors;
-use opentelemetry::metrics;
 use opentelemetry_otlp::{ExportConfig, WithExportConfig};
-use tokio::time::sleep;
 use std::error::Error;
 use std::time::Duration;
+use tokio::time::sleep;
 
-fn init_metrics() -> metrics::Result<BasicController> {
+fn init_metrics() -> Result<MeterProvider, MetricsError> {
     let export_config = ExportConfig {
         endpoint: "http://localhost:4317".to_string(),
         ..ExportConfig::default()
     };
     let push_interval = Duration::from_secs(1);
     opentelemetry_otlp::new_pipeline()
-        .metrics(
-            selectors::simple::inexpensive(),
-            cumulative_temporality_selector(),
-            runtime::Tokio,
-        )
+        .metrics(runtime::Tokio)
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
@@ -48,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
 
     println!("Waiting so that we could see metrics going down...");
     sleep(Duration::from_secs(10)).await;
-    meter_provider.stop(&cx)?;
+    meter_provider.force_flush(&cx)?;
 
     Ok(())
 }
