@@ -1,14 +1,13 @@
-# Autometrics + OTLP push controller
+# Autometrics + OTLP push controller (custom)
 
-This example demonstrates how you can push autometrics via OTLP HTTP protocol 
-to the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) or another OTel-compatible solution. It
-uses the Autometrics provided wrapper to achieve this.
+This example demonstrates how you can push autometrics via OTLP gRPC protocol to the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) or another OTel-compatible solution
+without using the Autometrics provided interface.
 
 ## Running the example
 
 ### Start a basic OTEL-Collector
 
-You can use the [`otel-collector-config.yml`](./otel-collector-config.yml) file to start an otel-collector container that listens on 0.0.0.0:4317 for incoming otlp-gRPC traffic as well as on 0.0.0.0:4318 for incoming otlp-http traffic, and exports the metrics it receives to stdout.
+You can use the [`otel-collector-config.yml`](./otel-collector-config.yml) file to start an otel-collector container that listens on 0.0.0.0:4317 for incoming otlp-gRPC traffic, and exports the metrics it receives to stdout.
 
 Run the following command in a second terminal to start a container in interactive mode:
 
@@ -16,7 +15,7 @@ Run the following command in a second terminal to start a container in interacti
 docker run -it --name otel-col \
     -p 4317:4317 -p 13133:13133 \
     -v $PWD/otel-collector-config.yml:/etc/otelcol/config.yaml \
-    otel/opentelemetry-collector-contrib:latest
+    otel/opentelemetry-collector:latest
 ```
 
 You should see the collector initialization output, that should end with something like:
@@ -32,7 +31,7 @@ You should see the collector initialization output, that should end with somethi
 Then come back on your primary shell and run this example:
 
 ```shell
-cargo run -p example-opentelemetry-push-http
+cargo run -p example-opentelemetry-push-custom
 ```
 
 ### Check the output
@@ -101,3 +100,7 @@ Then delete the container with
 ```bash
 docker rm otel-col
 ```
+
+## OpenTelemetry Metrics Push Controller
+
+The metric push controller is implemented as from this [example](https://github.com/open-telemetry/opentelemetry-rust/blob/f20c9b40547ee20b6ec99414bb21abdd3a54d99b/examples/basic-otlp/src/main.rs#L35-L52) from `opentelemetry-rust` crate.

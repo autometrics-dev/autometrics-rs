@@ -5,11 +5,6 @@ publish = false
 edition = "2021"
 
 [dependencies]
-autometrics = { path = "../../autometrics", features = ["opentelemetry-0_20"] }
+autometrics = { path = "../../autometrics", features = ["opentelemetry-0_20", "otel-push-exporter-http", "otel-push-exporter-tokio"] }
 autometrics-example-util = { path = "../util" }
-# Note that the version of the opentelemetry crate MUST match
-# the version used by autometrics
-opentelemetry = { version = "0.20", features = ["metrics", "rt-tokio"] }
-opentelemetry-otlp = { version = "0.13", features = ["tonic", "metrics"] }
-opentelemetry-semantic-conventions = { version = "0.12.0" }
 tokio = { version = "1", features = ["full"] }
