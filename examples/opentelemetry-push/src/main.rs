@@ -44,5 +44,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     sleep(Duration::from_secs(10)).await;
     meter_provider.force_flush(&cx)?;
 
+    meter_provider.shutdown()?;
     Ok(())
 }
