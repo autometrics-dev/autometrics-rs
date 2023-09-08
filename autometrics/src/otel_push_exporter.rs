@@ -120,3 +120,12 @@ fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk::runtime::TokioCurrentThrea
 fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk::runtime::AsyncStd> {
     return opentelemetry_otlp::new_pipeline().metrics(opentelemetry_sdk::runtime::AsyncStd);
 }
+
+#[cfg(not(any(
+    feature = "otel-push-exporter-tokio",
+    feature = "otel-push-exporter-tokio-current-thread",
+    feature = "otel-push-exporter-async-std"
+)))]
+fn runtime() -> ! {
+    compile_error!("select your runtime (`otel-push-exporter-tokio`, `otel-push-exporter-tokio-current-thread` or `otel-push-exporter-async-std`) for the autometrics push exporter or use the custom push exporter if none fit")
+}
