@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--
+- New exporter, `otel_push_exporter` is now available in addition to the existing
+  `prometheus_exporter`. It can be used to push metrics in the OTEL format via
+  HTTP or gRPC to a OTEL-collector-(compatible) server.
 
 ### Changed
 
