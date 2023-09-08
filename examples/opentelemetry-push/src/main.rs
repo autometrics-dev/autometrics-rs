@@ -12,6 +12,8 @@ async fn do_stuff() {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    // NOTICE: the variable gets assigned to `_meter_provider` instead of just `_`, as the later case
+    // would cause it to be dropped immediately and thus shut down.
     let _meter_provider = otel_push_exporter::init_http("http://0.0.0.0:4318")?;
     // or: otel_push_exporter::init_grpc("http://0.0.0.0:4317");
 
