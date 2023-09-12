@@ -118,10 +118,10 @@ pub fn init_grpc_with_timeout_period(
 
 #[cfg(all(
     feature = "otel-push-exporter-tokio",
-    any(
+    not(any(
         feature = "otel-push-exporter-tokio-current-thread",
         feature = "otel-push-exporter-async-std"
-    )
+    ))
 ))]
 fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk::runtime::Tokio> {
     return opentelemetry_otlp::new_pipeline().metrics(opentelemetry_sdk::runtime::Tokio);
