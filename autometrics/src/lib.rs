@@ -14,6 +14,8 @@ mod constants;
 pub mod exemplars;
 mod labels;
 pub mod objectives;
+#[cfg(feature = "otel-push-exporter")]
+pub mod otel_push_exporter;
 #[cfg(feature = "prometheus-exporter")]
 pub mod prometheus_exporter;
 pub mod settings;

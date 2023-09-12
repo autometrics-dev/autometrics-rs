@@ -36,6 +36,38 @@ prometheus-exporter = [
   "dep:prometheus-client",
 ]
 
+otel-push-exporter = [
+  "opentelemetry_sdk",
+  "opentelemetry_api",
+  "opentelemetry-otlp",
+  "opentelemetry-otlp/tls-roots",
+]
+
+otel-push-exporter-http = [
+  "otel-push-exporter",
+  "opentelemetry-otlp/http-proto"
+]
+
+otel-push-exporter-grpc = [
+  "otel-push-exporter",
+  "opentelemetry-otlp/grpc-tonic"
+]
+
+otel-push-exporter-tokio = [
+  "otel-push-exporter",
+  "opentelemetry_sdk/rt-tokio"
+]
+
+otel-push-exporter-tokio-current-thread = [
+  "otel-push-exporter",
+  "opentelemetry_sdk/rt-tokio-current-thread"
+]
+
+otel-push-exporter-async-std = [
+  "otel-push-exporter",
+  "opentelemetry_sdk/rt-async-std"
+]
+
 # Exemplars
 exemplars-tracing = ["tracing", "tracing-subscriber"]
 exemplars-tracing-opentelemetry-0_20 = [
@@ -68,6 +100,7 @@ opentelemetry-prometheus = { version = "0.13.0", optional = true }
 opentelemetry_sdk = { version = "0.20", default-features = false, features = [
   "metrics",
 ], optional = true }
+opentelemetry-otlp = { version = "0.13.0", default-features = false, optional = true }
 prometheus = { version = "0.13", default-features = false, optional = true }
 
 # Used for prometheus-client feature

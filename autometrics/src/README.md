@@ -125,6 +125,25 @@ pub fn main() {
 
 - `prometheus-exporter` - exports a Prometheus metrics collector and exporter. This is compatible with any of the [Metrics backends](#metrics-backends) and uses `prometheus-client` by default if none are explicitly selected
 
+### Pushing metrics
+
+Easily push collected metrics to a OpenTelemetry collector and compatible software.
+Combine one of the transport feature flags together with your runtime feature flag:
+
+**Transport feature flags**:
+
+- `otel-push-exporter-http` - metrics sent over HTTP(s) using `hyper`
+- `otel-push-exporter-grpc` - metrics sent over gRPC using `tonic`
+
+**Runtime feature flags**:
+
+- `otel-push-exporter-tokio` - tokio
+- `otel-push-exporter-tokio-current-thread` - tokio with `flavor = "current_thread"`
+- `otel-push-exporter-async-std` - async-std
+
+If you require more customization than these offered feature flags, enable just
+`otel-push-exporter` and follow the [example](https://github.com/autometrics-dev/autometrics-rs/tree/main/examples/opentelemetry-push-custom).
+
 ### Metrics backends
 
 > If you are exporting metrics yourself rather than using the `prometheus-exporter`, you must ensure that you are using the exact same version of the metrics library as `autometrics` (and it must come from `crates.io` rather than git or another source). If not, the autometrics metrics will not appear in your exported metrics.

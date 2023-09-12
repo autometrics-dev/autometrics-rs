@@ -1,5 +1,5 @@
-use std::io;
 use autometrics::autometrics;
+use std::io;
 
 // general purpose `Result`, part of the std prelude.
 // notice both `Ok` and `Err` generic type arguments are explicitly provided
