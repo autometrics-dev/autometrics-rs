@@ -73,7 +73,12 @@ exemplars-tracing = ["tracing", "tracing-subscriber"]
 exemplars-tracing-opentelemetry-0_20 = [
   "opentelemetry_api/trace",
   "tracing",
-  "tracing-opentelemetry",
+  "dep:tracing-opentelemetry-0-20",
+]
+exemplars-tracing-opentelemetry-0_21 = [
+  "opentelemetry_api/trace",
+  "tracing",
+  "dep:tracing-opentelemetry-0-21",
 ]
 
 # Custom objectives
@@ -113,7 +118,8 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ], optional = true }
 
 # Used for exemplars-tracing-opentelemetry feature
-tracing-opentelemetry = { version = "0.20", default-features = false, optional = true }
+tracing-opentelemetry-0-20 = { package = "tracing-opentelemetry", version = "0.20.0", default-features = false, optional = true }
+tracing-opentelemetry-0-21 = { package = "tracing-opentelemetry", version = "0.21.0", default-features = false, optional = true }
 
 [dev-dependencies]
 axum = { version = "0.6", features = ["tokio"] }
@@ -124,7 +130,6 @@ opentelemetry-stdout = { version = "0.1", features = ["trace"] }
 prometheus-client = "0.21"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-tracing-opentelemetry = "0.20"
 tracing-subscriber = "0.3"
 trybuild = "1.0"
 uuid = { version = "1", features = ["v4"] }

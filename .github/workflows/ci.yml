@@ -30,6 +30,7 @@ jobs:
       - run: cargo test --features=prometheus-exporter,prometheus-0_13
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_20
+      - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_21
       - run: cargo test --features=prometheus-exporter,opentelemetry-0_20
 
       # Build the crate using the other optional features
