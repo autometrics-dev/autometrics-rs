@@ -10,6 +10,7 @@ mod constants;
     feature = "exemplars-tracing",
     feature = "exemplars-tracing-opentelemetry",
     feature = "exemplars-tracing-opentelemetry-0_20",
+    feature = "exemplars-tracing-opentelemetry-0_21",
 ))]
 pub mod exemplars;
 mod labels;

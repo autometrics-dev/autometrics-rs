@@ -8,7 +8,7 @@ edition = "2021"
 autometrics = { path = "../../autometrics", features = [
   "prometheus-client-0_21",
   "prometheus-exporter",
-  "exemplars-tracing-opentelemetry-0_20",
+  "exemplars-tracing-opentelemetry-0_21",
 ] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.6", features = ["json"] }
@@ -17,5 +17,5 @@ opentelemetry-stdout = { version = "0.1", features = ["trace"] }
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing-opentelemetry = "0.21"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
