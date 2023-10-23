@@ -104,7 +104,14 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         // Only lists are allowed
                         let pair = match att.meta.require_list().and_then(|list| list.parse_args::<syn::MetaNameValue>()) {
                             Ok(pair) => pair,
-                            Err(err) => return Some(Err(Error::new_spanned(&att.meta, err))),
+                            Err(..) => return Some(
+                                Err(
+                                    Error::new_spanned(
+                                        &att.meta,
+                                        format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
+                                    ),
+                                ),
+                            ),
                         };
 
                         // Inside list, only 'result = ...' are allowed
