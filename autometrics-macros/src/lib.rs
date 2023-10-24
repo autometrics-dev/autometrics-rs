@@ -1,6 +1,6 @@
 use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use std::env;
 use syn::{
@@ -22,6 +22,13 @@ pub fn autometrics(
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let args = parse_macro_input!(args as parse::AutometricsArgs);
+
+    // if the input has yet to be modified by the `async-trait` crate, we will fail parsing in
+    // in the next line, so lets error early now
+    if let Err(err) = check_async_trait(&item) {
+        return err.into_compile_error().into();
+    }
+
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
@@ -35,6 +42,19 @@ pub fn autometrics(
     };
 
     output.into()
+}
+
+fn check_async_trait(input: &proc_macro::TokenStream) -> Result<()> {
+    let str = input.to_string();
+
+    if str.contains("#[async_trait]") || str.contains("#[async_trait::async_trait]") {
+        Err(syn::Error::new(
+            Span::call_site(),
+            "#[async_trait] must be defined BEFORE #[autometrics]",
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 #[proc_macro_derive(ResultLabels, attributes(label))]

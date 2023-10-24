@@ -1,0 +1,7 @@
+error: #[async_trait] must be defined BEFORE #[autometrics]
+  --> tests/result_labels/fail/async_trait_support.rs:15:1
+   |
+15 | #[autometrics]
+   | ^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the attribute macro `autometrics` (in Nightly builds, run with -Z macro-backtrace for more info)
