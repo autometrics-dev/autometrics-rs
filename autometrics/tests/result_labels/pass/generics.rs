@@ -35,9 +35,8 @@ fn issue_121_d() -> Result<impl ToString, impl std::error::Error> {
     }
 }
 
-#[test]
-fn invoke_issue_121() {
-    // we need to handle all three code generation cases
+fn main() {
+    // we need to handle all four code generation cases
     issue_121_a().unwrap();
     issue_121_b().unwrap();
     issue_121_c().unwrap();
