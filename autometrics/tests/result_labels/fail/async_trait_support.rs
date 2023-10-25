@@ -24,8 +24,7 @@ impl TestTrait for TestStruct {
     }
 }
 
-#[test]
-fn test_async_trait() {
+fn main() {
     let ts = TestStruct::default();
 
     async move {
