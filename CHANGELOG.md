@@ -9,35 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
 - New exporter, `otel_push_exporter` is now available in addition to the existing
   `prometheus_exporter`. It can be used to push metrics in the OTEL format via
   HTTP or gRPC to a OTEL-collector-(compatible) server.
-
-### Changed
-
 - Update to `syn` v2 (#145)
-- Error messages when using `#[autometrics]` together with `#[async_trait]` 
+- Add support for tracing-opentelemetry v0.21 (#147)
+- Error messages when using `#[autometrics]` together with `#[async_trait]`
   has been improved (#149)
-
-### Deprecated
-
--
-
-### Removed
-
--
-
-### Fixed
-
--
-
-### Security
-
--
-
----
 
 ## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
 
