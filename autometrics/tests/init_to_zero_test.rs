@@ -1,3 +1,5 @@
+#![cfg(feature = "prometheus-exporter")]
+
 use autometrics::{autometrics, prometheus_exporter};
 
 #[cfg(debug_assertions)]

@@ -148,9 +148,7 @@ fn instrument_function(
 
                             for args in &brackets.args {
                                 ts.push(match args {
-                                    GenericArgument::Type(ty)
-                                        if matches!(ty, Type::ImplTrait(_)) =>
-                                    {
+                                    GenericArgument::Type(Type::ImplTrait(_)) => {
                                         quote! { _ }
                                     }
                                     generic_arg => quote! { #generic_arg },
@@ -341,17 +339,17 @@ fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<T
         .items
         .into_iter()
         .map(|item| match item {
-            ImplItem::Method(mut method) => {
+            ImplItem::Fn(mut method) => {
                 // Skip any methods that have the #[skip_autometrics] attribute
                 if method
                     .attrs
                     .iter()
-                    .any(|attr| attr.path.is_ident("skip_autometrics"))
+                    .any(|attr| attr.path().is_ident("skip_autometrics"))
                 {
                     method
                         .attrs
-                        .retain(|attr| !attr.path.is_ident("skip_autometrics"));
-                    return ImplItem::Method(method);
+                        .retain(|attr| !attr.path().is_ident("skip_autometrics"));
+                    return ImplItem::Fn(method);
                 }
 
                 let item_fn = ItemFn {
