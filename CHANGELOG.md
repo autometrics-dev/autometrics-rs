@@ -17,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update to `syn` v2
-- Error messages when using `#[autometrics]` together with `#[async_trait]` has been improved
+- Update to `syn` v2 (#145)
+- Error messages when using `#[autometrics]` together with `#[async_trait]` 
+  has been improved (#149)
 
 ### Deprecated
 
