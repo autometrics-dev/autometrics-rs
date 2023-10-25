@@ -4,8 +4,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Data, DataEnum, DeriveInput, Error, Ident,
-    Lit, LitStr, Result, Variant,
+    punctuated::Punctuated, token::Comma, Attribute, Data, DataEnum, DeriveInput, Error, Expr,
+    ExprLit, Ident, Lit, LitStr, Result, Variant,
 };
 
 // These labels must match autometrics::ERROR_KEY and autometrics::OK_KEY,
@@ -94,8 +94,7 @@ fn conditional_label_clauses(
 fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
     attrs
             .iter()
-            .find_map(|att| match att.parse_meta() {
-                Ok(meta) => match &meta {
+            .find_map(|att| match &att.meta {
                     syn::Meta::List(list) => {
                         // Ignore attribute if it's not `label(...)`
                         if list.path.segments.len() != 1 || list.path.segments[0].ident != ATTR_LABEL {
@@ -103,12 +102,16 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         }
 
                         // Only lists are allowed
-                        let pair = match list.nested.first() {
-                            Some(syn::NestedMeta::Meta(syn::Meta::NameValue(pair))) => pair,
-                            _ => return Some(Err(Error::new_spanned(
-                            meta,
-                            format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
-                            ))),
+                        let pair = match att.meta.require_list().and_then(|list| list.parse_args::<syn::MetaNameValue>()) {
+                            Ok(pair) => pair,
+                            Err(..) => return Some(
+                                Err(
+                                    Error::new_spanned(
+                                        &att.meta,
+                                        format!("Only `{ATTR_LABEL}({RESULT_KEY} = \"RES\")` (RES can be {OK_KEY:?} or {ERROR_KEY:?}) is supported"),
+                                    ),
+                                ),
+                            ),
                         };
 
                         // Inside list, only 'result = ...' are allowed
@@ -120,11 +123,11 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         }
 
                         // Inside 'result = val', 'val' must be a string literal
-                        let lit_str = match pair.lit {
-                            Lit::Str(ref lit_str) => lit_str,
+                        let lit_str = match pair.value {
+                            Expr::Lit(ExprLit { lit: Lit::Str(ref lit_str), .. }) => lit_str,
                             _ => {
                             return Some(Err(Error::new_spanned(
-                                &pair.lit,
+                                &pair.value,
                             format!("Only {OK_KEY:?} or {ERROR_KEY:?}, as string literals, are accepted as result values"),
                             )));
                         }
@@ -153,11 +156,6 @@ fn extract_label_attribute(attrs: &[Attribute]) -> Result<Option<LitStr>> {
                         )))
                     },
                     _ => None,
-                },
-                Err(e) => Some(Err(Error::new_spanned(
-                    att,
-                    format!("could not parse the meta attribute: {e}"),
-                ))),
-            })
+                })
             .transpose()
 }
