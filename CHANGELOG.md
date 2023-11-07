@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error messages when using `#[autometrics]` together with `#[async_trait]`
   has been improved (#149)
 - Fixed missing feature flag for `opentelemetry-otlp` when autometrics feature
-  `otel-push-exporter-http` is enabled
+  `otel-push-exporter` is enabled
 
 ## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
 
