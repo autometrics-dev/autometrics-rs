@@ -1,6 +1,6 @@
 use opentelemetry_api::metrics::MetricsError;
-use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
 use opentelemetry_otlp::OtlpMetricPipeline;
+use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
 use opentelemetry_sdk::metrics::MeterProvider;
 use std::ops::Deref;
 use std::time::Duration;
