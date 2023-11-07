@@ -40,7 +40,8 @@ otel-push-exporter = [
   "opentelemetry_sdk",
   "opentelemetry_api",
   "opentelemetry-otlp",
-  "opentelemetry-otlp/tls-roots",
+  "opentelemetry-otlp/metrics",
+  "opentelemetry-otlp/tls-roots"
 ]
 
 otel-push-exporter-http = [
