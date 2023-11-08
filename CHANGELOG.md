@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing feature flag for `opentelemetry-otlp` when autometrics feature
   `otel-push-exporter` is enabled
 
+### Autometrics 1.0 compliance
+
+The [Autometrics specification v1.0.0](https://github.com/autometrics-dev/autometrics-shared/blob/main/specs/autometrics_v1.0.0.md) has been released.
+The following changes are made in order to bring the release in compliance with the spec:
+
+- Objective names that are not alphanumeric will now print a warning (#153)
+
 ## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
 
 ### Added
