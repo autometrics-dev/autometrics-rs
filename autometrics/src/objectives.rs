@@ -74,7 +74,7 @@ impl Objective {
     ///
     /// The name should be something descriptive of the function or group of functions it covers.
     /// For example, if you have an objective covering all of the HTTP handlers in your API you might call it `"api"`.
-    pub const fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str) -> Self {
         if !name.chars().all(char::is_alphanumeric) {
             eprintln!("warning: objective name \"{name}\" should be alphanumeric");
         }
