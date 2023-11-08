@@ -16,7 +16,7 @@ mod util;
 async fn main() {
     // Run Prometheus and generate random traffic for the app
     // (You would not actually do this in production, but it makes it easier to see the example in action)
-    //let _prometheus = run_prometheus(false);
+    let _prometheus = run_prometheus(false);
     tokio::spawn(generate_random_traffic());
 
     // Set up the exporter to collect metrics
@@ -33,7 +33,7 @@ async fn main() {
         )
         .with_state(Database::new());
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let server = axum::Server::bind(&addr);
 
     println!(
