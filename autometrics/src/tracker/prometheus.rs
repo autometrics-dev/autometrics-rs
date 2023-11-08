@@ -73,7 +73,9 @@ static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
             COMMIT_KEY,
             VERSION_KEY,
             BRANCH_KEY,
-            SERVICE_NAME_KEY_PROMETHEUS
+            SERVICE_NAME_KEY_PROMETHEUS,
+            REPO_URL_KEY_PROMETHEUS,
+            REPO_PROVIDER_KEY_PROMETHEUS,
         ],
         get_settings().prometheus_registry.clone()
     )
