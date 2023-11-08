@@ -143,6 +143,8 @@ impl TrackMetrics for PrometheusTracker {
                     build_info_labels.version,
                     build_info_labels.branch,
                     build_info_labels.service_name,
+                    build_info_labels.repo_url,
+                    build_info_labels.repo_provider
                 ])
                 .set(1);
         });

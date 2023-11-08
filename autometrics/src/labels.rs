@@ -15,15 +15,23 @@ pub struct BuildInfoLabels {
     pub(crate) commit: &'static str,
     pub(crate) version: &'static str,
     pub(crate) service_name: &'static str,
+    pub(crate) repo_url: &'static str,
+    pub(crate) repo_provider: &'static str,
 }
 
 impl BuildInfoLabels {
-    pub fn new(version: &'static str, commit: &'static str, branch: &'static str) -> Self {
+    pub fn new(version: &'static str, commit: &'static str, branch: &'static str, repo_url: &'static str, mut repo_provider: &'static str) -> Self {
+        if repo_provider.is_empty() {
+            repo_provider = Self::determinate_repo_provider_from_url(repo_url);
+        }
+
         Self {
             version,
             commit,
             branch,
             service_name: &get_settings().service_name,
+            repo_url,
+            repo_provider
         }
     }
 
@@ -33,7 +41,23 @@ impl BuildInfoLabels {
             (VERSION_KEY, self.version),
             (BRANCH_KEY, self.branch),
             (SERVICE_NAME_KEY, self.service_name),
+            (REPO_URL_KEY, self.repo_url),
+            (REPO_PROVIDER_KEY, self.repo_provider)
         ]
+    }
+
+    fn determinate_repo_provider_from_url(url: &'static str) -> &'static str {
+        let lowered = url.to_lowercase();
+
+        if lowered.contains("github.com") {
+            "github"
+        } else if lowered.contains("gitlab.com") {
+            "gitlab"
+        } else if lowered.contains("bitbucket.org") {
+            "bitbucket"
+        } else {
+            ""
+        }
     }
 }
 
