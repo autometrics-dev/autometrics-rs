@@ -37,3 +37,7 @@ pub const COMMIT_KEY: &str = "commit";
 pub const BRANCH_KEY: &str = "branch";
 pub const SERVICE_NAME_KEY: &str = "service.name";
 pub const SERVICE_NAME_KEY_PROMETHEUS: &str = "service_name";
+pub const REPO_URL_KEY: &str = "repository.url";
+pub const REPO_URL_KEY_PROMETHEUS: &str = "repository_url";
+pub const REPO_PROVIDER_KEY: &str = "repository.provider";
+pub const REPO_PROVIDER_KEY_PROMETHEUS: &str = "repository_provider";
