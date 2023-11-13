@@ -27,6 +27,8 @@ The following changes are made in order to bring the release in compliance with 
 - Added `repository_url` and `repository_provider` as `build_info` labels. They can be
   configured either through environment variables or automatically based on your `Cargo.toml`
   `package.repository` value (only GitHub, GitLab and BitBucket) (#152)
+- Added `autometrics_version` as `build_info` label, specifying the autometrics spec
+  version that we are targeting. It is currently hardcoded to `1.0.0` (#154)
 
 ## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
 
