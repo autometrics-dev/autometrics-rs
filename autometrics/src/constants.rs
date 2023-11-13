@@ -1,3 +1,6 @@
+// Version of the autometrics spec we are targeting
+pub const AUTOMETRICS_SPEC_TARGET: &str = "1.0.0";
+
 // Metrics
 pub const COUNTER_NAME: &str = "function.calls";
 pub const HISTOGRAM_NAME: &str = "function.calls.duration";

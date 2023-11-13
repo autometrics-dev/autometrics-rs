@@ -148,7 +148,7 @@ impl TrackMetrics for PrometheusTracker {
                     build_info_labels.service_name,
                     build_info_labels.repo_url,
                     build_info_labels.repo_provider,
-                    "1.0.0" // autometrics_version
+                    AUTOMETRICS_SPEC_TARGET
                 ])
                 .set(1);
         });

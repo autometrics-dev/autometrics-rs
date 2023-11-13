@@ -33,7 +33,7 @@ impl BuildInfoLabels {
             service_name: &get_settings().service_name,
             repo_url,
             repo_provider,
-            autometrics_version: "1.0.0"
+            autometrics_version: AUTOMETRICS_SPEC_TARGET
         }
     }
 
