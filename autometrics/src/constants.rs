@@ -1,3 +1,6 @@
+// Version of the autometrics spec we are targeting
+pub const AUTOMETRICS_SPEC_TARGET: &str = "1.0.0";
+
 // Metrics
 pub const COUNTER_NAME: &str = "function.calls";
 pub const HISTOGRAM_NAME: &str = "function.calls.duration";
@@ -41,3 +44,5 @@ pub const REPO_URL_KEY: &str = "repository.url";
 pub const REPO_URL_KEY_PROMETHEUS: &str = "repository_url";
 pub const REPO_PROVIDER_KEY: &str = "repository.provider";
 pub const REPO_PROVIDER_KEY_PROMETHEUS: &str = "repository_provider";
+pub const AUTOMETRICS_VERSION_KEY: &str = "autometrics.version";
+pub const AUTOMETRICS_VERSION_KEY_PROMETHEUS: &str = "autometrics_version";
