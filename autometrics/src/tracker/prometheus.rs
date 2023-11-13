@@ -76,6 +76,7 @@ static BUILD_INFO: Lazy<IntGaugeVec> = Lazy::new(|| {
             SERVICE_NAME_KEY_PROMETHEUS,
             REPO_URL_KEY_PROMETHEUS,
             REPO_PROVIDER_KEY_PROMETHEUS,
+            AUTOMETRICS_VERSION_KEY_PROMETHEUS,
         ],
         get_settings().prometheus_registry.clone()
     )
@@ -146,7 +147,8 @@ impl TrackMetrics for PrometheusTracker {
                     build_info_labels.branch,
                     build_info_labels.service_name,
                     build_info_labels.repo_url,
-                    build_info_labels.repo_provider
+                    build_info_labels.repo_provider,
+                    "1.0.0" // autometrics_version
                 ])
                 .set(1);
         });

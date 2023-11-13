@@ -41,3 +41,5 @@ pub const REPO_URL_KEY: &str = "repository.url";
 pub const REPO_URL_KEY_PROMETHEUS: &str = "repository_url";
 pub const REPO_PROVIDER_KEY: &str = "repository.provider";
 pub const REPO_PROVIDER_KEY_PROMETHEUS: &str = "repository_provider";
+pub const AUTOMETRICS_VERSION_KEY: &str = "autometrics.version";
+pub const AUTOMETRICS_VERSION_KEY_PROMETHEUS: &str = "autometrics_version";

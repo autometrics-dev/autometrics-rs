@@ -17,6 +17,7 @@ pub struct BuildInfoLabels {
     pub(crate) service_name: &'static str,
     pub(crate) repo_url: &'static str,
     pub(crate) repo_provider: &'static str,
+    pub(crate) autometrics_version: &'static str,
 }
 
 impl BuildInfoLabels {
@@ -31,7 +32,8 @@ impl BuildInfoLabels {
             branch,
             service_name: &get_settings().service_name,
             repo_url,
-            repo_provider
+            repo_provider,
+            autometrics_version: "1.0.0"
         }
     }
 
@@ -42,7 +44,8 @@ impl BuildInfoLabels {
             (BRANCH_KEY, self.branch),
             (SERVICE_NAME_KEY, self.service_name),
             (REPO_URL_KEY, self.repo_url),
-            (REPO_PROVIDER_KEY, self.repo_provider)
+            (REPO_PROVIDER_KEY, self.repo_provider),
+            (AUTOMETRICS_VERSION_KEY, self.autometrics_version)
         ]
     }
 
