@@ -34,6 +34,8 @@ pub struct AutometricsSettings {
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Vec<f64>,
     pub(crate) service_name: String,
+    pub(crate) repo_url: String,
+    pub(crate) repo_provider: String,
     #[cfg(any(prometheus, opentelemetry))]
     pub(crate) prometheus_registry: prometheus::Registry,
     #[cfg(prometheus_client)]
@@ -75,6 +77,8 @@ impl AutometricsSettings {
 #[derive(Debug, Default)]
 pub struct AutometricsSettingsBuilder {
     pub(crate) service_name: Option<String>,
+    pub(crate) repo_url: Option<String>,
+    pub(crate) repo_provider: Option<String>,
     #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
     pub(crate) histogram_buckets: Option<Vec<f64>>,
     #[cfg(any(prometheus, opentelemetry))]
@@ -108,6 +112,16 @@ impl AutometricsSettingsBuilder {
     /// 4. `CARGO_PKG_NAME` (at compile time), which is the name of the crate defined in the `Cargo.toml` file.
     pub fn service_name(mut self, service_name: impl Into<String>) -> Self {
         self.service_name = Some(service_name.into());
+        self
+    }
+
+    pub fn repo_url(mut self, repo_url: impl Into<String>) -> Self {
+        self.repo_url = Some(repo_url.into());
+        self
+    }
+
+    pub fn repo_provider(mut self, repo_provider: impl Into<String>) -> Self {
+        self.repo_provider = Some(repo_provider.into());
         self
     }
 
@@ -184,6 +198,11 @@ impl AutometricsSettingsBuilder {
                     .unwrap_or_else(|| <prometheus_client::registry::Registry>::default()),
             );
 
+        let repo_url = self
+            .repo_url
+            .or_else(|| env::var("AUTOMETRICS_REPOSITORY_URL").ok())
+            .unwrap_or_else(|| env!("CARGO_PKG_REPOSITORY").to_string());
+
         AutometricsSettings {
             #[cfg(any(prometheus_exporter, prometheus, prometheus_client))]
             histogram_buckets: self
@@ -194,6 +213,15 @@ impl AutometricsSettingsBuilder {
                 .or_else(|| env::var("AUTOMETRICS_SERVICE_NAME").ok())
                 .or_else(|| env::var("OTEL_SERVICE_NAME").ok())
                 .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string()),
+            repo_provider: self
+                .repo_provider
+                .or_else(|| env::var("AUTOMETRICS_REPOSITORY_PROVIDER").ok())
+                .or_else(|| {
+                    AutometricsSettingsBuilder::determinate_repo_provider_from_url(Some(&repo_url))
+                        .map(|s| s.to_string())
+                })
+                .unwrap_or_default(),
+            repo_url,
             #[cfg(prometheus_client)]
             prometheus_client_registry,
             #[cfg(prometheus_client)]
@@ -203,6 +231,22 @@ impl AutometricsSettingsBuilder {
                 .prometheus_registry
                 .unwrap_or_else(|| prometheus::default_registry().clone()),
         }
+    }
+
+    fn determinate_repo_provider_from_url(url: Option<&str>) -> Option<&'static str> {
+        url.and_then(|url| {
+            let lowered = url.to_lowercase();
+
+            if lowered.contains("github.com") {
+                Some("github")
+            } else if lowered.contains("gitlab.com") {
+                Some("gitlab")
+            } else if lowered.contains("bitbucket.org") {
+                Some("bitbucket")
+            } else {
+                None
+            }
+        })
     }
 }
 

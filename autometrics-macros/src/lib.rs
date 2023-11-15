@@ -308,8 +308,6 @@ fn instrument_function(
                     option_env!("AUTOMETRICS_VERSION").or(option_env!("CARGO_PKG_VERSION")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_COMMIT").or(option_env!("VERGEN_GIT_SHA")).unwrap_or_default(),
                     option_env!("AUTOMETRICS_BRANCH").or(option_env!("VERGEN_GIT_BRANCH")).unwrap_or_default(),
-                    option_env!("AUTOMETRICS_REPOSITORY_URL").or(option_env!("CARGO_PKG_REPOSITORY")).unwrap_or_default(),
-                    option_env!("AUTOMETRICS_REPOSITORY_PROVIDER").unwrap_or_default(),
                 ));
                 AutometricsTracker::start(#gauge_labels)
             };
