@@ -29,6 +29,8 @@ The following changes are made in order to bring the release in compliance with 
   `package.repository` value (only GitHub, GitLab and BitBucket) (#152)
 - Added `autometrics.version` as `build_info` label, specifying the autometrics spec
   version that we are targeting. It is currently hardcoded to `1.0.0` (#154)
+- Environment variables for `repository.url` and `repository.provider` will now be read at 
+  both compile time and runtime (#156)
 
 ## [0.6.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v0.5.0) - 2023-08-08
 
