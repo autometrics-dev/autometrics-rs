@@ -1,5 +1,5 @@
 use super::TraceLabels;
-use opentelemetry_api::trace::TraceContextExt;
+use opentelemetry_0_20::trace::TraceContextExt;
 use std::iter::FromIterator;
 use tracing::Span;
 

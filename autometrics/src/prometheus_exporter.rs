@@ -28,7 +28,7 @@ use http::{header::CONTENT_TYPE, Response};
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::OnceCell;
 #[cfg(opentelemetry)]
-use opentelemetry_api::metrics::MetricsError;
+use opentelemetry_0_20::metrics::MetricsError;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -210,10 +210,10 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
 
     #[cfg(opentelemetry)]
     {
-        use opentelemetry_api::global;
-        use opentelemetry_prometheus::exporter;
-        use opentelemetry_sdk::metrics::reader::AggregationSelector;
-        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind, MeterProvider};
+        use opentelemetry_0_20::global;
+        use opentelemetry_prometheus_0_13::exporter;
+        use opentelemetry_sdk_0_20::metrics::reader::AggregationSelector;
+        use opentelemetry_sdk_0_20::metrics::{Aggregation, InstrumentKind, MeterProvider};
 
         /// A custom aggregation selector that uses the configured histogram buckets,
         /// along with the other default aggregation settings.

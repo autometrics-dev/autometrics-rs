@@ -55,8 +55,8 @@ fn multiple_fields() {
 #[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
-    use opentelemetry_api::trace::TracerProvider as _;
-    use opentelemetry_sdk::trace::TracerProvider;
+    use opentelemetry_0_20::trace::TracerProvider as _;
+    use opentelemetry_sdk_0_20::trace::TracerProvider;
     use opentelemetry_stdout::SpanExporter;
     use std::io;
     use tracing_subscriber::{layer::SubscriberExt, Registry};
