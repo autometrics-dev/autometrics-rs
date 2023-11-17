@@ -7,10 +7,16 @@ error: #[async_trait] must be defined BEFORE #[autometrics]
    = note: this error originates in the attribute macro `autometrics` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `TestStruct: TestTrait` is not satisfied
-  --> tests/result_labels/fail/async_trait_support.rs:31:9
+  --> tests/result_labels/fail/async_trait_support.rs:31:10
    |
 31 |         <TestStruct as TestTrait>::method().await;
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `TestTrait` is not implemented for `TestStruct`
+   |          ^^^^^^^^^^ the trait `TestTrait` is not implemented for `TestStruct`
+   |
+help: this trait has no implementations, consider adding one
+  --> tests/result_labels/fail/async_trait_support.rs:7:1
+   |
+7  | trait TestTrait {
+   | ^^^^^^^^^^^^^^^
 
 error[E0599]: no method named `self_method` found for struct `TestStruct` in the current scope
   --> tests/result_labels/fail/async_trait_support.rs:32:12
