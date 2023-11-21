@@ -15,7 +15,8 @@ readme = "README.md"
 [features]
 # Metrics backends
 metrics-0_21 = ["dep:metrics"]
-opentelemetry-0_20 = ["opentelemetry-0-20/metrics", "dep:prometheus"]
+opentelemetry-0_20 = ["dep:opentelemetry-0-20", "opentelemetry-0-20/metrics", "dep:prometheus"]
+opentelemetry-0_21 = ["dep:opentelemetry-0-21", "opentelemetry-0-21/metrics", "dep:prometheus"]
 prometheus-0_13 = ["dep:prometheus"]
 prometheus-client-0_21 = ["dep:prometheus-client"]
 
@@ -25,48 +26,59 @@ opentelemetry = ["opentelemetry-0_20"]
 prometheus = ["prometheus-0_13"]
 prometheus-client = ["prometheus-client-0_21"]
 exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_20"]
+prometheus-exporter = ["prometheus-exporter-otel-0_20"]
 
 # Misc
-prometheus-exporter = [
+prometheus-exporter-otel-0_20 = [
+  "prometheus-exporter-parent",
+  "dep:opentelemetry-prometheus-0-13",
+  "dep:opentelemetry-sdk-0-20",
+]
+
+prometheus-exporter-otel-0_21 = [
+  "prometheus-exporter-parent",
+  "dep:opentelemetry-prometheus-0-14",
+  "dep:opentelemetry-sdk-0-21",
+]
+
+prometheus-exporter-parent = [
   "http",
   "metrics-exporter-prometheus",
-  "opentelemetry-prometheus-0-13",
-  "opentelemetry-sdk-0-20",
   "dep:prometheus",
   "dep:prometheus-client",
 ]
 
 otel-push-exporter = [
-  "opentelemetry-sdk-0-20",
-  "dep:opentelemetry-0-20",
-  "opentelemetry-otlp-0-20",
-  "opentelemetry-otlp-0-20/metrics",
-  "opentelemetry-otlp-0-20/tls-roots"
+  "dep:opentelemetry-sdk-0-21",
+  "dep:opentelemetry-0-21",
+  "dep:opentelemetry-otlp-0-21",
+  "opentelemetry-otlp-0-21/metrics",
+  "opentelemetry-otlp-0-21/tls-roots"
 ]
 
 otel-push-exporter-http = [
   "otel-push-exporter",
-  "opentelemetry-otlp-0-20/http-proto"
+  "opentelemetry-otlp-0-21/http-proto"
 ]
 
 otel-push-exporter-grpc = [
   "otel-push-exporter",
-  "opentelemetry-otlp-0-20/grpc-tonic"
+  "opentelemetry-otlp-0-21/grpc-tonic"
 ]
 
 otel-push-exporter-tokio = [
   "otel-push-exporter",
-  "opentelemetry-sdk-0-20/rt-tokio"
+  "opentelemetry-sdk-0-21/rt-tokio"
 ]
 
 otel-push-exporter-tokio-current-thread = [
   "otel-push-exporter",
-  "opentelemetry-sdk-0-20/rt-tokio-current-thread"
+  "opentelemetry-sdk-0-21/rt-tokio-current-thread"
 ]
 
 otel-push-exporter-async-std = [
   "otel-push-exporter",
-  "opentelemetry-sdk-0-20/rt-async-std"
+  "opentelemetry-sdk-0-21/rt-async-std"
 ]
 
 # Exemplars
@@ -77,7 +89,7 @@ exemplars-tracing-opentelemetry-0_20 = [
   "dep:tracing-opentelemetry-0-20",
 ]
 exemplars-tracing-opentelemetry-0_21 = [
-  "opentelemetry-0-20/trace",
+  "opentelemetry-0-20/trace", # yea for some reason they use otel 0.20 with tracing-opentelemetry 0.21. only 0.22 is updated w/ otel 0.21
   "tracing",
   "dep:tracing-opentelemetry-0-21",
 ]
@@ -94,10 +106,18 @@ spez = "0.1.2"
 thiserror = "1"
 
 # Used for opentelemetry feature
+## The opentelemetry_api crate has been incorperated into `opentelemetry` as of v0.21 so the `package` directives are different
 opentelemetry-0-20 = { package = "opentelemetry_api", version = "0.20", default-features = false, optional = true }
-opentelemetry-prometheus-0-13 = { package = "opentelemetry-prometheus", version = "0.13.0", optional = true } # otel 0.20
+opentelemetry-0-21 = { package = "opentelemetry", version = "0.21", default-features = false, optional = true }
+
+opentelemetry-prometheus-0-13 = { package = "opentelemetry-prometheus", version = "0.13", optional = true } # otel 0.20
+opentelemetry-prometheus-0-14 = { package = "opentelemetry-prometheus", version = "0.14", optional = true } # otel 0.21
+
 opentelemetry-sdk-0-20 = { package = "opentelemetry_sdk", version = "0.20", default-features = false, features = ["metrics"], optional = true }
-opentelemetry-otlp-0-20 = { package = "opentelemetry-otlp", version = "0.13.0", default-features = false, optional = true }
+opentelemetry-sdk-0-21 = { package = "opentelemetry_sdk", version = "0.21", default-features = false, features = ["metrics"], optional = true }
+
+opentelemetry-otlp-0-20 = { package = "opentelemetry-otlp", version = "0.13", default-features = false, optional = true }
+opentelemetry-otlp-0-21 = { package = "opentelemetry-otlp", version = "0.14", default-features = false, optional = true }
 
 # Use for metrics feature
 metrics = { version = "0.21", default-features = false, optional = true }

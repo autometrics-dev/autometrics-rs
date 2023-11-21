@@ -6,7 +6,7 @@ pub fn main() {
     #[cfg(feature = "metrics")]
     println!("cargo:warning=The `metrics` feature is deprecated and will be removed in the next version. Please use `metrics-0_21` instead.");
     #[cfg(feature = "opentelemetry")]
-    println!("cargo:warning=The `opentelemetry` feature is deprecated and will be removed in the next version. Please use `opentelemetry-0_20` instead.");
+    println!("cargo:warning=The `opentelemetry` feature is deprecated and will be removed in the next version. Please use `opentelemetry-0_20` or `opentelemetry-0_21` instead.");
     #[cfg(feature = "prometheus")]
     println!("cargo:warning=The `prometheus` feature is deprecated and will be removed in the next version. Please use `prometheus-0_13` instead.");
     #[cfg(feature = "prometheus-client")]
@@ -17,7 +17,7 @@ pub fn main() {
     cfg_aliases! {
       // Backends
       metrics: { any(feature = "metrics", feature = "metrics-0_21") },
-      opentelemetry: { any(feature = "opentelemetry", feature = "opentelemetry-0_20") },
+      opentelemetry: { any(feature = "opentelemetry", feature = "opentelemetry-0_20", feature="opentelemetry-0_21") },
       prometheus: { any(feature = "prometheus", feature = "prometheus-0_13") },
       prometheus_client_feature: { any(feature = "prometheus-client", feature = "prometheus-client-0_21") },
       default_backend: { all(
@@ -27,7 +27,7 @@ pub fn main() {
       prometheus_client: { any(prometheus_client_feature, default_backend) },
 
       // Misc
-      prometheus_exporter: { feature = "prometheus-exporter" },
+      prometheus_exporter: { any(feature = "prometheus-exporter", feature = "prometheus-exporter-otel-0_20", feature = "prometheus-exporter-otel-0_21") },
 
       // Exemplars
       exemplars: { any(exemplars_tracing, exemplars_tracing_opentelemetry) },

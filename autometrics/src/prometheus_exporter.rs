@@ -27,8 +27,10 @@ use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::OnceCell;
-#[cfg(opentelemetry)]
+#[cfg(feature = "opentelemetry-0-20")]
 use opentelemetry_0_20::metrics::MetricsError;
+#[cfg(feature = "opentelemetry-0-21")]
+use opentelemetry_0_21::metrics::MetricsError;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -210,10 +212,24 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
 
     #[cfg(opentelemetry)]
     {
-        use opentelemetry_0_20::global;
-        use opentelemetry_prometheus_0_13::exporter;
-        use opentelemetry_sdk_0_20::metrics::reader::AggregationSelector;
-        use opentelemetry_sdk_0_20::metrics::{Aggregation, InstrumentKind, MeterProvider};
+        #[cfg(feature = "opentelemetry-0-20")]
+        use opentelemetry_0_20 as opentelemetry;
+        #[cfg(feature = "opentelemetry-0-20")]
+        use opentelemetry_prometheus_0_13 as opentelemetry_prometheus;
+        #[cfg(feature = "opentelemetry-0-20")]
+        use opentelemetry_sdk_0_20 as opentelemetry_sdk;
+
+        #[cfg(feature = "opentelemetry-0-21")]
+        use opentelemetry_0_21 as opentelemetry;
+        #[cfg(feature = "opentelemetry-0-21")]
+        use opentelemetry_prometheus_0_14 as opentelemetry_prometheus;
+        #[cfg(feature = "opentelemetry-0-21")]
+        use opentelemetry_sdk_0_21 as opentelemetry_sdk;
+
+        use opentelemetry::global;
+        use opentelemetry_prometheus::exporter;
+        use opentelemetry_sdk::metrics::reader::AggregationSelector;
+        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind, MeterProvider};
 
         /// A custom aggregation selector that uses the configured histogram buckets,
         /// along with the other default aggregation settings.

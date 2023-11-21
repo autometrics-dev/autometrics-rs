@@ -17,7 +17,11 @@ mod labels;
 pub mod objectives;
 #[cfg(feature = "otel-push-exporter")]
 pub mod otel_push_exporter;
-#[cfg(feature = "prometheus-exporter")]
+#[cfg(any(
+    feature = "prometheus-exporter",
+    feature = "prometheus-exporter-otel-0_20",
+    feature = "prometheus-exporter-otel-0_21"
+))]
 pub mod prometheus_exporter;
 pub mod settings;
 mod task_local;

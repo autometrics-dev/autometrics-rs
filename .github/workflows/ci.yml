@@ -23,15 +23,21 @@ jobs:
       - run: cargo clippy --features=prometheus-0_13
       - run: cargo clippy --features=prometheus-client-0_21
       - run: cargo clippy --features=opentelemetry-0_20
+      - run: cargo clippy --features=opentelemetry-0_21
 
       # Run the tests with each of the different metrics libraries
-      - run: cargo test --features=prometheus-exporter
-      - run: cargo test --features=prometheus-exporter,metrics-0_21
-      - run: cargo test --features=prometheus-exporter,prometheus-0_13
-      - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing
-      - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_20
-      - run: cargo test --features=prometheus-exporter,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_21
-      - run: cargo test --features=prometheus-exporter,opentelemetry-0_20
+      - run: cargo test --features=prometheus-exporter-otel-0_20
+      - run: cargo test --features=prometheus-exporter-otel-0_21
+      - run: cargo test --features=prometheus-exporter-otel-0_20,metrics-0_21
+      - run: cargo test --features=prometheus-exporter-otel-0_21,metrics-0_21
+      - run: cargo test --features=prometheus-exporter-otel-0_20,prometheus-0_13
+      - run: cargo test --features=prometheus-exporter-otel-0_21,prometheus-0_13
+      - run: cargo test --features=prometheus-exporter-otel-0_20,prometheus-client-0_21,exemplars-tracing
+      - run: cargo test --features=prometheus-exporter-otel-0_21,prometheus-client-0_21,exemplars-tracing
+      - run: cargo test --features=prometheus-exporter-otel-0_20,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_20
+      - run: cargo test --features=prometheus-exporter-otel-0_20,prometheus-client-0_21,exemplars-tracing-opentelemetry-0_21
+      - run: cargo test --features=prometheus-exporter-otel-0_20,opentelemetry-0_20
+      - run: cargo test --features=prometheus-exporter-otel-0_21,opentelemetry-0_21
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics-0_21,custom-objective-percentile,custom-objective-latency
@@ -44,7 +50,6 @@ jobs:
       - run: cargo build --package example-exemplars-tracing-opentelemetry
       - run: cargo build --package example-full-api
       - run: cargo build --package example-opentelemetry-push
-
 
       # Make sure the docs can be built
       - run: cargo doc --all-features
