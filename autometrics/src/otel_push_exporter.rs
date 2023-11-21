@@ -1,7 +1,19 @@
+#[cfg(feature = "opentelemetry-0_20")]
 use opentelemetry_0_20::metrics::MetricsError;
-use opentelemetry_otlp_0_20::OtlpMetricPipeline;
-use opentelemetry_otlp_0_20::{ExportConfig, Protocol, WithExportConfig};
-use opentelemetry_sdk_0_20::metrics::MeterProvider;
+#[cfg(feature = "opentelemetry-0_21")]
+use opentelemetry_0_21::metrics::MetricsError;
+#[cfg(feature = "opentelemetry-0_20")]
+use opentelemetry_otlp_0_20::{
+    new_exporter, new_pipeline, ExportConfig, OtlpMetricPipeline, Protocol, WithExportConfig,
+};
+#[cfg(feature = "opentelemetry-0_21")]
+use opentelemetry_otlp_0_21::{
+    new_exporter, new_pipeline, ExportConfig, OtlpMetricPipeline, Protocol, WithExportConfig,
+};
+#[cfg(feature = "opentelemetry-0_20")]
+use opentelemetry_sdk_0_20::{metrics::MeterProvider, runtime};
+#[cfg(feature = "opentelemetry-0_21")]
+use opentelemetry_sdk_0_21::{metrics::MeterProvider, runtime};
 use std::ops::Deref;
 use std::time::Duration;
 
@@ -34,15 +46,11 @@ impl Drop for OtelMeterProvider {
 #[cfg(feature = "otel-push-exporter-http")]
 pub fn init_http(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
     runtime()
-        .with_exporter(
-            opentelemetry_otlp_0_20::new_exporter()
-                .http()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::HttpBinary,
-                    ..Default::default()
-                }),
-        )
+        .with_exporter(new_exporter().http().with_export_config(ExportConfig {
+            endpoint: url.into(),
+            protocol: Protocol::HttpBinary,
+            ..Default::default()
+        }))
         .build()
         .map(OtelMeterProvider)
 }
@@ -55,16 +63,12 @@ pub fn init_http_with_timeout_period(
     period: Duration,
 ) -> Result<OtelMeterProvider, MetricsError> {
     runtime()
-        .with_exporter(
-            opentelemetry_otlp_0_20::new_exporter()
-                .http()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::HttpBinary,
-                    timeout,
-                    ..Default::default()
-                }),
-        )
+        .with_exporter(new_exporter().http().with_export_config(ExportConfig {
+            endpoint: url.into(),
+            protocol: Protocol::HttpBinary,
+            timeout,
+            ..Default::default()
+        }))
         .with_period(period)
         .build()
         .map(OtelMeterProvider)
@@ -79,15 +83,11 @@ pub fn init_http_with_timeout_period(
 #[cfg(feature = "otel-push-exporter-grpc")]
 pub fn init_grpc(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
     runtime()
-        .with_exporter(
-            opentelemetry_otlp_0_20::new_exporter()
-                .tonic()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::Grpc,
-                    ..Default::default()
-                }),
-        )
+        .with_exporter(new_exporter().tonic().with_export_config(ExportConfig {
+            endpoint: url.into(),
+            protocol: Protocol::Grpc,
+            ..Default::default()
+        }))
         .build()
         .map(OtelMeterProvider)
 }
@@ -100,20 +100,21 @@ pub fn init_grpc_with_timeout_period(
     period: Duration,
 ) -> Result<OtelMeterProvider, MetricsError> {
     runtime()
-        .with_exporter(
-            opentelemetry_otlp_0_20::new_exporter()
-                .tonic()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::Grpc,
-                    timeout,
-                    ..Default::default()
-                }),
-        )
+        .with_exporter(new_exporter().tonic().with_export_config(ExportConfig {
+            endpoint: url.into(),
+            protocol: Protocol::Grpc,
+            timeout,
+            ..Default::default()
+        }))
         .with_period(period)
         .build()
         .map(OtelMeterProvider)
 }
+
+#[cfg(feature = "opentelemetry-0_20")]
+type MetricPipeline<T> = OtlpMetricPipeline<T>;
+#[cfg(feature = "opentelemetry-0_21")]
+type MetricPipeline<T> = OtlpMetricPipeline<T, opentelemetry_otlp_0_21::NoExporterConfig>;
 
 #[cfg(all(
     feature = "otel-push-exporter-tokio",
@@ -122,8 +123,8 @@ pub fn init_grpc_with_timeout_period(
         feature = "otel-push-exporter-async-std"
     ))
 ))]
-fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk_0_20::runtime::Tokio> {
-    return opentelemetry_otlp_0_20::new_pipeline().metrics(opentelemetry_sdk_0_20::runtime::Tokio);
+fn runtime() -> MetricPipeline<runtime::Tokio> {
+    return new_pipeline().metrics(runtime::Tokio);
 }
 
 #[cfg(all(
@@ -133,9 +134,8 @@ fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk_0_20::runtime::Tokio> {
         feature = "otel-push-exporter-async-std"
     ))
 ))]
-fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk_0_20::runtime::TokioCurrentThread> {
-    return opentelemetry_otlp::new_pipeline()
-        .metrics(opentelemetry_sdk_0_20::runtime::TokioCurrentThread);
+fn runtime() -> MetricPipeline<runtime::TokioCurrentThread> {
+    return new_pipeline().metrics(runtime::TokioCurrentThread);
 }
 
 #[cfg(all(
@@ -145,8 +145,8 @@ fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk_0_20::runtime::TokioCurrent
         feature = "otel-push-exporter-tokio-current-thread"
     ))
 ))]
-fn runtime() -> OtlpMetricPipeline<opentelemetry_sdk_0_20::runtime::AsyncStd> {
-    return opentelemetry_otlp::new_pipeline().metrics(opentelemetry_sdk_0_20::runtime::AsyncStd);
+fn runtime() -> MetricPipeline<runtime::AsyncStd> {
+    return new_pipeline().metrics(runtime::AsyncStd);
 }
 
 #[cfg(not(any(

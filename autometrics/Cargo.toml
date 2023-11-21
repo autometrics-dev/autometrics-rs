@@ -58,7 +58,8 @@ otel-push-exporter = [
 
 otel-push-exporter-http = [
   "otel-push-exporter",
-  "opentelemetry-otlp-0-21/http-proto"
+  "opentelemetry-otlp-0-21/http-proto",
+  "opentelemetry-otlp-0-21/reqwest-client"
 ]
 
 otel-push-exporter-grpc = [
