@@ -1,8 +1,8 @@
-#[cfg(feature = "opentelemetry-0_20")]
+#[cfg(all(not(doc), feature = "opentelemetry-0_20"))]
 use opentelemetry_0_20::metrics::MetricsError;
 #[cfg(feature = "opentelemetry-0_21")]
 use opentelemetry_0_21::metrics::MetricsError;
-#[cfg(feature = "opentelemetry-0_20")]
+#[cfg(all(not(doc), feature = "opentelemetry-0_20"))]
 use opentelemetry_otlp_0_20::{
     new_exporter, new_pipeline, ExportConfig, OtlpMetricPipeline, Protocol, WithExportConfig,
 };
@@ -10,7 +10,7 @@ use opentelemetry_otlp_0_20::{
 use opentelemetry_otlp_0_21::{
     new_exporter, new_pipeline, ExportConfig, OtlpMetricPipeline, Protocol, WithExportConfig,
 };
-#[cfg(feature = "opentelemetry-0_20")]
+#[cfg(all(not(doc), feature = "opentelemetry-0_20"))]
 use opentelemetry_sdk_0_20::{metrics::MeterProvider, runtime};
 #[cfg(feature = "opentelemetry-0_21")]
 use opentelemetry_sdk_0_21::{metrics::MeterProvider, runtime};
@@ -111,9 +111,9 @@ pub fn init_grpc_with_timeout_period(
         .map(OtelMeterProvider)
 }
 
-#[cfg(feature = "opentelemetry-0_20")]
+#[cfg(all(not(doc), feature = "opentelemetry-0_20"))]
 type MetricPipeline<T> = OtlpMetricPipeline<T>;
-#[cfg(feature = "opentelemetry-0_21")]
+#[cfg(all(not(doc), feature = "opentelemetry-0_21"))]
 type MetricPipeline<T> = OtlpMetricPipeline<T, opentelemetry_otlp_0_21::NoExporterConfig>;
 
 #[cfg(all(
