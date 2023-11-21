@@ -17,7 +17,7 @@ pub fn main() {
     cfg_aliases! {
       // Backends
       metrics: { any(feature = "metrics", feature = "metrics-0_21") },
-      opentelemetry: { any(feature = "opentelemetry", feature = "opentelemetry-0_20", feature="opentelemetry-0_21") },
+      opentelemetry: { any(feature = "opentelemetry", feature = "opentelemetry-0_20", feature = "opentelemetry-0_21") },
       prometheus: { any(feature = "prometheus", feature = "prometheus-0_13") },
       prometheus_client_feature: { any(feature = "prometheus-client", feature = "prometheus-client-0_21") },
       default_backend: { all(

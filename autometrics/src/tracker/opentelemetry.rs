@@ -3,8 +3,18 @@ use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
-use opentelemetry_0_20::metrics::{Counter, Histogram, Unit, UpDownCounter};
-use opentelemetry_0_20::{global, KeyValue};
+#[cfg(feature = "opentelemetry-0-20")]
+use opentelemetry_0_20::{
+    global,
+    metrics::{Counter, Histogram, Unit, UpDownCounter},
+    KeyValue,
+};
+#[cfg(feature = "opentelemetry-0-21")]
+use opentelemetry_0_21::{
+    global,
+    metrics::{Counter, Histogram, Unit, UpDownCounter},
+    KeyValue,
+};
 use std::{sync::Once, time::Instant};
 
 static SET_BUILD_INFO: Once = Once::new();
