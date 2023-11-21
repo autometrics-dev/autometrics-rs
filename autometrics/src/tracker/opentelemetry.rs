@@ -3,13 +3,13 @@ use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
-#[cfg(feature = "opentelemetry-0-20")]
+#[cfg(feature = "opentelemetry-0_20")]
 use opentelemetry_0_20::{
     global,
     metrics::{Counter, Histogram, Unit, UpDownCounter},
     KeyValue,
 };
-#[cfg(feature = "opentelemetry-0-21")]
+#[cfg(feature = "opentelemetry-0_21")]
 use opentelemetry_0_21::{
     global,
     metrics::{Counter, Histogram, Unit, UpDownCounter},

@@ -27,9 +27,9 @@ use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::OnceCell;
-#[cfg(feature = "opentelemetry-0-20")]
+#[cfg(feature = "opentelemetry-0_20")]
 use opentelemetry_0_20::metrics::MetricsError;
-#[cfg(feature = "opentelemetry-0-21")]
+#[cfg(feature = "opentelemetry-0_21")]
 use opentelemetry_0_21::metrics::MetricsError;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
@@ -212,18 +212,18 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
 
     #[cfg(opentelemetry)]
     {
-        #[cfg(feature = "opentelemetry-0-20")]
+        #[cfg(feature = "opentelemetry-0_20")]
         use opentelemetry_0_20 as opentelemetry;
-        #[cfg(feature = "opentelemetry-0-20")]
+        #[cfg(feature = "opentelemetry-0_20")]
         use opentelemetry_prometheus_0_13 as opentelemetry_prometheus;
-        #[cfg(feature = "opentelemetry-0-20")]
+        #[cfg(feature = "opentelemetry-0_20")]
         use opentelemetry_sdk_0_20 as opentelemetry_sdk;
 
-        #[cfg(feature = "opentelemetry-0-21")]
+        #[cfg(feature = "opentelemetry-0_21")]
         use opentelemetry_0_21 as opentelemetry;
-        #[cfg(feature = "opentelemetry-0-21")]
+        #[cfg(feature = "opentelemetry-0_21")]
         use opentelemetry_prometheus_0_14 as opentelemetry_prometheus;
-        #[cfg(feature = "opentelemetry-0-21")]
+        #[cfg(feature = "opentelemetry-0_21")]
         use opentelemetry_sdk_0_21 as opentelemetry_sdk;
 
         use opentelemetry::global;
