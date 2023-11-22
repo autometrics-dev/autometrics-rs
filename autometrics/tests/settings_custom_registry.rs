@@ -94,7 +94,7 @@ fn custom_prometheus_registry() {
 #[cfg(opentelemetry)]
 #[test]
 fn custom_opentelemetry_registry() {
-    #[cfg(feature = "opentelemetry-0_20")]
+    #[cfg(all(not(doc), feature = "opentelemetry-0_20"))]
     use opentelemetry_0_20::{global, KeyValue};
     #[cfg(feature = "opentelemetry-0_21")]
     use opentelemetry_0_21::{global, KeyValue};
