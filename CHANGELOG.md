@@ -65,6 +65,7 @@ The following changes are made in order to bring the release in compliance with 
   as with the `prometheus` and `prometheus-client` crates, because the histogram buckets can now
   be configured via the settings
 - Upgraded `opentelemetry` to v0.20
+- Upgraded `prometheus-client` to v0.22
 
 ### Deprecated
 

@@ -17,13 +17,13 @@ readme = "README.md"
 metrics-0_21 = ["dep:metrics"]
 opentelemetry-0_21 = ["opentelemetry/metrics", "dep:prometheus"]
 prometheus-0_13 = ["dep:prometheus"]
-prometheus-client-0_21 = ["dep:prometheus-client"]
+prometheus-client-0_22 = ["dep:prometheus-client"]
 
 # Deprecated feature flags
 metrics = ["metrics-0_21"]
 opentelemetry = ["opentelemetry-0_21"]
 prometheus = ["prometheus-0_13"]
-prometheus-client = ["prometheus-client-0_21"]
+prometheus-client = ["prometheus-client-0_22"]
 exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_22"]
 
 # Misc
@@ -106,7 +106,7 @@ opentelemetry-otlp = { version = "0.14.0", default-features = false, optional = 
 prometheus = { version = "0.13", default-features = false, optional = true }
 
 # Used for prometheus-client feature
-prometheus-client = { version = "0.21.1", optional = true }
+prometheus-client = { version = "0.22", optional = true }
 
 # Used for exemplars-tracing feature
 tracing = { version = "0.1", optional = true }
@@ -124,7 +124,7 @@ criterion = "0.5"
 http = "0.2"
 opentelemetry = "0.21"
 opentelemetry-stdout = { version = "0.2", features = ["trace"] }
-prometheus-client = "0.21"
+prometheus-client = "0.22"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
