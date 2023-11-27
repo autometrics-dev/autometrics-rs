@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   has been improved (#149)
 - Fixed missing feature flag for `opentelemetry-otlp` when autometrics feature
   `otel-push-exporter` is enabled
+- Update to OpenTelemetry v0.21
 
 ### Autometrics 1.0 compliance
 
