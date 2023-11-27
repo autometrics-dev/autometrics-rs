@@ -6,9 +6,9 @@ edition = "2021"
 
 [dependencies]
 autometrics = { path = "../../autometrics", features = [
-  "prometheus-client-0_21",
+  "prometheus-client-0_22",
   "prometheus-exporter",
-  "exemplars-tracing-opentelemetry-0_21",
+  "exemplars-tracing-opentelemetry-0_22",
 ] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.6", features = ["json"] }

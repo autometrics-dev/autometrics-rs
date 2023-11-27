@@ -1,23 +1,12 @@
 use super::TraceLabels;
-use opentelemetry_api::trace::TraceContextExt;
+use opentelemetry::trace::TraceContextExt as _;
 use std::iter::FromIterator;
 use tracing::Span;
-
-#[cfg(all(
-    not(doc),
-    all(
-        feature = "exemplars-tracing-opentelemetry-0_20",
-        feature = "exemplars-tracing-opentelemetry-0_21"
-    )
-))]
-compile_error!("Only one of the `exemplars-tracing-opentelemetry-0_20` and `exemplars-tracing-opentelemetry-0_21` features can be enabled at a time");
+use tracing_opentelemetry_0_22::OpenTelemetrySpanExt;
 
 pub fn get_exemplar() -> Option<TraceLabels> {
     // Get the OpenTelemetry Context from the tracing span
-    #[cfg(feature = "exemplars-tracing-opentelemetry-0_20")]
-    let context = tracing_opentelemetry_0_20::OpenTelemetrySpanExt::context(&Span::current());
-    #[cfg(feature = "exemplars-tracing-opentelemetry-0_21")]
-    let context = tracing_opentelemetry_0_21::OpenTelemetrySpanExt::context(&Span::current());
+    let context = OpenTelemetrySpanExt::context(&Span::current());
 
     // Now get the OpenTelemetry "span" from the Context
     // (it's confusing because the word "span" is used by both tracing and OpenTelemetry

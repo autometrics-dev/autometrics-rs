@@ -55,7 +55,7 @@ fn multiple_fields() {
 #[cfg(exemplars_tracing_opentelemetry)]
 #[test]
 fn tracing_opentelemetry_context() {
-    use opentelemetry_api::trace::TracerProvider as _;
+    use opentelemetry::trace::TracerProvider as _;
     use opentelemetry_sdk::trace::TracerProvider;
     use opentelemetry_stdout::SpanExporter;
     use std::io;
@@ -70,10 +70,9 @@ fn tracing_opentelemetry_context() {
     let tracer = provider.tracer("test");
 
     // This adds the OpenTelemetry Context to every tracing Span
-    #[cfg(feature = "exemplars-tracing-opentelemetry-0_20")]
-    let otel_layer = tracing_opentelemetry_0_20::layer().with_tracer(tracer);
-    #[cfg(feature = "exemplars-tracing-opentelemetry-0_21")]
-    let otel_layer = tracing_opentelemetry_0_21::layer().with_tracer(tracer);
+    #[cfg(feature = "exemplars-tracing-opentelemetry-0_22")]
+    let otel_layer = tracing_opentelemetry_0_22::layer().with_tracer(tracer);
+
     let subscriber = Registry::default().with(otel_layer);
 
     #[autometrics]

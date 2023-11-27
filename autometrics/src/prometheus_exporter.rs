@@ -28,7 +28,7 @@ use http::{header::CONTENT_TYPE, Response};
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::OnceCell;
 #[cfg(opentelemetry)]
-use opentelemetry_api::metrics::MetricsError;
+use opentelemetry::metrics::MetricsError;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -210,7 +210,7 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
 
     #[cfg(opentelemetry)]
     {
-        use opentelemetry_api::global;
+        use opentelemetry::global;
         use opentelemetry_prometheus::exporter;
         use opentelemetry_sdk::metrics::reader::AggregationSelector;
         use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind, MeterProvider};
