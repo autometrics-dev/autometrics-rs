@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking changes
 
 - `opentelemetry` has been updated to v0.21 (#159)  
-  New feature flags: `opentelemetry-0_21`, `exemplars-tracing-opentelemetry-0_21`  
+  New feature flags: `opentelemetry-0_21`, `exemplars-tracing-opentelemetry-0_22`  
   Removed feature flags: `opentelemetry-0_20`, `exemplars-tracing-opentelemetry-0_20`, `exemplars-tracing-opentelemetry-0_21`
 - `prometheus-client` has been updated to v0.22 (#160)  
   New feature flag: `prometheus-client-0_22`  
