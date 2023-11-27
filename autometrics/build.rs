@@ -12,7 +12,7 @@ pub fn main() {
     #[cfg(feature = "prometheus-client")]
     println!("cargo:warning=The `prometheus-client` feature is deprecated and will be removed in the next version. Please use `prometheus-client-0_21` instead.");
     #[cfg(feature = "exemplars-tracing-opentelemetry")]
-    println!("cargo:warning=The `exemplars-tracing-opentelemetry` feature is deprecated and will be removed in the next version. Please use `exemplars-tracing-opentelemetry-0_20` or `exemplars-tracing-opentelemetry-0_21` instead.");
+    println!("cargo:warning=The `exemplars-tracing-opentelemetry` feature is deprecated and will be removed in the next version. Please use `exemplars-tracing-opentelemetry-0_22` instead.");
 
     cfg_aliases! {
       // Backends
@@ -32,7 +32,7 @@ pub fn main() {
       // Exemplars
       exemplars: { any(exemplars_tracing, exemplars_tracing_opentelemetry) },
       exemplars_tracing: { feature = "exemplars-tracing" },
-      exemplars_tracing_opentelemetry: { any(feature = "exemplars-tracing-opentelemetry-0_20", feature = "exemplars-tracing-opentelemetry-0_21", feature = "exemplars-tracing-opentelemetry") },
+      exemplars_tracing_opentelemetry: { any(feature = "exemplars-tracing-opentelemetry-0_22", feature = "exemplars-tracing-opentelemetry") },
 
       // Custom objectives
       custom_objective_percentile: { feature = "custom-objective-percentile" },

@@ -24,7 +24,7 @@ metrics = ["metrics-0_21"]
 opentelemetry = ["opentelemetry-0_21"]
 prometheus = ["prometheus-0_13"]
 prometheus-client = ["prometheus-client-0_21"]
-exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_21"]
+exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_22"]
 
 # Misc
 prometheus-exporter = [
@@ -71,11 +71,11 @@ otel-push-exporter-async-std = [
 
 # Exemplars
 exemplars-tracing = ["tracing", "tracing-subscriber"]
-exemplars-tracing-opentelemetry-0_21 = [
-  "opentelemetry_api",
-  "opentelemetry_api/trace",
+exemplars-tracing-opentelemetry-0_22 = [
+  "dep:opentelemetry",
+  "opentelemetry_sdk/trace",
   "tracing",
-  "dep:tracing-opentelemetry-0-21",
+  "dep:tracing-opentelemetry-0-22",
 ]
 
 # Custom objectives
@@ -90,7 +90,6 @@ spez = "0.1.2"
 thiserror = "1"
 
 # Used for opentelemetry feature
-opentelemetry_api = { version = "0.20", default-features = false, optional = true } # for compat with tracing-otel-0.21
 opentelemetry = { version = "0.21", default-features = false, optional = true }
 
 # Use for metrics feature
@@ -116,7 +115,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ], optional = true }
 
 # Used for exemplars-tracing-opentelemetry feature
-tracing-opentelemetry-0-21 = { package = "tracing-opentelemetry", version = "0.21.0", default-features = false, optional = true }
+tracing-opentelemetry-0-22 = { package = "tracing-opentelemetry", version = "0.22", default-features = false, optional = true }
 
 [dev-dependencies]
 async-trait = "0.1.74"

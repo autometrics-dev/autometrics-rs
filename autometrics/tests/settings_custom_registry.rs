@@ -94,7 +94,7 @@ fn custom_prometheus_registry() {
 #[cfg(opentelemetry)]
 #[test]
 fn custom_opentelemetry_registry() {
-    use opentelemetry_api::{global, KeyValue};
+    use opentelemetry::{global, KeyValue};
     use prometheus::{Registry, TextEncoder};
 
     // OpenTelemetry uses the `prometheus` crate under the hood
