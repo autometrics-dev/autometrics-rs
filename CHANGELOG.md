@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking changes
+
+- `opentelemetry` has been updated to v0.21 (#159)  
+  New feature flags: `opentelemetry-0_21`, `exemplars-tracing-opentelemetry-0_21`  
+  Removed feature flags: `opentelemetry-0_20`, `exemplars-tracing-opentelemetry-0_20`, `exemplars-tracing-opentelemetry-0_21`
+- `prometheus-client` has been updated to v0.22 (#160)  
+  New feature flag: `prometheus-client-0_22`  
+  Removed feature flag: `prometheus-client-0_21`
+
+**If you are using these metrics separately in your application in addition to Autometrics,
+ensure that you match the version that Autometrics uses.**
+
+### General changes
+
 - New exporter, `otel_push_exporter` is now available in addition to the existing
   `prometheus_exporter`. It can be used to push metrics in the OTEL format via
   HTTP or gRPC to a OTEL-collector-(compatible) server.
@@ -18,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   has been improved (#149)
 - Fixed missing feature flag for `opentelemetry-otlp` when autometrics feature
   `otel-push-exporter` is enabled
-- Update to OpenTelemetry v0.21
 
 ### Autometrics 1.0 compliance
 
@@ -65,7 +78,6 @@ The following changes are made in order to bring the release in compliance with 
   as with the `prometheus` and `prometheus-client` crates, because the histogram buckets can now
   be configured via the settings
 - Upgraded `opentelemetry` to v0.20
-- Upgraded `prometheus-client` to v0.22
 
 ### Deprecated
 
