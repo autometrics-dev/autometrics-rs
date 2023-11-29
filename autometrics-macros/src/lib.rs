@@ -1,8 +1,9 @@
 use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use std::env;
+use std::str::FromStr;
 use syn::{
     parse_macro_input, GenericArgument, ImplItem, ItemFn, ItemImpl, PathArguments, Result,
     ReturnType, Type,
@@ -21,19 +22,14 @@ pub fn autometrics(
     args: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let args = parse_macro_input!(args as parse::AutometricsArgs);
+    let args = parse_macro_input!(args as AutometricsArgs);
 
-    // if the input has yet to be modified by the `async-trait` crate, we will fail parsing in
-    // in the next line, so lets error early now
-    if let Err(err) = check_async_trait(&item) {
-        return err.into_compile_error().into();
-    }
-
+    let (async_trait, item) = check_async_trait(item);
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
         Item::Function(item) => instrument_function(&args, item, &None),
-        Item::Impl(item) => instrument_impl_block(&args, item),
+        Item::Impl(item) => instrument_impl_block(&args, item, async_trait),
     };
 
     let output = match result {
@@ -44,16 +40,21 @@ pub fn autometrics(
     output.into()
 }
 
-fn check_async_trait(input: &proc_macro::TokenStream) -> Result<()> {
+fn check_async_trait(input: proc_macro::TokenStream) -> (bool, proc_macro::TokenStream) {
     let str = input.to_string();
 
     if str.contains("#[async_trait]") || str.contains("#[async_trait::async_trait]") {
-        Err(syn::Error::new(
-            Span::call_site(),
-            "#[async_trait] must be defined BEFORE #[autometrics]",
-        ))
+        // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
+        (
+            true,
+            proc_macro::TokenStream::from_str(
+                &str.replace("#[async_trait]", "")
+                    .replace("#[async_trait::async_trait]", ""),
+            )
+            .unwrap(),
+        )
     } else {
-        Ok(())
+        (false, input)
     }
 }
 
@@ -331,8 +332,18 @@ fn instrument_function(
 }
 
 /// Add autometrics instrumentation to an entire impl block
-fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<TokenStream> {
+fn instrument_impl_block(
+    args: &AutometricsArgs,
+    mut item: ItemImpl,
+    async_trait: bool,
+) -> Result<TokenStream> {
     let struct_name = Some(item.self_ty.to_token_stream().to_string());
+
+    let async_trait = if async_trait {
+        quote! { #[async_trait::async_trait] }
+    } else {
+        quote! {}
+    };
 
     // Replace all of the method items in place
     item.items = item
@@ -368,7 +379,10 @@ fn instrument_impl_block(args: &AutometricsArgs, mut item: ItemImpl) -> Result<T
         })
         .collect();
 
-    Ok(quote! { #item })
+    Ok(quote! {
+        #async_trait
+        #item
+    })
 }
 
 /// Create Prometheus queries for the generated metric and
