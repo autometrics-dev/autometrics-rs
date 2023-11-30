@@ -32,6 +32,9 @@ ensure that you match the version that Autometrics uses.**
   has been improved (#149)
 - Fixed missing feature flag for `opentelemetry-otlp` when autometrics feature
   `otel-push-exporter` is enabled
+- Fixed incorrect duration being recorded when using `#[async_trait]` together with `#[autometrics]` (#161)   
+  **Please note that the `#[autometrics]` macro needs to be defined BEFORE `#[async_trait]`.**
+- Fixed value of the `result` label being empty when the function is annotated with `#[async_trait]` (#161)
 
 ### Autometrics 1.0 compliance
 
