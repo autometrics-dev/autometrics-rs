@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.6.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Fiberplane <info@fiberplane.com>", "Evan Schwartz <3262610+emschwartz@users.noreply.github.com>"]
 description = " Easily add metrics to your code that actually help you spot and debug issues in production. Built on Prometheus and OpenTelemetry."
@@ -21,4 +21,4 @@ members = [
 exclude = ["examples/data", "examples/target"]
 
 [workspace.dependencies]
-autometrics-macros = { version = "0.6.0", path = "autometrics-macros" }
+autometrics-macros = { path = "autometrics-macros" }
