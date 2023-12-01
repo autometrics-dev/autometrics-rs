@@ -2,6 +2,7 @@ use crate::parse::{AutometricsArgs, Item};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
+use regex::Regex;
 use std::env;
 use std::str::FromStr;
 use syn::{
@@ -29,7 +30,7 @@ pub fn autometrics(
 
     let result = match item {
         Item::Function(item) => instrument_function(&args, item, &None),
-        Item::Impl(item) => instrument_impl_block(&args, item, async_trait),
+        Item::Impl(item) => instrument_impl_block(&args, item, &async_trait),
     };
 
     let output = match result {
@@ -40,22 +41,21 @@ pub fn autometrics(
     output.into()
 }
 
-fn check_async_trait(input: proc_macro::TokenStream) -> (bool, proc_macro::TokenStream) {
-    let str = input.to_string();
+/// returns a tuple of two containing:
+/// - `async_trait` attributes that have to be re-added after our instrumentation magic has been added
+/// - `input` but without the `async_trait` attributes
+fn check_async_trait(input: proc_macro::TokenStream) -> (String, proc_macro::TokenStream) {
+    let regex = Regex::new(r#"#\[[^\]]*async_trait\]"#).expect("The regex is hardcoded and thus guaranteed to be successfully parseable");
 
-    if str.contains("#[async_trait]") || str.contains("#[async_trait::async_trait]") {
-        // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
-        (
-            true,
-            proc_macro::TokenStream::from_str(
-                &str.replace("#[async_trait]", "")
-                    .replace("#[async_trait::async_trait]", ""),
-            )
-            .unwrap(),
-        )
-    } else {
-        (false, input)
-    }
+    let original = input.to_string();
+
+    let attributes: Vec<_> = regex.find_iter(&original).map(|m| m.as_str()).collect();
+    let replaced = regex.replace_all(&original, "");
+
+    // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
+    let ts = proc_macro::TokenStream::from_str(replaced.as_ref()).unwrap();
+
+    (attributes.join("\n"), ts)
 }
 
 #[proc_macro_derive(ResultLabels, attributes(label))]
@@ -335,15 +335,9 @@ fn instrument_function(
 fn instrument_impl_block(
     args: &AutometricsArgs,
     mut item: ItemImpl,
-    async_trait: bool,
+    attributes_to_re_add: &str,
 ) -> Result<TokenStream> {
     let struct_name = Some(item.self_ty.to_token_stream().to_string());
-
-    let async_trait = if async_trait {
-        quote! { #[async_trait::async_trait] }
-    } else {
-        quote! {}
-    };
 
     // Replace all of the method items in place
     item.items = item
@@ -379,8 +373,10 @@ fn instrument_impl_block(
         })
         .collect();
 
+    let ts = TokenStream::from_str(attributes_to_re_add)?;
+
     Ok(quote! {
-        #async_trait
+        #ts
         #item
     })
 }
