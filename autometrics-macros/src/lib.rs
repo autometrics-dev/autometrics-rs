@@ -8,6 +8,7 @@ use syn::{
     parse_macro_input, GenericArgument, ImplItem, ItemFn, ItemImpl, PathArguments, Result,
     ReturnType, Type,
 };
+use regex::Regex;
 
 mod parse;
 mod result_labels;
@@ -41,28 +42,16 @@ pub fn autometrics(
 }
 
 fn check_async_trait(input: proc_macro::TokenStream) -> (bool, proc_macro::TokenStream) {
-    let str = input.to_string();
-    let tokens: Vec<_> = str.split_whitespace().collect();
-    let mut found_attribute = false;
+    // .unwrap is safe because the regex is hardcoded and thus guaranteed to be successfully parseable
+    let regex = Regex::new(r#"#\[[^\]]*async_trait\]"#).unwrap();
 
-    let modified_tokens: Vec<&str> = tokens
-        .iter()
-        .filter_map(|&token| {
-            if token.starts_with("#[") && token.ends_with("async_trait]") {
-                found_attribute = true;
-                None // Skip the found #[*async_trait] attribute
-            } else {
-                Some(token)
-            }
-        })
-        .collect();
-
-    let modified_input = modified_tokens.join(" ");
+    let original = input.to_string();
+    let replaced = regex.replace_all(&original, "");
 
     // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
-    let ts = proc_macro::TokenStream::from_str(&modified_input).unwrap();
+    let ts = proc_macro::TokenStream::from_str(replaced.as_ref()).unwrap();
 
-    (found_attribute, ts)
+    (original != replaced, ts)
 }
 
 #[proc_macro_derive(ResultLabels, attributes(label))]
