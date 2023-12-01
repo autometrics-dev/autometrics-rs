@@ -41,6 +41,9 @@ pub fn autometrics(
     output.into()
 }
 
+/// returns a tuple of two containing:
+/// - `async_trait` attributes that have to be re-added after our instrumentation magic has been added
+/// - `input` but without the `async_trait` attributes
 fn check_async_trait(input: proc_macro::TokenStream) -> (String, proc_macro::TokenStream) {
     // .unwrap is safe because the regex is hardcoded and thus guaranteed to be successfully parseable
     let regex = Regex::new(r#"#\[[^\]]*async_trait\]"#).unwrap();
