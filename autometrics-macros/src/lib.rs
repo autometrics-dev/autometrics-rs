@@ -42,20 +42,27 @@ pub fn autometrics(
 
 fn check_async_trait(input: proc_macro::TokenStream) -> (bool, proc_macro::TokenStream) {
     let str = input.to_string();
+    let tokens: Vec<_> = str.split_whitespace().collect();
+    let mut found_attribute = false;
 
-    if str.contains("#[async_trait]") || str.contains("#[async_trait::async_trait]") {
-        // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
-        (
-            true,
-            proc_macro::TokenStream::from_str(
-                &str.replace("#[async_trait]", "")
-                    .replace("#[async_trait::async_trait]", ""),
-            )
-            .unwrap(),
-        )
-    } else {
-        (false, input)
-    }
+    let modified_tokens: Vec<&str> = tokens
+        .iter()
+        .filter_map(|&token| {
+            if token.starts_with("#[") && token.ends_with("async_trait]") {
+                found_attribute = true;
+                None // Skip the found #[*async_trait] attribute
+            } else {
+                Some(token)
+            }
+        })
+        .collect();
+
+    let modified_input = modified_tokens.join(" ");
+
+    // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
+    let ts = proc_macro::TokenStream::from_str(&modified_input).unwrap();
+
+    (found_attribute, ts)
 }
 
 #[proc_macro_derive(ResultLabels, attributes(label))]
