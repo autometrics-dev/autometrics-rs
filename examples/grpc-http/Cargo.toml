@@ -1,0 +1,16 @@
+[package]
+name = "grpc-http"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
+prost = "0.12"
+tokio = { version = "1", features = ["full"] }
+tonic = "0.10"
+tonic-health = "0.10"
+warp = "0.3"
+
+[build-dependencies]
+tonic-build = "0.10"
