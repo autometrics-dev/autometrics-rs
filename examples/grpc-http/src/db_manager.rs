@@ -16,22 +16,20 @@ impl DBManager {
         }
     }
 
-   pub  async fn connect_to_db(&self) -> Result<(), Error>{
-        println!("Connecting to database");
+    pub async fn connect_to_db(&self) -> Result<(), Error> {
         Ok(())
     }
 
-    pub async fn close_db(&self) -> Result<(), Error>{
-        println!("DB connection closed");
+    pub async fn close_db(&self) -> Result<(), Error> {
         Ok(())
     }
 
-    pub async fn query_table(&self) -> Result<(), Error>{
+    pub async fn query_table(&self) -> Result<(), Error> {
         println!("Query table");
         Ok(())
     }
 
-    pub async fn write_into_table(&self) -> Result<(), Error>{
+    pub async fn write_into_table(&self) -> Result<(), Error> {
         println!("Write into table");
         Ok(())
     }

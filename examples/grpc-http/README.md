@@ -51,7 +51,10 @@ Spin up local Prometheus and start scraping your application that listens on por
 am start :8080
 ```
 
-Now you can test your endpoints and generate some traffic.
+If you now inspect the Autometrics explorer on `http://localhost:6789` you will see your metrics. However, upon first start, all matrics are
+empty because no request has been sent yet. 
+
+Now you can test your endpoints and generate some traffic and refresh the autometrics explorer to see you metrics. 
 
 ### Starting the Service
 
@@ -67,7 +70,14 @@ Started metrics on port 8080
 Explore autometrics at http://127.0.0.1:6789
 ```
 
-### Stopping the Service
+### Stopping the Service 
+
+You can stop the service either via ctrl-c ore by sending a SIGTERM signal to kill the process. This has been implemented for Windows, Linux, Mac, and should also work on Docker and Kubernetes. 
+
+On Windows, Linux, or Mac, just hit Ctrl-C 
+
+Alternatively, you can send a SIGTERM signal from another process
+using the kill command on Linux or Mac. 
 
 In a second terminal, run
 
@@ -84,12 +94,13 @@ Sample output:
 In this example, the service runs on PID 73014. Let's send a sigterm signal to shutdown the service. On you system, a different PID will be returned so please use that one instead. 
 
 ```bash
-Kill 73014
+kill 73014
 ```
 
 Expected output:
 
 ```
+Received SIGTERM
 DB connection closed
 gRPC shutdown complete
 http shutdown complete
@@ -131,4 +142,12 @@ returns:
 }
 ```
 
-If you now inspect the Autometrics explorer on `http://localhost:6789` you will see your metrics.
+## Viewing the metrics
+
+When you inspect the Autometrics explorer on `http://localhost:6789` you will see your metrics and SLOs. The explorer shows four tabs:
+
+1) Dashboard: Aggregated overview of all metrics
+2) Functions: Detailed metrics for each instrumented API function
+3) SLO's: Service Level Agreements for each instrumented API function
+4) Alerts: Notifications of violated SLO's or any other anomaly. 
+
