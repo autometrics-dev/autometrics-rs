@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## Unreleased
+
+-
+
+## [1.0.0] - 2023-12-01
 
 ### Breaking changes
 
@@ -35,6 +39,7 @@ ensure that you match the version that Autometrics uses.**
 - Fixed incorrect duration being recorded when using `#[async_trait]` together with `#[autometrics]` (#161)   
   **Please note that the `#[autometrics]` macro needs to be defined BEFORE `#[async_trait]`.**
 - Fixed value of the `result` label being empty when the function is annotated with `#[async_trait]` (#161)
+- Fixed `#[async_trait]` not being correctly detected if its re-exported in another crate (#164)
 
 ### Autometrics 1.0 compliance
 

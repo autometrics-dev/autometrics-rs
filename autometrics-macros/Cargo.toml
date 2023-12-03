@@ -18,4 +18,5 @@ proc-macro = true
 percent-encoding = "2.2"
 proc-macro2 = "1"
 quote = "1"
+regex = "1.10.2"
 syn =  { version = "2", features = ["full"] }
