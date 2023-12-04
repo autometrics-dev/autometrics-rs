@@ -39,8 +39,8 @@ impl MyJobRunner {
 // You have to create a separate SLO for each API function and instrument
 // each API function individually instead of using the macro on trait level.
 // Docs https://docs.autometrics.dev/rust/adding-alerts-and-slos
-#[tonic::async_trait]
 #[autometrics(objective = API_SLO)]
+#[tonic::async_trait]
 impl JobRunner for MyJobRunner {
     async fn send_job(&self, request: Request<JobRequest>) -> Result<Response<JobReply>, Status> {
         println!("Got a request: {:?}", request);
