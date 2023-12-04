@@ -1,0 +1,38 @@
+syntax = "proto3";
+package job;
+
+service JobRunner {
+    rpc SendJob (JobRequest) returns (JobReply);
+    rpc ListJobs (Empty) returns (JobList);
+}
+
+message Empty {}
+
+message Job {
+    int32 id = 1;
+    string name = 2;
+
+    enum Status {
+        NOT_STARTED = 0;
+        RUNNING = 1;
+        FINISHED = 2;
+    }
+}
+
+message JobRequest {
+   string name = 1;
+}
+
+message JobReply {
+    string message = 1;
+
+    enum Status {
+        NOT_STARTED = 0;
+        RUNNING = 1;
+        FINISHED = 2;
+    }
+}
+
+message JobList {
+    repeated Job job = 1;
+}
