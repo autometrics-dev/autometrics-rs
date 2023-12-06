@@ -4,7 +4,9 @@ use autometrics::prometheus_exporter;
 use autometrics_example_util::run_prometheus;
 use axum::routing::{get, post};
 use axum::Router;
-use std::net::SocketAddr;
+use std::error::Error;
+use std::net::{Ipv4Addr, SocketAddr};
+use tokio::net::TcpListener;
 
 mod database;
 mod error;
@@ -13,7 +15,7 @@ mod util;
 
 /// Run the API server as well as Prometheus and a traffic generator
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // Run Prometheus and generate random traffic for the app
     // (You would not actually do this in production, but it makes it easier to see the example in action)
     let _prometheus = run_prometheus(false);
@@ -33,8 +35,8 @@ async fn main() {
         )
         .with_state(Database::new());
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    let server = axum::Server::bind(&addr);
+    let listener = TcpListener::bind((Ipv4Addr::from([127, 0, 0, 1]), 3000)).await?;
+    let addr = listener.local_addr()?;
 
     println!(
         "The example API server is now running on: {addr}
@@ -45,8 +47,6 @@ Then, hover over one of the HTTP handler functions (in your editor) to bring up 
 Click on one of the Autometrics links to see the graph for that handler's metrics in Prometheus."
     );
 
-    server
-        .serve(app.into_make_service())
-        .await
-        .expect("Error starting example API server");
+    axum::serve(listener, app).await?;
+    Ok(())
 }

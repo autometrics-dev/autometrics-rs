@@ -119,7 +119,7 @@ tracing-opentelemetry-0-22 = { package = "tracing-opentelemetry", version = "0.2
 
 [dev-dependencies]
 async-trait = "0.1.74"
-axum = { version = "0.6", features = ["tokio"] }
+axum = { version = "0.7.2", features = ["tokio"] }
 criterion = "0.5"
 http = "0.2"
 opentelemetry = "0.21"

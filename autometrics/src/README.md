@@ -45,17 +45,19 @@ pub async fn create_user() -> Result<(), ()> {
 
 // Export the metrics to Prometheus
 #[tokio::main]
-pub async fn main() {
-  prometheus_exporter::init();
+pub async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    prometheus_exporter::init();
 
-  let app = Router::new()
-      .route("/users", post(create_user))
-      .route(
-          "/metrics",
-          get(|| async { prometheus_exporter::encode_http_response() }),
-      );
-  Server::bind(&([127, 0, 0, 1], 0).into())
-      .serve(app.into_make_service());
+    let app = Router::new()
+        .route("/users", post(create_user))
+        .route(
+            "/metrics",
+            get(|| async { prometheus_exporter::encode_http_response() }),
+        );
+
+    let listener = TcpListener::bind((Ipv4Addr::from([127, 0, 0, 1]), 0)).await?;
+    axum::serve(listener, app).await?;
+    Ok(())
 }
 ```
 
