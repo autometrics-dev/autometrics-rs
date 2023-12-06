@@ -121,7 +121,7 @@ tracing-opentelemetry-0-22 = { package = "tracing-opentelemetry", version = "0.2
 async-trait = "0.1.74"
 axum = { version = "0.7.2", features = ["tokio"] }
 criterion = "0.5"
-http = "0.2"
+http = "1.0.0"
 opentelemetry = "0.21"
 opentelemetry-stdout = { version = "0.2", features = ["trace"] }
 prometheus-client = "0.22"
