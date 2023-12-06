@@ -1,6 +1,6 @@
 use autometrics::{autometrics, prometheus_exporter};
 use autometrics_example_util::run_prometheus;
-use axum::{routing::get, Router, Server, ServiceExt};
+use axum::{routing::get, Router, ServiceExt};
 use opentelemetry::sdk::trace::TracerProvider;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_stdout::SpanExporter;
