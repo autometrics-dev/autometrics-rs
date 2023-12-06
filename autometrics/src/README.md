@@ -33,9 +33,12 @@ See [autometrics.dev](https://docs.autometrics.dev/) for more details on the ide
 
 Autometrics isn't tied to any web framework, but this shows how you can use the library in an [Axum](https://github.com/tokio-rs/axum) server.
 
-```rust
+```rust,ignore
 use autometrics::{autometrics, prometheus_exporter};
-use axum::{routing::*, Router, Server};
+use axum::{routing::*, Router};
+use std::error::Error;
+use std::net::Ipv4Addr;
+use tokio::net::TcpListener;
 
 // Instrument your functions with metrics
 #[autometrics]
