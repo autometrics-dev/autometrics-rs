@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
--
+- Update `http` to `1.0`. This fixes compatibility with `axum 0.7` (#167)
 
-## [1.0.0] - 2023-12-01
+## [1.0.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v1.0.0) - 2023-12-01
 
 ### Breaking changes
 
