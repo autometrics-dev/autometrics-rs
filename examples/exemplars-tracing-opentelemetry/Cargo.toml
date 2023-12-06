@@ -11,7 +11,7 @@ autometrics = { path = "../../autometrics", features = [
   "exemplars-tracing-opentelemetry-0_22",
 ] }
 autometrics-example-util = { path = "../util" }
-axum = { version = "0.6", features = ["json"] }
+axum = { version = "0.7.2", features = ["json"] }
 opentelemetry = "0.20"
 opentelemetry-stdout = { version = "0.1", features = ["trace"] }
 reqwest = { version = "0.11", features = ["json"] }

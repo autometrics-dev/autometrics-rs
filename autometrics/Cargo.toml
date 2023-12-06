@@ -96,7 +96,7 @@ opentelemetry = { version = "0.21", default-features = false, optional = true }
 metrics = { version = "0.21", default-features = false, optional = true }
 
 # Used for prometheus-exporter feature
-http = { version = "0.2", optional = true }
+http = { version = "1.0.0", optional = true }
 metrics-exporter-prometheus = { version = "0.12", default-features = false, optional = true }
 opentelemetry-prometheus = { version = "0.14", optional = true }
 opentelemetry_sdk = { version = "0.21", default-features = false, features = [
@@ -119,9 +119,9 @@ tracing-opentelemetry-0-22 = { package = "tracing-opentelemetry", version = "0.2
 
 [dev-dependencies]
 async-trait = "0.1.74"
-axum = { version = "0.6", features = ["tokio"] }
+axum = { version = "0.7.2", features = ["tokio"] }
 criterion = "0.5"
-http = "0.2"
+http = "1.0.0"
 opentelemetry = "0.21"
 opentelemetry-stdout = { version = "0.2", features = ["trace"] }
 prometheus-client = "0.22"
