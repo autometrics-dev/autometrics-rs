@@ -1,6 +1,6 @@
 use opentelemetry::metrics::MetricsError;
-use opentelemetry_otlp::OtlpMetricPipeline;
 use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
+use opentelemetry_otlp::{OtlpMetricPipeline, OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT};
 use opentelemetry_sdk::metrics::MeterProvider;
 use std::ops::Deref;
 use std::time::Duration;
@@ -33,18 +33,8 @@ impl Drop for OtelMeterProvider {
 /// from within code, consider using [`init_http_with_timeout_period`].
 #[cfg(feature = "otel-push-exporter-http")]
 pub fn init_http(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
-    runtime()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .http()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::HttpBinary,
-                    ..Default::default()
-                }),
-        )
-        .build()
-        .map(OtelMeterProvider)
+    let (timeout, period) = timeout_and_period_from_env_or_default();
+    init_http_with_timeout_period(url, timeout, period)
 }
 
 /// Initialize the OpenTelemetry push exporter using HTTP transport with customized `timeout` and `period`.
@@ -78,18 +68,8 @@ pub fn init_http_with_timeout_period(
 /// from within code, consider using [`init_grpc_with_timeout_period`].
 #[cfg(feature = "otel-push-exporter-grpc")]
 pub fn init_grpc(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
-    runtime()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::Grpc,
-                    ..Default::default()
-                }),
-        )
-        .build()
-        .map(OtelMeterProvider)
+    let (timeout, period) = timeout_and_period_from_env_or_default();
+    init_grpc_with_timeout_period(url, timeout, period)
 }
 
 /// Initialize the OpenTelemetry push exporter using gRPC transport with customized `timeout` and `period`.
@@ -113,6 +93,26 @@ pub fn init_grpc_with_timeout_period(
         .with_period(period)
         .build()
         .map(OtelMeterProvider)
+}
+
+/// returns timeout and period from their respective environment variables
+/// or the default, if they are not set or set to an invalid value
+fn timeout_and_period_from_env_or_default() -> (Duration, Duration) {
+    let timeout = Duration::from_secs(
+        std::env::var_os("OTEL_METRIC_EXPORT_TIMEOUT")
+            .and_then(|os_string| os_string.to_str())
+            .and_then(|str| str.parse().ok())
+            .unwrap_or(OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT),
+    );
+
+    let period = Duration::from_secs(
+        std::env::var_os("OTEL_METRIC_EXPORT_INTERVAL")
+            .and_then(|os_string| os_string.to_str())
+            .and_then(|str| str.parse().ok())
+            .unwrap_or(60),
+    );
+
+    (timeout, period)
 }
 
 #[cfg(all(
