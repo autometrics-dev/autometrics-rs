@@ -103,14 +103,14 @@ fn timeout_and_period_from_env_or_default() -> (Duration, Duration) {
 
     let timeout = Duration::from_secs(
         std::env::var_os(OTEL_EXPORTER_TIMEOUT_ENV)
-            .and_then(|os_string| os_string.as_os_str().to_str())
+            .and_then(|os_string| os_string.into_string().ok())
             .and_then(|str| str.parse().ok())
             .unwrap_or(OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT),
     );
 
     let period = Duration::from_secs(
         std::env::var_os(OTEL_EXPORTER_INTERVAL_ENV)
-            .and_then(|os_string| os_string.as_os_str().to_str())
+            .and_then(|os_string| os_string.into_string().ok())
             .and_then(|str| str.parse().ok())
             .unwrap_or(60),
     );
