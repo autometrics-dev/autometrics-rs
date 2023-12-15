@@ -98,16 +98,19 @@ pub fn init_grpc_with_timeout_period(
 /// returns timeout and period from their respective environment variables
 /// or the default, if they are not set or set to an invalid value
 fn timeout_and_period_from_env_or_default() -> (Duration, Duration) {
+    const OTEL_EXPORTER_TIMEOUT_ENV: &str = "OTEL_METRIC_EXPORT_TIMEOUT";
+    const OTEL_EXPORTER_INTERVAL_ENV: &str = "OTEL_METRIC_EXPORT_INTERVAL";
+
     let timeout = Duration::from_secs(
-        std::env::var_os("OTEL_METRIC_EXPORT_TIMEOUT")
-            .and_then(|os_string| os_string.to_str())
+        std::env::var_os(OTEL_EXPORTER_TIMEOUT_ENV)
+            .and_then(|os_string| os_string.as_os_str().to_str())
             .and_then(|str| str.parse().ok())
             .unwrap_or(OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT),
     );
 
     let period = Duration::from_secs(
-        std::env::var_os("OTEL_METRIC_EXPORT_INTERVAL")
-            .and_then(|os_string| os_string.to_str())
+        std::env::var_os(OTEL_EXPORTER_INTERVAL_ENV)
+            .and_then(|os_string| os_string.as_os_str().to_str())
             .and_then(|str| str.parse().ok())
             .unwrap_or(60),
     );
