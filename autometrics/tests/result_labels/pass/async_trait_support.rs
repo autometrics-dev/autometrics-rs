@@ -27,7 +27,7 @@ impl TestTrait for TestStruct {
 fn main() {
     let ts = TestStruct::default();
 
-    async move {
+    let _ = async move {
         <TestStruct as TestTrait>::method().await;
         ts.self_method().await;
     };
