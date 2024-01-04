@@ -21,8 +21,8 @@ impl Parse for Item {
     fn parse(input: ParseStream) -> Result<Self> {
         input
             .parse()
-            .map(Item::Impl)
-            .or_else(|_| input.parse().map(Item::Function))
+            .map(Item::Function)
+            .or_else(|_| input.parse().map(Item::Impl))
     }
 }
 
