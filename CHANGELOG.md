@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update `http` to `1.0`. This fixes compatibility with `axum 0.7` (#167)
 - Explicitly set default timeout and period for the OTEL push exporter (#168)
+- Fix a regression that made all compilation errors in instrumented code appear as located in
+  the `#[autometrics]` annotation instead of the original location (#170)
 
 ## [1.0.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v1.0.0) - 2023-12-01
 
