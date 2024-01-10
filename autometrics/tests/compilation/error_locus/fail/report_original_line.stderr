@@ -1,5 +1,5 @@
 error[E0596]: cannot borrow `contents` as mutable, as it is not declared as mutable
-  --> tests/error_locus/fail/arg_count.rs:10:5
+  --> tests/compilation/error_locus/fail/report_original_line.rs:10:5
    |
 10 |     contents.push(2);
    |     ^^^^^^^^ cannot borrow as mutable

@@ -18,7 +18,6 @@ fn single_field() {
     tracing::subscriber::with_default(subscriber, || single_field_fn());
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
             && line.contains(r#"function="single_field_fn""#)
@@ -83,7 +82,6 @@ fn tracing_opentelemetry_context() {
     tracing::subscriber::with_default(subscriber, opentelemetry_context_fn);
 
     let metrics = prometheus_exporter::encode_to_string().unwrap();
-    println!("{}", metrics);
     assert!(metrics.lines().any(|line| {
         line.starts_with("function_calls_total{")
             && line.contains(r#"function="opentelemetry_context_fn""#)
