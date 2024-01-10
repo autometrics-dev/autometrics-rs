@@ -19,12 +19,10 @@ pub(crate) enum Item {
 
 impl Parse for Item {
     fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Token![impl]) {
-            input.parse().map(Item::Impl)
-        } else {
-            input.parse().map(Item::Function)
-        }
+        input
+            .parse()
+            .map(Item::Function)
+            .or_else(|_| input.parse().map(Item::Impl))
     }
 }
 

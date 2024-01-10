@@ -25,11 +25,11 @@ pub fn autometrics(
 ) -> proc_macro::TokenStream {
     let args = parse_macro_input!(args as AutometricsArgs);
 
-    let (async_trait, item) = check_async_trait(item);
+    let async_trait = check_async_trait(&item);
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
-        Item::Function(item) => instrument_function(&args, item, &None),
+        Item::Function(item) => instrument_function(&args, item, None),
         Item::Impl(item) => instrument_impl_block(&args, item, &async_trait),
     };
 
@@ -41,22 +41,15 @@ pub fn autometrics(
     output.into()
 }
 
-/// returns a tuple of two containing:
-/// - `async_trait` attributes that have to be re-added after our instrumentation magic has been added
-/// - `input` but without the `async_trait` attributes
-fn check_async_trait(input: proc_macro::TokenStream) -> (String, proc_macro::TokenStream) {
+/// returns the `async_trait` attributes that have to be re-added after our instrumentation magic has been added
+fn check_async_trait(input: &proc_macro::TokenStream) -> String {
     let regex = Regex::new(r#"#\[[^\]]*async_trait\]"#)
         .expect("The regex is hardcoded and thus guaranteed to be successfully parseable");
 
     let original = input.to_string();
-
     let attributes: Vec<_> = regex.find_iter(&original).map(|m| m.as_str()).collect();
-    let replaced = regex.replace_all(&original, "");
 
-    // .unwrap is safe because we only remove tokens from the existing stream, we dont add new ones
-    let ts = proc_macro::TokenStream::from_str(replaced.as_ref()).unwrap();
-
-    (attributes.join("\n"), ts)
+    attributes.join("\n")
 }
 
 #[proc_macro_derive(ResultLabels, attributes(label))]
@@ -71,7 +64,7 @@ pub fn result_labels(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
 fn instrument_function(
     args: &AutometricsArgs,
     item: ItemFn,
-    struct_name: &Option<String>,
+    struct_name: Option<&str>,
 ) -> Result<TokenStream> {
     let sig = item.sig;
     let block = item.block;
@@ -364,7 +357,7 @@ fn instrument_impl_block(
                     sig: method.sig,
                     block: Box::new(method.block),
                 };
-                let tokens = match instrument_function(args, item_fn, &struct_name) {
+                let tokens = match instrument_function(args, item_fn, struct_name.as_deref()) {
                     Ok(tokens) => tokens,
                     Err(err) => err.to_compile_error(),
                 };
