@@ -1,5 +1,5 @@
 use syn::parse::{Parse, ParseStream};
-use syn::{Expr, ItemFn, ItemImpl, Result, Token};
+use syn::{Expr, ItemFn, ItemImpl, LitStr, Result, Token};
 
 mod kw {
     syn::custom_keyword!(track_concurrency);
@@ -8,10 +8,12 @@ mod kw {
     syn::custom_keyword!(latency);
     syn::custom_keyword!(ok_if);
     syn::custom_keyword!(error_if);
+    syn::custom_keyword!(struct_name);
 }
 
 /// Autometrics can be applied to individual functions or to
 /// (all of the methods within) impl blocks.
+#[derive(Debug)]
 pub(crate) enum Item {
     Function(ItemFn),
     Impl(ItemImpl),
@@ -32,6 +34,9 @@ pub(crate) struct AutometricsArgs {
     pub ok_if: Option<Expr>,
     pub error_if: Option<Expr>,
     pub objective: Option<Expr>,
+
+    // Fix for https://github.com/autometrics-dev/autometrics-rs/issues/139.
+    pub struct_name: Option<String>,
 }
 
 impl Parse for AutometricsArgs {
@@ -67,6 +72,11 @@ impl Parse for AutometricsArgs {
                     return Err(input.error("expected only a single `objective` argument"));
                 }
                 args.objective = Some(input.parse()?);
+            } else if lookahead.peek(kw::struct_name) {
+                let _ = input.parse::<kw::struct_name>()?;
+                let _ = input.parse::<Token![=]>()?;
+                let struct_name = input.parse::<LitStr>()?.value();
+                args.struct_name = Some(struct_name);
             } else if lookahead.peek(Token![,]) {
                 let _ = input.parse::<Token![,]>()?;
             } else {
