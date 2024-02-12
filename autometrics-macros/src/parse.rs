@@ -13,7 +13,6 @@ mod kw {
 
 /// Autometrics can be applied to individual functions or to
 /// (all of the methods within) impl blocks.
-#[derive(Debug)]
 pub(crate) enum Item {
     Function(ItemFn),
     Impl(ItemImpl),
