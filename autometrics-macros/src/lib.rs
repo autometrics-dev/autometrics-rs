@@ -29,7 +29,7 @@ pub fn autometrics(
     let item = parse_macro_input!(item as Item);
 
     let result = match item {
-        Item::Function(item) => instrument_function(&args, item, None),
+        Item::Function(item) => instrument_function(&args, item, args.struct_name.as_deref()),
         Item::Impl(item) => instrument_impl_block(&args, item, &async_trait),
     };
 
