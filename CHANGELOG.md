@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Explicitly set default timeout and period for the OTEL push exporter (#168)
 - Fix a regression that made all compilation errors in instrumented code appear as located in
   the `#[autometrics]` annotation instead of the original location (#170)
+- Add missing feature flag for otel-push-exporter (#172)
 
 ## [1.0.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v1.0.0) - 2023-12-01
 

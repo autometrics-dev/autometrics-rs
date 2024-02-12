@@ -41,7 +41,8 @@ otel-push-exporter = [
   "dep:opentelemetry",
   "opentelemetry-otlp",
   "opentelemetry-otlp/metrics",
-  "opentelemetry-otlp/tls-roots"
+  "opentelemetry-otlp/tls-roots",
+  "opentelemetry-otlp/reqwest-rustls"
 ]
 
 otel-push-exporter-http = [
