@@ -72,6 +72,29 @@ fn impl_block() {
 }
 
 #[test]
+fn struct_name_autometrics_macro_attribute() {
+    prometheus_exporter::try_init().ok();
+
+    struct Bar;
+
+    impl Bar {
+        #[autometrics(struct_name = "Bar")]
+        fn test_fn() -> &'static str {
+            "Hello world!"
+        }
+    }
+
+    Bar::test_fn();
+
+    let metrics = prometheus_exporter::encode_to_string().unwrap();
+    assert!(metrics.lines().any(|line| {
+        line.starts_with("function_calls_total{")
+            && line.contains(r#"function="Bar::test_fn""#)
+            && line.ends_with("} 1")
+    }));
+}
+
+#[test]
 fn result() {
     prometheus_exporter::try_init().ok();
 
