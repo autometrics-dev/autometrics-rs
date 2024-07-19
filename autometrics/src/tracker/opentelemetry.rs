@@ -3,7 +3,7 @@ use crate::__private::FunctionDescription;
 use crate::labels::{BuildInfoLabels, CounterLabels, GaugeLabels, HistogramLabels, Label};
 use crate::{constants::*, tracker::TrackMetrics};
 use once_cell::sync::Lazy;
-use opentelemetry::metrics::{Counter, Histogram, Unit, UpDownCounter};
+use opentelemetry::metrics::{Counter, Histogram, UpDownCounter};
 use opentelemetry::{global, KeyValue};
 use std::{sync::Once, time::Instant};
 
@@ -19,10 +19,9 @@ static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
     // Note that the unit needs to be written as "s" rather than "seconds"
     // or it will not be included in the metric name
     // https://github.com/open-telemetry/opentelemetry-rust/issues/1173
-    let unit = Unit::new("s");
     global::meter(METER_NAME)
         .f64_histogram(HISTOGRAM_NAME)
-        .with_unit(unit)
+        .with_unit("s")
         .with_description(HISTOGRAM_DESCRIPTION)
         .init()
 });
