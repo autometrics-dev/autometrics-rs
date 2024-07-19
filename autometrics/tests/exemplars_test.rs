@@ -70,7 +70,7 @@ fn tracing_opentelemetry_context() {
     let tracer = provider.tracer("test");
 
     // This adds the OpenTelemetry Context to every tracing Span
-    #[cfg(feature = "exemplars-tracing-opentelemetry-0_22")]
+    #[cfg(feature = "exemplars-tracing-opentelemetry-0_24")]
     let otel_layer = tracing_opentelemetry_0_22::layer().with_tracer(tracer);
 
     let subscriber = Registry::default().with(otel_layer);

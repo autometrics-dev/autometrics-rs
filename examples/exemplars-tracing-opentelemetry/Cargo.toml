@@ -8,7 +8,7 @@ edition = "2021"
 autometrics = { path = "../../autometrics", features = [
   "prometheus-client-0_22",
   "prometheus-exporter",
-  "exemplars-tracing-opentelemetry-0_22",
+  "exemplars-tracing-opentelemetry-0_24",
 ] }
 autometrics-example-util = { path = "../util" }
 axum = { version = "0.7.2", features = ["json"] }

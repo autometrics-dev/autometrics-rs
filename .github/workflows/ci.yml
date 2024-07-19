@@ -22,15 +22,15 @@ jobs:
       - run: cargo clippy --features=metrics-0_21,prometheus-exporter
       - run: cargo clippy --features=prometheus-0_13
       - run: cargo clippy --features=prometheus-client-0_22
-      - run: cargo clippy --features=opentelemetry-0_21
+      - run: cargo clippy --features=opentelemetry-0_24
 
       # Run the tests with each of the different metrics libraries
       - run: cargo test --features=prometheus-exporter
       - run: cargo test --features=prometheus-exporter,metrics-0_21
       - run: cargo test --features=prometheus-exporter,prometheus-0_13
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_22,exemplars-tracing
-      - run: cargo test --features=prometheus-exporter,prometheus-client-0_22,exemplars-tracing-opentelemetry-0_22
-      - run: cargo test --features=prometheus-exporter,opentelemetry-0_21
+      - run: cargo test --features=prometheus-exporter,prometheus-client-0_22,exemplars-tracing-opentelemetry-0_24
+      - run: cargo test --features=prometheus-exporter,opentelemetry-0_24
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics-0_21,custom-objective-percentile,custom-objective-latency
