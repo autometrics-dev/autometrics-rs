@@ -2,7 +2,7 @@ use super::TraceLabels;
 use opentelemetry::trace::TraceContextExt as _;
 use std::iter::FromIterator;
 use tracing::Span;
-use tracing_opentelemetry_0_22::OpenTelemetrySpanExt;
+use tracing_opentelemetry_0_24::OpenTelemetrySpanExt;
 
 pub fn get_exemplar() -> Option<TraceLabels> {
     // Get the OpenTelemetry Context from the tracing span
