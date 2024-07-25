@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- `opentelemetry` has been updated to v0.24 (#179)
+### Breaking changes
+
+- `opentelemetry` has been updated to v0.24 (#179)  
+  New feature flags: `opentelemetry-0_24`, `exemplars-tracing-opentelemetry-0_25`  
+  Removed feature flags: `opentelemetry-0_21`, `exemplars-tracing-opentelemetry-0_22`
+
+**If you are using these metrics library separately in your application in addition 
+to Autometrics, ensure that you match the version that Autometrics uses.**
 
 ## [1.0.1](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v1.0.1) - 2024-02-12
 

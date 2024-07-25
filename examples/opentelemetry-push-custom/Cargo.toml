@@ -10,7 +10,7 @@ autometrics-example-util = { path = "../util" }
 # Note that the version of the opentelemetry crate MUST match
 # the version used by autometrics
 opentelemetry = { version = "0.24", features = ["metrics"] }
-opentelemetry_sdk = { version = "0.24.1", features = ["metrics", "rt-tokio"] }
+opentelemetry_sdk = { version = "0.24", features = ["metrics", "rt-tokio"] }
 opentelemetry-otlp = { version = "0.17", features = ["tonic", "metrics"] }
 opentelemetry-semantic-conventions = { version = "0.13" }
 tokio = { version = "1", features = ["full"] }
