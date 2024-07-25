@@ -1,8 +1,8 @@
 use autometrics::{autometrics, prometheus_exporter};
 use autometrics_example_util::run_prometheus;
 use axum::{routing::get, Router};
-use opentelemetry_sdk::trace::TracerProvider;
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::trace::TracerProvider;
 use opentelemetry_stdout::SpanExporter;
 use std::error::Error;
 use std::net::Ipv4Addr;
