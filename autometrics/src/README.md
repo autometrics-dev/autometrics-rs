@@ -163,7 +163,7 @@ If you require more customization than these offered feature flags, enable just
 See the [exemplars module docs](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) for details about these features. Currently only supported with the `prometheus-client` backend.
 
 - `exemplars-tracing` - extract arbitrary fields from `tracing::Span`s
-- `exemplars-tracing-opentelemetry-0_24` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate
+- `exemplars-tracing-opentelemetry-0_25` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate
 
 ### Custom objective values
 
