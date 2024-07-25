@@ -29,6 +29,8 @@ use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandl
 use once_cell::sync::OnceCell;
 #[cfg(opentelemetry)]
 use opentelemetry::metrics::MetricsError;
+#[cfg(opentelemetry)]
+use opentelemetry_sdk::metrics::SdkMeterProvider;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -213,7 +215,7 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
         use opentelemetry::global;
         use opentelemetry_prometheus::exporter;
         use opentelemetry_sdk::metrics::reader::AggregationSelector;
-        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind, MeterProvider};
+        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind};
 
         /// A custom aggregation selector that uses the configured histogram buckets,
         /// along with the other default aggregation settings.
@@ -228,7 +230,9 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
                     | InstrumentKind::UpDownCounter
                     | InstrumentKind::ObservableCounter
                     | InstrumentKind::ObservableUpDownCounter => Aggregation::Sum,
-                    InstrumentKind::ObservableGauge => Aggregation::LastValue,
+                    InstrumentKind::ObservableGauge | InstrumentKind::Gauge => {
+                        Aggregation::LastValue
+                    }
                     InstrumentKind::Histogram => Aggregation::ExplicitBucketHistogram {
                         boundaries: self.histogram_buckets.clone(),
                         record_min_max: false,
@@ -246,7 +250,7 @@ fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitiali
             .without_target_info()
             .build()?;
 
-        let meter_provider = MeterProvider::builder().with_reader(exporter).build();
+        let meter_provider = SdkMeterProvider::builder().with_reader(exporter).build();
 
         global::set_meter_provider(meter_provider);
     }

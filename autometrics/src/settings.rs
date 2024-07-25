@@ -195,7 +195,7 @@ impl AutometricsSettingsBuilder {
         let (prometheus_client_registry, prometheus_client_metrics) =
             crate::tracker::prometheus_client::initialize_registry(
                 self.prometheus_client_registry
-                    .unwrap_or_else(|| <prometheus_client::registry::Registry>::default()),
+                    .unwrap_or_else(<prometheus_client::registry::Registry>::default),
             );
 
         let repo_url = self

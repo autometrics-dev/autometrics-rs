@@ -1,17 +1,17 @@
 use opentelemetry::metrics::MetricsError;
 use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
 use opentelemetry_otlp::{OtlpMetricPipeline, OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT};
-use opentelemetry_sdk::metrics::MeterProvider;
+use opentelemetry_sdk::metrics::SdkMeterProvider;
 use std::ops::Deref;
 use std::time::Duration;
 
-/// Newtype struct holding a [`MeterProvider`] with a custom `Drop` implementation to automatically clean up itself
+/// Newtype struct holding a [`SdkMeterProvider`] with a custom `Drop` implementation to automatically clean up itself
 #[repr(transparent)]
 #[must_use = "Assign this to a unused variable instead: `let _meter = ...` (NOT `let _ = ...`), as else it will be dropped immediately - which will cause it to be shut down"]
-pub struct OtelMeterProvider(MeterProvider);
+pub struct OtelMeterProvider(SdkMeterProvider);
 
 impl Deref for OtelMeterProvider {
-    type Target = MeterProvider;
+    type Target = SdkMeterProvider;
 
     fn deref(&self) -> &Self::Target {
         &self.0

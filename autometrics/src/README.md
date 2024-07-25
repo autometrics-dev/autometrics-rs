@@ -153,7 +153,7 @@ If you require more customization than these offered feature flags, enable just
 
 > If you are exporting metrics yourself rather than using the `prometheus-exporter`, you must ensure that you are using the exact same version of the metrics library as `autometrics` (and it must come from `crates.io` rather than git or another source). If not, the autometrics metrics will not appear in your exported metrics.
 
-- `opentelemetry-0_21`  - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics.
+- `opentelemetry-0_24`  - use the [opentelemetry](https://crates.io/crates/opentelemetry) crate for producing metrics.
 - `metrics-0_21` - use the [metrics](https://crates.io/crates/metrics) crate for producing metrics
 - `prometheus-0_13` - use the [prometheus](https://crates.io/crates/prometheus) crate for producing metrics
 - `prometheus-client-0_22` - use the official [prometheus-client](https://crates.io/crates/prometheus-client) crate for producing metrics
@@ -163,7 +163,7 @@ If you require more customization than these offered feature flags, enable just
 See the [exemplars module docs](https://docs.rs/autometrics/latest/autometrics/exemplars/index.html) for details about these features. Currently only supported with the `prometheus-client` backend.
 
 - `exemplars-tracing` - extract arbitrary fields from `tracing::Span`s
-- `exemplars-tracing-opentelemetry-0_20` or `exemplars-tracing-opentelemetry-0_21` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate
+- `exemplars-tracing-opentelemetry-0_25` - extract the `trace_id` and `span_id` from the `opentelemetry::Context`, which is attached to `tracing::Span`s by the `tracing-opentelemetry` crate
 
 ### Custom objective values
 
