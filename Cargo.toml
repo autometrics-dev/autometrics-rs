@@ -21,4 +21,4 @@ members = [
 exclude = ["examples/data", "examples/target"]
 
 [workspace.dependencies]
-autometrics-macros = { version = "1.0.1", path = "autometrics-macros" }
+autometrics-macros = { version = "2.0.0", path = "autometrics-macros" }
