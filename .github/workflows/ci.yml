@@ -35,6 +35,9 @@ jobs:
       # Build the crate using the other optional features
       - run: cargo build --features=metrics-0_21,custom-objective-percentile,custom-objective-latency
 
+      # Install protoc for the examples
+      - uses: arduino/setup-protoc@v3
+
       # Compile the examples
       - run: cargo build --package example-actix-web
       - run: cargo build --package example-axum
@@ -42,6 +45,7 @@ jobs:
       - run: cargo build --package example-exemplars-tracing
       - run: cargo build --package example-exemplars-tracing-opentelemetry
       - run: cargo build --package example-full-api
+      - run: cargo build --package example-grpc-http
       - run: cargo build --package example-opentelemetry-push
 
 
