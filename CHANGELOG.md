@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
--
+### Breaking changes
+- `metrics` has been updated to v0.24 (#183)
+  New feature flag: `metrics-0_24`
+  Removed feature flag: `metrics-0_21`
 
 ## [2.0.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v2.0.0) - 2024-07-25
 

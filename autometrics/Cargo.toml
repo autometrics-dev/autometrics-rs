@@ -14,13 +14,13 @@ readme = "README.md"
 
 [features]
 # Metrics backends
-metrics-0_21 = ["dep:metrics"]
+metrics-0_24 = ["dep:metrics"]
 opentelemetry-0_24 = ["opentelemetry/metrics", "dep:prometheus"]
 prometheus-0_13 = ["dep:prometheus"]
 prometheus-client-0_22 = ["dep:prometheus-client"]
 
 # Deprecated feature flags
-metrics = ["metrics-0_21"]
+metrics = ["metrics-0_24"]
 opentelemetry = ["opentelemetry-0_24"]
 prometheus = ["prometheus-0_13"]
 prometheus-client = ["prometheus-client-0_22"]
@@ -94,11 +94,11 @@ thiserror = "1"
 opentelemetry = { version = "0.24", default-features = false, optional = true }
 
 # Use for metrics feature
-metrics = { version = "0.21", default-features = false, optional = true }
+metrics = { version = "0.24", default-features = false, optional = true }
 
 # Used for prometheus-exporter feature
 http = { version = "1.0.0", optional = true }
-metrics-exporter-prometheus = { version = "0.12", default-features = false, optional = true }
+metrics-exporter-prometheus = { version = "0.16", default-features = false, optional = true }
 opentelemetry-prometheus = { version = "0.17", optional = true }
 opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
   "metrics",
