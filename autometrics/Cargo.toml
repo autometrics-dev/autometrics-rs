@@ -134,7 +134,7 @@ uuid = { version = "1", features = ["v4"] }
 vergen = { version = "8.1", features = ["git", "gitcl"] }
 
 [build-dependencies]
-cfg_aliases = "0.1"
+cfg_aliases = "0.2.1"
 
 [package.metadata.docs.rs]
 all-features = true

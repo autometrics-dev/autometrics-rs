@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use tonic::transport::Server as TonicServer;
-use warp::Filter;
 use warp::http::StatusCode;
+use warp::Filter;
 
 use autometrics::prometheus_exporter;
 use server::MyJobRunner;
@@ -51,9 +51,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .serve_with_shutdown(grpc_addr, signal);
 
     // Build http /metrics endpoint
-    let routes = warp::get()
-        .and(warp::path("metrics"))
-        .map(|| prometheus_exporter::encode_to_string().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR));
+    let routes = warp::get().and(warp::path("metrics")).map(|| {
+        prometheus_exporter::encode_to_string().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+    });
 
     // Build http web server
     let (_, web_server) =
