@@ -5,7 +5,7 @@ use autometrics_example_util::run_prometheus;
 use axum::routing::{get, post};
 use axum::Router;
 use std::error::Error;
-use std::net::{Ipv4Addr, SocketAddr};
+use std::net::Ipv4Addr;
 use tokio::net::TcpListener;
 
 mod database;

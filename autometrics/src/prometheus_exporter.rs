@@ -27,10 +27,6 @@ use http::{header::CONTENT_TYPE, Response};
 #[cfg(metrics)]
 use metrics_exporter_prometheus::{BuildError, PrometheusBuilder, PrometheusHandle};
 use once_cell::sync::OnceCell;
-#[cfg(opentelemetry)]
-use opentelemetry::metrics::MetricsError;
-#[cfg(opentelemetry)]
-use opentelemetry_sdk::metrics::SdkMeterProvider;
 #[cfg(any(opentelemetry, prometheus))]
 use prometheus::TextEncoder;
 use thiserror::Error;
@@ -64,10 +60,6 @@ pub enum EncodingError {
 pub enum ExporterInitializationError {
     #[error("Prometheus exporter has already been initialized")]
     AlreadyInitialized,
-
-    #[cfg(opentelemetry)]
-    #[error(transparent)]
-    OpenTelemetryExporter(#[from] MetricsError),
 
     #[cfg(metrics)]
     #[error(transparent)]
@@ -210,50 +202,49 @@ impl GlobalPrometheus {
 fn initialize_prometheus_exporter() -> Result<GlobalPrometheus, ExporterInitializationError> {
     let settings = get_settings();
 
-    #[cfg(opentelemetry)]
-    {
-        use opentelemetry::global;
-        use opentelemetry_prometheus::exporter;
-        use opentelemetry_sdk::metrics::reader::AggregationSelector;
-        use opentelemetry_sdk::metrics::{Aggregation, InstrumentKind};
+    // opentelemetry-prometheus is no longer maintained and stops at 0.29.1
+    // this config works with latest 0.29.1, but prometheus dependency was updated at 0.30 version
+    // so this is now useless
+    // #[cfg(opentelemetry)]
+    // {
+    //     use opentelemetry_sdk::metrics::SdkMeterProvider;
+    //     use opentelemetry::global;
+    //     use opentelemetry_prometheus::exporter;
+    //     use opentelemetry_sdk::metrics::{Aggregation, Stream};
+    //     use opentelemetry_sdk::metrics::{Instrument, InstrumentKind};
 
-        /// A custom aggregation selector that uses the configured histogram buckets,
-        /// along with the other default aggregation settings.
-        struct AggregationSelectorWithHistogramBuckets {
-            histogram_buckets: Vec<f64>,
-        }
+    //     let view = move |i: &Instrument| match i.kind() {
+    //         InstrumentKind::Counter
+    //         | InstrumentKind::UpDownCounter
+    //         | InstrumentKind::ObservableCounter
+    //         | InstrumentKind::ObservableUpDownCounter => Stream::builder()
+    //             .with_aggregation(Aggregation::Sum)
+    //             .build()
+    //             .ok(),
+    //         InstrumentKind::ObservableGauge | InstrumentKind::Gauge => Stream::builder()
+    //             .with_aggregation(Aggregation::LastValue)
+    //             .build()
+    //             .ok(),
+    //         InstrumentKind::Histogram => Stream::builder()
+    //             .with_aggregation(Aggregation::ExplicitBucketHistogram {
+    //                 boundaries: settings.histogram_buckets.clone(),
+    //                 record_min_max: false,
+    //             })
+    //             .build()
+    //             .ok(),
+    //     };
 
-        impl AggregationSelector for AggregationSelectorWithHistogramBuckets {
-            fn aggregation(&self, kind: InstrumentKind) -> Aggregation {
-                match kind {
-                    InstrumentKind::Counter
-                    | InstrumentKind::UpDownCounter
-                    | InstrumentKind::ObservableCounter
-                    | InstrumentKind::ObservableUpDownCounter => Aggregation::Sum,
-                    InstrumentKind::ObservableGauge | InstrumentKind::Gauge => {
-                        Aggregation::LastValue
-                    }
-                    InstrumentKind::Histogram => Aggregation::ExplicitBucketHistogram {
-                        boundaries: self.histogram_buckets.clone(),
-                        record_min_max: false,
-                    },
-                }
-            }
-        }
+    //     let exporter: opentelemetry_prometheus::PrometheusExporter = exporter()
+    //         .with_registry(settings.prometheus_registry.clone())
+    //         .without_scope_info()
+    //         .without_target_info()
+    //         .build()
+    //         .unwrap();
 
-        let exporter = exporter()
-            .with_registry(settings.prometheus_registry.clone())
-            .with_aggregation_selector(AggregationSelectorWithHistogramBuckets {
-                histogram_buckets: settings.histogram_buckets.clone(),
-            })
-            .without_scope_info()
-            .without_target_info()
-            .build()?;
+    //     let meter_provider = SdkMeterProvider::builder().with_reader(exporter).with_view(view).build();
 
-        let meter_provider = SdkMeterProvider::builder().with_reader(exporter).build();
-
-        global::set_meter_provider(meter_provider);
-    }
+    //     global::set_meter_provider(meter_provider);
+    // }
 
     Ok(GlobalPrometheus {
         #[cfg(metrics)]

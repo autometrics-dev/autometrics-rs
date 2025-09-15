@@ -104,7 +104,7 @@ fn custom_opentelemetry_registry() {
         .prometheus_registry(registry)
         .init();
 
-    let custom_metric = global::meter("foo").u64_counter("custom_metric").init();
+    let custom_metric = global::meter("foo").u64_counter("custom_metric").build();
 
     #[autometrics]
     fn hello_world() -> &'static str {

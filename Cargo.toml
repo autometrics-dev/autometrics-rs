@@ -11,6 +11,7 @@ keywords = ["metrics", "prometheus", "opentelemetry"]
 categories = ["development-tools::debugging", "development-tools::profiling"]
 
 [workspace]
+resolver = "2"
 default-members = ["autometrics", "autometrics-cli", "autometrics-macros"]
 members = [
   "autometrics",

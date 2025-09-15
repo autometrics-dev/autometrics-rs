@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `prometheus` has been updated to v0.14 (#187)
   New feature flag: `prometheus-0_14`
   Removed feature flag: `prometheus-0_13`
+- No more `prometheus-exporter` with `opentelemetry`, use standard otlp exporter (see <https://github.com/open-telemetry/opentelemetry-rust/pull/2831>)
+- Update `opentelemetry` to v0.30
 
 ## [2.0.0](https://github.com/autometrics-dev/autometrics-rs/releases/tag/v2.0.0) - 2024-07-25
 

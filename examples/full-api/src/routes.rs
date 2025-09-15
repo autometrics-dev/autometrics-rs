@@ -1,6 +1,6 @@
 use autometrics::{autometrics, objectives::*};
 use autometrics_example_util::sleep_random_duration;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::State, Json};
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 

@@ -5,6 +5,6 @@ publish = false
 edition = "2021"
 
 [dependencies]
-autometrics = { path = "../../autometrics", features = ["opentelemetry-0_24", "otel-push-exporter-http", "otel-push-exporter-tokio"] }
+autometrics = { path = "../../autometrics", features = ["opentelemetry-0_30", "otel-push-exporter-http", "otel-push-exporter-tokio"] }
 autometrics-example-util = { path = "../util" }
 tokio = { version = "1", features = ["full"] }

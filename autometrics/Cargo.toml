@@ -15,23 +15,23 @@ readme = "README.md"
 [features]
 # Metrics backends
 metrics-0_24 = ["dep:metrics"]
-opentelemetry-0_24 = ["opentelemetry/metrics", "dep:prometheus"]
+opentelemetry-0_30 = ["opentelemetry/metrics", "dep:prometheus"]
 prometheus-0_14 = ["dep:prometheus"]
 prometheus-client-0_22 = ["dep:prometheus-client"]
 
 # Deprecated feature flags
 metrics = ["metrics-0_24"]
-opentelemetry = ["opentelemetry-0_24"]
+opentelemetry = ["opentelemetry-0_30"]
 prometheus = ["prometheus-0_14"]
 prometheus-client = ["prometheus-client-0_22"]
-exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_25"]
+exemplars-tracing-opentelemetry = ["exemplars-tracing-opentelemetry-0_31"]
 
 # Misc
 prometheus-exporter = [
   "http",
   "metrics-exporter-prometheus",
-  "opentelemetry-prometheus",
   "opentelemetry_sdk",
+  "opentelemetry_sdk/spec_unstable_metrics_views",
   "dep:prometheus",
   "dep:prometheus-client",
 ]
@@ -65,18 +65,13 @@ otel-push-exporter-tokio-current-thread = [
   "opentelemetry_sdk/rt-tokio-current-thread"
 ]
 
-otel-push-exporter-async-std = [
-  "otel-push-exporter",
-  "opentelemetry_sdk/rt-async-std"
-]
-
 # Exemplars
 exemplars-tracing = ["tracing", "tracing-subscriber"]
-exemplars-tracing-opentelemetry-0_25 = [
+exemplars-tracing-opentelemetry-0_31 = [
   "dep:opentelemetry",
   "opentelemetry_sdk/trace",
   "tracing",
-  "dep:tracing-opentelemetry",
+  "dep:tracing-opentelemetry"
 ]
 
 # Custom objectives
@@ -91,20 +86,19 @@ spez = "0.1.2"
 thiserror = "1"
 
 # Used for opentelemetry feature
-opentelemetry = { version = "0.24", default-features = false, optional = true }
+opentelemetry = { version = "0.30", default-features = false, optional = true }
 
 # Use for metrics feature
 metrics = { version = "0.24", default-features = false, optional = true }
 
 # Used for prometheus-exporter feature
 http = { version = "1.0.0", optional = true }
-metrics-exporter-prometheus = { version = "0.16", default-features = false, optional = true }
-opentelemetry-prometheus = { version = "0.17", optional = true }
-opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
+metrics-exporter-prometheus = { version = "0.17", default-features = false, optional = true }
+opentelemetry_sdk = { version = "0.30.0", default-features = false, features = [
   "metrics",
 ], optional = true }
-opentelemetry-otlp = { version = "0.17", default-features = false, optional = true }
-prometheus = { version = "0.13", default-features = false, optional = true }
+opentelemetry-otlp = { version = "0.30", default-features = false, optional = true }
+prometheus = { version = "0.14", default-features = false, optional = true }
 
 # Used for prometheus-client feature
 prometheus-client = { version = "0.22", optional = true }
@@ -116,15 +110,15 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ], optional = true }
 
 # Used for exemplars-tracing-opentelemetry feature
-tracing-opentelemetry = { version = "0.25", default-features = false, optional = true }
+tracing-opentelemetry = { version = "0.31", default-features = false, optional = true }
 
 [dev-dependencies]
 async-trait = "0.1.74"
 axum = { version = "0.7.2", features = ["tokio"] }
 criterion = "0.5"
 http = "1.0.0"
-opentelemetry = "0.24"
-opentelemetry-stdout = { version = "0.5", features = ["trace"] }
+opentelemetry = "0.30"
+opentelemetry-stdout = { version = "0.30", features = ["trace"] }
 prometheus-client = "0.22"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
