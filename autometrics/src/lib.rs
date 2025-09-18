@@ -9,7 +9,7 @@ mod constants;
 #[cfg(any(
     feature = "exemplars-tracing",
     feature = "exemplars-tracing-opentelemetry",
-    feature = "exemplars-tracing-opentelemetry-0_25",
+    feature = "exemplars-tracing-opentelemetry-0_31",
 ))]
 pub mod exemplars;
 mod labels;

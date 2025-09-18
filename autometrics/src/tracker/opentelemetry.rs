@@ -13,7 +13,7 @@ static COUNTER: Lazy<Counter<u64>> = Lazy::new(|| {
     global::meter(METER_NAME)
         .u64_counter(COUNTER_NAME)
         .with_description(COUNTER_DESCRIPTION)
-        .init()
+        .build()
 });
 static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
     // Note that the unit needs to be written as "s" rather than "seconds"
@@ -23,13 +23,13 @@ static HISTOGRAM: Lazy<Histogram<f64>> = Lazy::new(|| {
         .f64_histogram(HISTOGRAM_NAME)
         .with_unit("s")
         .with_description(HISTOGRAM_DESCRIPTION)
-        .init()
+        .build()
 });
 static GAUGE: Lazy<UpDownCounter<i64>> = Lazy::new(|| {
     global::meter(METER_NAME)
         .i64_up_down_counter(GAUGE_NAME)
         .with_description(GAUGE_DESCRIPTION)
-        .init()
+        .build()
 });
 
 /// Tracks the number of function calls, concurrent calls, and latency
@@ -78,7 +78,7 @@ impl TrackMetrics for OpenTelemetryTracker {
             let build_info = global::meter(METER_NAME)
                 .f64_up_down_counter(BUILD_INFO_NAME)
                 .with_description(BUILD_INFO_DESCRIPTION)
-                .init();
+                .build();
             build_info.add(1.0, &build_info_labels);
         });
     }

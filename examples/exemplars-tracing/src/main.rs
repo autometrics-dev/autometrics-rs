@@ -2,10 +2,10 @@ use autometrics::{
     autometrics, exemplars::tracing::AutometricsExemplarExtractor, prometheus_exporter,
 };
 use autometrics_example_util::run_prometheus;
-use axum::{http::header::CONTENT_TYPE, response::Response, routing::get, Router};
+use axum::{routing::get, Router};
 use std::error::Error;
 use std::net::Ipv4Addr;
-use std::{net::SocketAddr, time::Duration};
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tracing::{instrument, trace};
 use tracing_subscriber::{prelude::*, EnvFilter};

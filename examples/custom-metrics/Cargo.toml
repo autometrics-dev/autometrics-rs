@@ -13,7 +13,6 @@ prometheus-client = ["autometrics/prometheus-client", "dep:prometheus-client"]
 [dependencies]
 autometrics = { path = "../../autometrics", features = ["prometheus-exporter"] }
 metrics = { version = "0.21.1", optional = true }
-once_cell = "1.17"
 opentelemetry = { version = "0.20", features = ["metrics"], optional = true }
 prometheus = { version = "0.13", optional = true }
 prometheus-client = { version = "0.21.2", optional = true }

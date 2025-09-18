@@ -13,7 +13,7 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
@@ -22,15 +22,15 @@ jobs:
       - run: cargo clippy --features=metrics-0_24,prometheus-exporter
       - run: cargo clippy --features=prometheus-0_14
       - run: cargo clippy --features=prometheus-client-0_22
-      - run: cargo clippy --features=opentelemetry-0_24
+      - run: cargo clippy --features=opentelemetry-0_30
 
       # Run the tests with each of the different metrics libraries
       - run: cargo test --features=prometheus-exporter
       - run: cargo test --features=prometheus-exporter,metrics-0_24
       - run: cargo test --features=prometheus-exporter,prometheus-0_14
       - run: cargo test --features=prometheus-exporter,prometheus-client-0_22,exemplars-tracing
-      - run: cargo test --features=prometheus-exporter,prometheus-client-0_22,exemplars-tracing-opentelemetry-0_25
-      - run: cargo test --features=prometheus-exporter,opentelemetry-0_24
+      - run: cargo test --features=prometheus-client-0_22,exemplars-tracing-opentelemetry-0_31 # no prometheus-exporter anymore with otlp
+      - run: cargo test --features=opentelemetry-0_30 # no prometheus-exporter anymore with otlp
 
       # Build the crate using the other optional features
       - run: cargo build --features=metrics-0_24,custom-objective-percentile,custom-objective-latency
@@ -43,7 +43,7 @@ jobs:
       - run: cargo build --package example-axum
       - run: cargo build --package example-custom-metrics
       - run: cargo build --package example-exemplars-tracing
-      - run: cargo build --package example-exemplars-tracing-opentelemetry
+      # - run: cargo build --package example-exemplars-tracing-opentelemetry # removed, no more prometheus-exporter in otlp
       - run: cargo build --package example-full-api
       - run: cargo build --package example-grpc-http
       - run: cargo build --package example-opentelemetry-push

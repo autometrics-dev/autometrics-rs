@@ -1,5 +1,4 @@
 use autometrics::{autometrics, prometheus_exporter};
-use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "prometheus-client")]
 use prometheus_client::metrics::{counter::Counter, family::Family};
 
@@ -18,7 +17,7 @@ pub fn function_with_custom_metrics_metric() {
 }
 
 // Run the example with `--features=opentelemetry` to use the `opentelemetry` crate to define additional metrics.
-#[cfg(feature = "openetelemetry")]
+#[cfg(feature = "opentelemetry")]
 pub fn function_with_custom_opentelemetry_metric() {
     use once_cell::sync::Lazy;
     use opentelemetry::{global, metrics::Counter, KeyValue};

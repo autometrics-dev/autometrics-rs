@@ -1,7 +1,8 @@
-use opentelemetry::metrics::MetricsError;
-use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
-use opentelemetry_otlp::{OtlpMetricPipeline, OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT};
-use opentelemetry_sdk::metrics::SdkMeterProvider;
+use opentelemetry_otlp::{
+    ExportConfig, ExporterBuildError, MetricExporter, Protocol, WithExportConfig,
+    OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT,
+};
+use opentelemetry_sdk::metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider};
 use std::ops::Deref;
 use std::time::Duration;
 
@@ -32,7 +33,7 @@ impl Drop for OtelMeterProvider {
 /// to configure the timeout and interval respectively. If you want to customize those
 /// from within code, consider using [`init_http_with_timeout_period`].
 #[cfg(feature = "otel-push-exporter-http")]
-pub fn init_http(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
+pub fn init_http(url: impl Into<String>) -> Result<OtelMeterProvider, ExporterBuildError> {
     let (timeout, period) = timeout_and_period_from_env_or_default();
     init_http_with_timeout_period(url, timeout, period)
 }
@@ -43,21 +44,22 @@ pub fn init_http_with_timeout_period(
     url: impl Into<String>,
     timeout: Duration,
     period: Duration,
-) -> Result<OtelMeterProvider, MetricsError> {
-    runtime()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .http()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::HttpBinary,
-                    timeout,
-                    ..Default::default()
-                }),
-        )
-        .with_period(period)
-        .build()
-        .map(OtelMeterProvider)
+) -> Result<OtelMeterProvider, ExporterBuildError> {
+    let exporter = MetricExporter::builder()
+        .with_http()
+        .with_export_config(ExportConfig {
+            endpoint: Some(url.into()),
+            protocol: Protocol::HttpBinary,
+            timeout: Some(timeout),
+            ..Default::default()
+        })
+        .build()?;
+
+    let reader = PeriodicReader::builder(exporter)
+        .with_interval(period)
+        .build();
+
+    Ok(OtelMeterProvider(runtime().with_reader(reader).build()))
 }
 
 /// Initialize the OpenTelemetry push exporter using gRPC transport.
@@ -67,7 +69,7 @@ pub fn init_http_with_timeout_period(
 /// to configure the timeout and interval respectively. If you want to customize those
 /// from within code, consider using [`init_grpc_with_timeout_period`].
 #[cfg(feature = "otel-push-exporter-grpc")]
-pub fn init_grpc(url: impl Into<String>) -> Result<OtelMeterProvider, MetricsError> {
+pub fn init_grpc(url: impl Into<String>) -> Result<OtelMeterProvider, ExporterBuildError> {
     let (timeout, period) = timeout_and_period_from_env_or_default();
     init_grpc_with_timeout_period(url, timeout, period)
 }
@@ -78,21 +80,22 @@ pub fn init_grpc_with_timeout_period(
     url: impl Into<String>,
     timeout: Duration,
     period: Duration,
-) -> Result<OtelMeterProvider, MetricsError> {
-    runtime()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_export_config(ExportConfig {
-                    endpoint: url.into(),
-                    protocol: Protocol::Grpc,
-                    timeout,
-                    ..Default::default()
-                }),
-        )
-        .with_period(period)
-        .build()
-        .map(OtelMeterProvider)
+) -> Result<OtelMeterProvider, ExporterBuildError> {
+    let exporter = MetricExporter::builder()
+        .with_tonic()
+        .with_export_config(ExportConfig {
+            endpoint: Some(url.into()),
+            protocol: Protocol::HttpBinary,
+            timeout: Some(timeout),
+            ..Default::default()
+        })
+        .build()?;
+
+    let reader = PeriodicReader::builder(exporter)
+        .with_interval(period)
+        .build();
+
+    Ok(OtelMeterProvider(runtime().with_reader(reader).build()))
 }
 
 /// returns timeout and period from their respective environment variables
@@ -105,7 +108,7 @@ fn timeout_and_period_from_env_or_default() -> (Duration, Duration) {
         std::env::var_os(OTEL_EXPORTER_TIMEOUT_ENV)
             .and_then(|os_string| os_string.into_string().ok())
             .and_then(|str| str.parse().ok())
-            .unwrap_or(OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT),
+            .unwrap_or(OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT.as_secs()),
     );
 
     let period = Duration::from_secs(
@@ -118,51 +121,6 @@ fn timeout_and_period_from_env_or_default() -> (Duration, Duration) {
     (timeout, period)
 }
 
-#[cfg(all(
-    feature = "otel-push-exporter-tokio",
-    not(any(
-        feature = "otel-push-exporter-tokio-current-thread",
-        feature = "otel-push-exporter-async-std"
-    ))
-))]
-fn runtime(
-) -> OtlpMetricPipeline<opentelemetry_sdk::runtime::Tokio, opentelemetry_otlp::NoExporterConfig> {
-    return opentelemetry_otlp::new_pipeline().metrics(opentelemetry_sdk::runtime::Tokio);
-}
-
-#[cfg(all(
-    feature = "otel-push-exporter-tokio-current-thread",
-    not(any(
-        feature = "otel-push-exporter-tokio",
-        feature = "otel-push-exporter-async-std"
-    ))
-))]
-fn runtime() -> OtlpMetricPipeline<
-    opentelemetry_sdk::runtime::TokioCurrentThread,
-    opentelemetry_otlp::NoExporterConfig,
-> {
-    return opentelemetry_otlp::new_pipeline()
-        .metrics(opentelemetry_sdk::runtime::TokioCurrentThread);
-}
-
-#[cfg(all(
-    feature = "otel-push-exporter-async-std",
-    not(any(
-        feature = "otel-push-exporter-tokio",
-        feature = "otel-push-exporter-tokio-current-thread"
-    ))
-))]
-fn runtime(
-) -> OtlpMetricPipeline<opentelemetry_sdk::runtime::AsyncStd, opentelemetry_otlp::NoExporterConfig>
-{
-    return opentelemetry_otlp::new_pipeline().metrics(opentelemetry_sdk::runtime::AsyncStd);
-}
-
-#[cfg(not(any(
-    feature = "otel-push-exporter-tokio",
-    feature = "otel-push-exporter-tokio-current-thread",
-    feature = "otel-push-exporter-async-std"
-)))]
-fn runtime() -> ! {
-    compile_error!("select your runtime (`otel-push-exporter-tokio`, `otel-push-exporter-tokio-current-thread` or `otel-push-exporter-async-std`) for the autometrics push exporter or use the custom push exporter if none fit")
+fn runtime() -> MeterProviderBuilder {
+    SdkMeterProvider::builder()
 }
